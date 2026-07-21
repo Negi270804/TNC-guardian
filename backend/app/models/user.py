@@ -14,3 +14,10 @@ class User(Base):
     is_verified = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    
+    # Extended profile columns
+    avatar_url = Column(String(512), nullable=True)
+    company = Column(String(255), nullable=True)
+    designation = Column(String(255), nullable=True)
+    bio = Column(String(1000), nullable=True)
+    last_login = Column(DateTime(timezone=True), nullable=True)

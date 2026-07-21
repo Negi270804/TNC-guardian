@@ -12,6 +12,7 @@ interface AuthContextType {
   logout: () => void;
   clearError: () => void;
   error: string | null;
+  updateUser: (user: User) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -28,7 +29,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (savedToken) {
         setToken(savedToken);
         try {
-          // Fetch current user from API
           const currentUser = await authService.getMe();
           setUser(currentUser);
         } catch (err: any) {
@@ -64,7 +64,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setError(null);
     try {
       await authService.register(email, password, fullName);
-      // Automatically log the user in on successful registration
       await login(email, password);
     } catch (err: any) {
       const msg = err.response?.data?.detail || 'Account registration failed.';
@@ -86,6 +85,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setError(null);
   };
 
+  const updateUser = (updatedUser: User) => {
+    setUser(updatedUser);
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -98,6 +101,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         logout,
         clearError,
         error,
+        updateUser,
       }}
     >
       {children}

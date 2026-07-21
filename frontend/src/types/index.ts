@@ -6,6 +6,10 @@ export interface User {
   is_verified: boolean;
   created_at: string;
   updated_at: string;
+  avatar_url?: string;
+  company?: string;
+  designation?: string;
+  bio?: string;
 }
 
 export interface TokenResponse {

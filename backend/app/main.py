@@ -6,6 +6,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from app.api.v1.health import router as health_router
 from app.api.auth import router as auth_router
+from app.api.users import router as users_router
 from app.database import test_db_connection
 
 @asynccontextmanager
@@ -57,7 +58,6 @@ async def sqlalchemy_exception_handler(request: Request, exc: SQLAlchemyError):
             "Ensure the database 'tnc_guardian' is created on the server."
         )
     
-    # Extract original connection details if nested
     orig_detail = str(exc.__dict__.get('orig', exc))
     
     return JSONResponse(
@@ -74,6 +74,7 @@ async def sqlalchemy_exception_handler(request: Request, exc: SQLAlchemyError):
 # Include core routes
 app.include_router(health_router, prefix="/api/v1", tags=["Health Checks"])
 app.include_router(auth_router, prefix="/api/auth", tags=["User Authentication"])
+app.include_router(users_router, prefix="/api/users", tags=["Users Profile Workspace"])
 
 @app.get("/")
 def read_root():
