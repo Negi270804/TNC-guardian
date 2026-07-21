@@ -1,17 +1,19 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field
 
+from dotenv import find_dotenv
+
 class Settings(BaseSettings):
     # Environment file configs
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=find_dotenv() or ".env",
         env_file_encoding="utf-8",
         extra="ignore"
     )
 
     # Database connection parameters
     DATABASE_URL: str = Field(
-        default="postgresql+asyncpg://postgres:postgres_password@db:5432/tnc_guardian",
+        default="postgresql+asyncpg://postgres:postgres_password@db:5432/TNC-guardian",
         alias="DATABASE_URL"
     )
 

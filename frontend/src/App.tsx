@@ -9,9 +9,12 @@ import { Dashboard } from '@/pages/Dashboard';
 import { History } from '@/pages/History';
 import { Settings } from '@/pages/Settings';
 import { NotFound } from '@/pages/NotFound';
+import { ForgotPassword } from '@/pages/ForgotPassword';
 
 import { AppLayout } from '@/layouts/AppLayout';
 import { AuthLayout } from '@/layouts/AuthLayout';
+import { AuthProvider } from '@/context/AuthContext';
+import { ProtectedRoute } from '@/routes/ProtectedRoute';
 
 // Initialize TanStack query client cache settings
 const queryClient = new QueryClient({
@@ -27,29 +30,38 @@ const queryClient = new QueryClient({
 export const App: React.FC = () => {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <Routes>
-          {/* Public Landing View */}
-          <Route path="/" element={<Landing />} />
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* Public Landing View */}
+            <Route path="/" element={<Landing />} />
 
-          {/* Authentication Pages Layout */}
-          <Route element={<AuthLayout />}>
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-          </Route>
+            {/* Authentication Pages Layout */}
+            <Route element={<AuthLayout />}>
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+            </Route>
 
-          {/* Authenticated Application Workspace */}
-          <Route element={<AppLayout />}>
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/history" element={<History />} />
-            <Route path="/settings" element={<Settings />} />
-          </Route>
+            {/* Authenticated Application Workspace (Guarded) */}
+            <Route
+              element={
+                <ProtectedRoute>
+                  <AppLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/history" element={<History />} />
+              <Route path="/settings" element={<Settings />} />
+            </Route>
 
-          {/* Fallback routes */}
-          <Route path="/404" element={<NotFound />} />
-          <Route path="*" element={<Navigate to="/404" replace />} />
-        </Routes>
-      </BrowserRouter>
+            {/* Fallback routes */}
+            <Route path="/404" element={<NotFound />} />
+            <Route path="*" element={<Navigate to="/404" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
     </QueryClientProvider>
   );
 };
