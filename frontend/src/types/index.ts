@@ -38,6 +38,41 @@ export interface Document {
   word_count?: number | null;
   processing_started_at?: string;
   processing_completed_at?: string;
+
+  // Analysis reference
+  analysis?: {
+    id: string;
+    overall_risk_score: number;
+    processing_time: number;
+    provider: string;
+    model_name: string;
+    created_at: string;
+  } | null;
+}
+
+export interface AnalysisItem {
+  id: string;
+  analysis_id: string;
+  title: string;
+  category: string;
+  risk_level: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  explanation: string;
+  original_text: string;
+  suggestion: string;
+  created_at: string;
+}
+
+export interface Analysis {
+  id: string;
+  document_id: string;
+  overall_risk_score: number;
+  summary: string;
+  recommendations: string;
+  processing_time: number;
+  provider: string;
+  model_name: string;
+  created_at: string;
+  items: AnalysisItem[];
 }
 
 export interface AnalysisRecord {

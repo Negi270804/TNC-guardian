@@ -17,6 +17,7 @@ if config.config_file_name is not None:
 from app.database import Base
 from app.models.user import User
 from app.models.document import Document
+from app.models.analysis import Analysis, AnalysisItem
 target_metadata = Base.metadata
 
 # Inject database URL configuration dynamically

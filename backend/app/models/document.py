@@ -1,6 +1,7 @@
 import uuid
 from sqlalchemy import Column, String, Integer, Boolean, Text, DateTime, ForeignKey, func
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
 from app.database import Base
 
 class Document(Base):
@@ -25,3 +26,6 @@ class Document(Base):
     word_count = Column(Integer, nullable=True)
     processing_started_at = Column(DateTime(timezone=True), nullable=True)
     processing_completed_at = Column(DateTime(timezone=True), nullable=True)
+
+    # 1-to-1 relationship with Analysis model
+    analysis = relationship("Analysis", back_populates="document", uselist=False, cascade="all, delete-orphan", lazy="selectin")

@@ -85,6 +85,24 @@ export const Documents: React.FC = () => {
     },
   });
 
+  // Analyze T&C Mutation
+  const analyzeMutation = useMutation<any, Error, string>({
+    mutationFn: async (docId: string) => {
+      const response = await apiClient.post<any>(`/analysis/${docId}`);
+      return response.data;
+    },
+    onSuccess: (newAnalysis) => {
+      queryClient.invalidateQueries({ queryKey: ['documents'] });
+      setSuccessToast(`AI risk audit completed! Risk score: ${newAnalysis.overall_risk_score}/100`);
+      setTimeout(() => setSuccessToast(null), 5000);
+    },
+    onError: (err: any) => {
+      const msg = err.response?.data?.detail || 'AI Analysis engine failed.';
+      setErrorToast(msg);
+      setTimeout(() => setErrorToast(null), 5000);
+    },
+  });
+
   // Delete Mutation
   const deleteMutation = useMutation<void, Error, string>({
     mutationFn: async (docId: string) => {
@@ -158,6 +176,47 @@ export const Documents: React.FC = () => {
 
   return (
     <div className="space-y-8 relative">
+      {/* AI Analysis Loading Screen Overlay */}
+      {analyzeMutation.isPending && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex flex-col items-center justify-center p-4 z-50">
+          <style>{`
+            @keyframes progress-indeterminate {
+              0% { transform: translateX(-100%); }
+              50% { transform: translateX(0%); }
+              100% { transform: translateX(100%); }
+            }
+            .animate-progress-indeterminate {
+              animation: progress-indeterminate 2s infinite ease-in-out;
+              width: 50%;
+            }
+          `}</style>
+          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-8 space-y-6 text-center shadow-2xl">
+            <div className="relative w-24 h-24 mx-auto flex items-center justify-center">
+              <div className="absolute inset-0 rounded-full border-4 border-t-emerald-500 border-r-emerald-500/20 border-b-emerald-500/20 border-l-emerald-500/20 animate-spin" />
+              <div className="absolute inset-2 rounded-full border-4 border-b-green-400 border-t-green-400/20 border-r-green-400/20 border-l-green-400/20 animate-spin" style={{ animationDirection: 'reverse' }} />
+              <span className="text-3xl">⚖️</span>
+            </div>
+            
+            <div className="space-y-2">
+              <h3 className="text-lg font-bold text-slate-100 font-display">AI Legal Audit in Progress</h3>
+              <p className="text-xs text-slate-400 max-w-xs mx-auto">
+                Analyzing clauses, identifying liability limits, checking hidden fees and auto-renewal constraints...
+              </p>
+            </div>
+
+            <div className="w-full bg-slate-950 border border-slate-850 rounded-lg p-3 space-y-2">
+              <div className="flex justify-between text-[11px] font-medium text-slate-400">
+                <span>Auditing Engine Status</span>
+                <span className="text-emerald-400 font-semibold animate-pulse">ACTIVE</span>
+              </div>
+              <div className="w-full bg-slate-850 rounded-full h-1 overflow-hidden relative">
+                <div className="bg-gradient-to-r from-emerald-500 to-green-400 h-1 rounded-full animate-progress-indeterminate absolute" />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Toast notifications */}
       {successToast && (
         <div className="fixed top-4 right-4 z-50 p-4 rounded-md bg-green-950 border border-green-800 text-sm text-green-300 shadow-lg animate-bounce">
@@ -273,17 +332,35 @@ export const Documents: React.FC = () => {
                           <td className="p-3 text-xs text-slate-400">{formatBytes(doc.file_size)}</td>
                           <td className="p-3 text-xs text-slate-400">{formatDate(doc.created_at)}</td>
                           <td className="p-3">
-                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
-                              doc.processing_status === 'COMPLETED'
-                                ? 'bg-green-950/60 text-green-400 border-green-800/40'
-                                : doc.processing_status === 'PROCESSING' || isProcessing
-                                ? 'bg-yellow-950/60 text-yellow-400 border-yellow-800/40 animate-pulse'
-                                : doc.processing_status === 'FAILED'
-                                ? 'bg-red-950/60 text-red-400 border-red-800/40'
-                                : 'bg-slate-950 text-slate-400 border-slate-800'
-                            }`}>
-                              {isProcessing ? 'PROCESSING' : doc.processing_status}
-                            </span>
+                            {doc.processing_status === 'COMPLETED' ? (
+                              doc.analysis ? (
+                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                                  doc.analysis.overall_risk_score <= 35
+                                    ? 'bg-green-950/60 text-green-400 border-green-800/40'
+                                    : doc.analysis.overall_risk_score <= 60
+                                    ? 'bg-yellow-950/60 text-yellow-400 border-yellow-800/40'
+                                    : doc.analysis.overall_risk_score <= 85
+                                    ? 'bg-orange-950/60 text-orange-400 border-orange-800/40'
+                                    : 'bg-red-950/60 text-red-400 border-red-800/40'
+                                }`}>
+                                  Risk: {doc.analysis.overall_risk_score}/100
+                                </span>
+                              ) : (
+                                <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold border bg-emerald-950/40 text-emerald-400 border-emerald-800/20">
+                                  Ready to Analyze
+                                </span>
+                              )
+                            ) : (
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
+                                doc.processing_status === 'PROCESSING' || isProcessing
+                                  ? 'bg-yellow-950/60 text-yellow-400 border-yellow-800/40 animate-pulse'
+                                  : doc.processing_status === 'FAILED'
+                                  ? 'bg-red-950/60 text-red-400 border-red-800/40'
+                                  : 'bg-slate-950 text-slate-400 border-slate-800'
+                              }`}>
+                                {isProcessing ? 'PROCESSING' : doc.processing_status}
+                              </span>
+                            )}
                           </td>
                           <td className="p-3 text-right space-x-2">
                             {/* Extract action button */}
@@ -297,6 +374,21 @@ export const Documents: React.FC = () => {
                               </button>
                             )}
 
+                            {/* Analyze action button */}
+                            {doc.processing_status === 'COMPLETED' && (
+                              <button
+                                onClick={() => analyzeMutation.mutate(doc.id)}
+                                disabled={analyzeMutation.isPending}
+                                className={`text-xs px-2 py-1 rounded border transition disabled:opacity-50 ${
+                                  doc.analysis
+                                    ? 'text-slate-400 hover:text-slate-200 bg-slate-900 hover:bg-slate-850 border-slate-800'
+                                    : 'text-emerald-400 hover:text-emerald-300 bg-emerald-950/20 hover:bg-emerald-950/40 border-emerald-900/20 font-medium animate-pulse'
+                                }`}
+                              >
+                                {doc.analysis ? 'Re-analyze' : 'Analyze'}
+                              </button>
+                            )}
+
                             {/* View details page router link */}
                             <Link
                               to={`/documents/${doc.id}`}
@@ -307,8 +399,8 @@ export const Documents: React.FC = () => {
                             
                             <button
                               onClick={() => deleteMutation.mutate(doc.id)}
-                              disabled={deleteMutation.isPending || isProcessing}
-                              className="text-xs text-red-400 hover:text-red-300 px-2 py-1 bg-red-950/20 hover:bg-red-950/40 rounded border border-red-900/20 transition"
+                              disabled={deleteMutation.isPending || isProcessing || analyzeMutation.isPending}
+                              className="text-xs text-red-400 hover:text-red-300 px-2 py-1 bg-red-950/20 hover:bg-red-950/40 rounded border border-red-900/20 transition disabled:opacity-50"
                             >
                               Delete
                             </button>

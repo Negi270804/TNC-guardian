@@ -3,6 +3,17 @@ from uuid import UUID
 from datetime import datetime
 from typing import Optional
 
+class AnalysisBriefResponse(BaseModel):
+    id: UUID
+    overall_risk_score: int
+    processing_time: float
+    provider: str
+    model_name: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
 class DocumentResponse(BaseModel):
     id: UUID
     user_id: UUID
@@ -23,6 +34,9 @@ class DocumentResponse(BaseModel):
     word_count: Optional[int] = None
     processing_started_at: Optional[datetime] = None
     processing_completed_at: Optional[datetime] = None
+
+    # Analysis reference
+    analysis: Optional[AnalysisBriefResponse] = None
 
     class Config:
         from_attributes = True
