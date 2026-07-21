@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, func
+from sqlalchemy import Column, String, Integer, Boolean, Text, DateTime, ForeignKey, func
 from sqlalchemy.dialects.postgresql import UUID
 from app.database import Base
 
@@ -16,3 +16,12 @@ class Document(Base):
     storage_path = Column(String(512), nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+    # Extended OCR and processing columns
+    processing_status = Column(String(50), default="UPLOADED", nullable=False)
+    text_extracted = Column(Boolean, default=False, nullable=False)
+    extracted_text = Column(Text, nullable=True)
+    page_count = Column(Integer, nullable=True)
+    word_count = Column(Integer, nullable=True)
+    processing_started_at = Column(DateTime(timezone=True), nullable=True)
+    processing_completed_at = Column(DateTime(timezone=True), nullable=True)

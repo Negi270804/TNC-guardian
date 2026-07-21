@@ -29,6 +29,15 @@ export interface Document {
   storage_path: string;
   created_at: string;
   updated_at: string;
+  
+  // Extended OCR fields
+  processing_status: string;
+  text_extracted: boolean;
+  extracted_text?: string;
+  page_count?: number | null;
+  word_count?: number | null;
+  processing_started_at?: string;
+  processing_completed_at?: string;
 }
 
 export interface AnalysisRecord {

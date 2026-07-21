@@ -7,6 +7,7 @@ import { Login } from '@/pages/Login';
 import { Register } from '@/pages/Register';
 import { Dashboard } from '@/pages/Dashboard';
 import { Documents } from '@/pages/Documents';
+import { DocumentDetails } from '@/pages/DocumentDetails';
 import { Profile } from '@/pages/Profile';
 import { History } from '@/pages/History';
 import { Settings } from '@/pages/Settings';
@@ -51,6 +52,7 @@ export const App: React.FC = () => {
             >
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/documents" element={<Documents />} />
+              <Route path="/documents/:id" element={<DocumentDetails />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/history" element={<History />} />
               <Route path="/settings" element={<Settings />} />

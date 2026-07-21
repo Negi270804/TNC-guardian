@@ -6,11 +6,13 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from datetime import datetime, timezone
 from app.database import get_db
 from app.dependencies.auth import get_current_user
 from app.models.user import User
 from app.models.document import Document
 from app.schemas.document import DocumentResponse
+from app.services.ocr_service import OCRService
 
 router = APIRouter()
 
@@ -60,7 +62,6 @@ async def upload_document(
 
     if file_size <= 0:
         try:
-            # Safely handle both synchronous and asynchronous seek/tell across Starlette versions
             if inspect.iscoroutinefunction(file.seek):
                 await file.seek(0, 2)
                 file_size = await file.tell()
@@ -69,8 +70,7 @@ async def upload_document(
                 file.file.seek(0, 2)
                 file_size = file.file.tell()
                 file.file.seek(0)
-        except Exception as e:
-            # Fallback to content-length if seek fails
+        except Exception:
             file_size = int(file.headers.get("content-length", 0))
 
     if file_size > MAX_FILE_SIZE:
@@ -111,7 +111,8 @@ async def upload_document(
         file_type=ext.lstrip('.'),
         file_size=file_size,
         upload_status="UPLOADED",
-        storage_path=storage_path
+        storage_path=storage_path,
+        processing_status="UPLOADED"
     )
 
     db.add(new_doc)
@@ -136,7 +137,7 @@ async def get_document(
 ):
     query = select(Document).where(Document.id == document_id)
     res = await db.execute(query)
-    doc = res.scalar_one_or_none()
+    doc = res.scalars().first()
 
     if not doc:
         raise HTTPException(
@@ -161,7 +162,7 @@ async def delete_document(
 ):
     query = select(Document).where(Document.id == document_id)
     res = await db.execute(query)
-    doc = res.scalar_one_or_none()
+    doc = res.scalars().first()
 
     if not doc:
         raise HTTPException(
@@ -190,3 +191,97 @@ async def delete_document(
     await db.delete(doc)
     await db.commit()
     return {"message": "Document deleted successfully."}
+
+@router.post("/{document_id}/extract", response_model=DocumentResponse)
+async def extract_document_text(
+    document_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    query = select(Document).where(Document.id == document_id)
+    res = await db.execute(query)
+    doc = res.scalars().first()
+
+    if not doc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Document not found."
+        )
+
+    # Auth check
+    if doc.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have permission to access this document."
+        )
+
+    # Update state to PROCESSING
+    doc.processing_status = "PROCESSING"
+    doc.processing_started_at = datetime.now(timezone.utc)
+    db.add(doc)
+    await db.commit()
+    await db.refresh(doc)
+
+    try:
+        # Run text extraction service
+        extraction_result = await OCRService.extract_text(doc.storage_path, doc.file_type)
+        
+        # Save completed details
+        doc.extracted_text = extraction_result["text"]
+        doc.page_count = extraction_result["page_count"]
+        doc.word_count = extraction_result["word_count"]
+        doc.text_extracted = True
+        doc.processing_status = "COMPLETED"
+        doc.processing_completed_at = datetime.now(timezone.utc)
+    except Exception as e:
+        # Gracefully handle failures
+        doc.processing_status = "FAILED"
+        doc.processing_completed_at = datetime.now(timezone.utc)
+        db.add(doc)
+        await db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Text extraction and OCR engine processing failed: {str(e)}"
+        )
+
+    db.add(doc)
+    await db.commit()
+    await db.refresh(doc)
+    return doc
+
+@router.get("/{document_id}/text")
+async def get_document_text(
+    document_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    query = select(Document).where(Document.id == document_id)
+    res = await db.execute(query)
+    doc = res.scalars().first()
+
+    if not doc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Document not found."
+        )
+
+    # Auth check
+    if doc.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have permission to access this document."
+        )
+
+    if not doc.text_extracted:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Text has not been extracted from this document yet. Call the extract endpoint first."
+        )
+
+    return {
+        "document_id": doc.id,
+        "original_filename": doc.original_filename,
+        "extracted_text": doc.extracted_text,
+        "page_count": doc.page_count,
+        "word_count": doc.word_count
+    }
