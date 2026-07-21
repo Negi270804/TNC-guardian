@@ -31,3 +31,23 @@ class AnalysisResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class AnalysisSummaryResponse(BaseModel):
+    document_id: UUID
+    summary: str
+    recommendations: str
+    processing_time: float
+    provider: str
+    model_name: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class AnalysisRiskScoreResponse(BaseModel):
+    document_id: UUID
+    overall_risk_score: int
+    created_at: datetime
+
+    class Config:
+        from_attributes = True

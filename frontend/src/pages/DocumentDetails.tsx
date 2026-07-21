@@ -179,12 +179,22 @@ export const DocumentDetails: React.FC = () => {
             {doc.original_filename}
           </h2>
         </div>
-        <Link
-          to="/documents"
-          className="px-4 py-2 bg-slate-900 border border-slate-800 text-xs font-semibold text-slate-300 hover:text-white rounded transition"
-        >
-          ← Back to Repository
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          {doc.analysis && (
+            <Link
+              to={`/results/${doc.id}`}
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white rounded-lg transition shadow-md"
+            >
+              📊 Results Dashboard
+            </Link>
+          )}
+          <Link
+            to="/documents"
+            className="px-4 py-2 bg-slate-900 border border-slate-800 text-xs font-semibold text-slate-300 hover:text-white rounded-lg transition"
+          >
+            ← Back to Repository
+          </Link>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

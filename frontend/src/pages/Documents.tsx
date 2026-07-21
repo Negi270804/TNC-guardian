@@ -389,6 +389,16 @@ export const Documents: React.FC = () => {
                               </button>
                             )}
 
+                            {/* View results dashboard link */}
+                            {doc.analysis && (
+                              <Link
+                                to={`/results/${doc.id}`}
+                                className="inline-block text-xs text-emerald-400 hover:text-emerald-300 px-2 py-1 bg-emerald-950/20 rounded border border-emerald-900/20 transition font-semibold"
+                              >
+                                Results
+                              </Link>
+                            )}
+
                             {/* View details page router link */}
                             <Link
                               to={`/documents/${doc.id}`}
