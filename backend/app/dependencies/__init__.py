@@ -1,0 +1,1 @@
+# FastAPI injection dependencies namespace

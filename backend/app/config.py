@@ -1,0 +1,14 @@
+from app.settings import settings
+
+# Global configurations aliases mapping to Pydantic Settings
+DATABASE_URL = settings.DATABASE_URL
+JWT_SECRET = settings.JWT_SECRET
+JWT_ALGORITHM = settings.JWT_ALGORITHM
+ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES
+
+ANTHROPIC_API_KEY = settings.ANTHROPIC_API_KEY
+OPENAI_API_KEY = settings.OPENAI_API_KEY
+
+AWS_ACCESS_KEY = settings.AWS_ACCESS_KEY
+AWS_SECRET_KEY = settings.AWS_SECRET_KEY
+S3_BUCKET = settings.S3_BUCKET
