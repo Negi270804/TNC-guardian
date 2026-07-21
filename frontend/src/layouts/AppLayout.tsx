@@ -20,7 +20,7 @@ export const AppLayout: React.FC = () => {
       <aside className="w-64 bg-slate-900 border-r border-slate-800 flex flex-col justify-between p-4">
         <div>
           <div className="flex items-center gap-2 mb-8 px-2">
-            <span className="text-xl font-bold text-green-500">TNC Guardian</span>
+            <span className="text-xl font-bold text-green-500 font-display">TNC Guardian</span>
           </div>
           <nav className="space-y-1">
             <Link
@@ -32,6 +32,16 @@ export const AppLayout: React.FC = () => {
               }`}
             >
               Dashboard
+            </Link>
+            <Link
+              to="/documents"
+              className={`block px-3 py-2 rounded-md text-sm font-medium transition ${
+                isActive('/documents')
+                  ? 'bg-green-600/10 text-green-400 border-l-2 border-green-500'
+                  : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+              }`}
+            >
+              Documents
             </Link>
             <Link
               to="/profile"

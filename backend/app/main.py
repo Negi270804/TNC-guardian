@@ -7,6 +7,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from app.api.v1.health import router as health_router
 from app.api.auth import router as auth_router
 from app.api.users import router as users_router
+from app.api.documents import router as documents_router
 from app.database import test_db_connection
 
 @asynccontextmanager
@@ -75,6 +76,7 @@ async def sqlalchemy_exception_handler(request: Request, exc: SQLAlchemyError):
 app.include_router(health_router, prefix="/api/v1", tags=["Health Checks"])
 app.include_router(auth_router, prefix="/api/auth", tags=["User Authentication"])
 app.include_router(users_router, prefix="/api/users", tags=["Users Profile Workspace"])
+app.include_router(documents_router, prefix="/api/documents", tags=["Document Upload Workspace"])
 
 @app.get("/")
 def read_root():

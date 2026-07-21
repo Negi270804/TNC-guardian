@@ -6,6 +6,7 @@ import { Landing } from '@/pages/Landing';
 import { Login } from '@/pages/Login';
 import { Register } from '@/pages/Register';
 import { Dashboard } from '@/pages/Dashboard';
+import { Documents } from '@/pages/Documents';
 import { Profile } from '@/pages/Profile';
 import { History } from '@/pages/History';
 import { Settings } from '@/pages/Settings';
@@ -17,13 +18,12 @@ import { AuthLayout } from '@/layouts/AuthLayout';
 import { AuthProvider } from '@/context/AuthContext';
 import { ProtectedRoute } from '@/routes/ProtectedRoute';
 
-// Initialize TanStack query client cache settings
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       refetchOnWindowFocus: false,
       retry: 1,
-      staleTime: 120000, // 2 minutes
+      staleTime: 120000,
     },
   },
 });
@@ -34,17 +34,14 @@ export const App: React.FC = () => {
       <AuthProvider>
         <BrowserRouter>
           <Routes>
-            {/* Public Landing View */}
             <Route path="/" element={<Landing />} />
 
-            {/* Authentication Pages Layout */}
             <Route element={<AuthLayout />}>
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
             </Route>
 
-            {/* Authenticated Application Workspace (Guarded) */}
             <Route
               element={
                 <ProtectedRoute>
@@ -53,12 +50,12 @@ export const App: React.FC = () => {
               }
             >
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/documents" element={<Documents />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/history" element={<History />} />
               <Route path="/settings" element={<Settings />} />
             </Route>
 
-            {/* Fallback routes */}
             <Route path="/404" element={<NotFound />} />
             <Route path="*" element={<Navigate to="/404" replace />} />
           </Routes>

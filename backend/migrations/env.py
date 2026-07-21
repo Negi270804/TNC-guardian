@@ -16,6 +16,7 @@ if config.config_file_name is not None:
 # Set meta-data target mapping for migrations autogenerate support
 from app.database import Base
 from app.models.user import User
+from app.models.document import Document
 target_metadata = Base.metadata
 
 # Inject database URL configuration dynamically

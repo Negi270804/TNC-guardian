@@ -18,6 +18,19 @@ export interface TokenResponse {
   user: User;
 }
 
+export interface Document {
+  id: string;
+  user_id: string;
+  original_filename: string;
+  stored_filename: string;
+  file_type: string;
+  file_size: number;
+  upload_status: string;
+  storage_path: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface AnalysisRecord {
   id: string;
   document_title: string;

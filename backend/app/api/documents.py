@@ -1,0 +1,192 @@
+import os
+import uuid
+import shutil
+import inspect
+from typing import List
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from app.database import get_db
+from app.dependencies.auth import get_current_user
+from app.models.user import User
+from app.models.document import Document
+from app.schemas.document import DocumentResponse
+
+router = APIRouter()
+
+# Resolve target base uploads location relative to backend project path
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+UPLOADS_DIR = os.path.join(BASE_DIR, "uploads")
+
+ALLOWED_EXTENSIONS = {".pdf", ".docx", ".txt", ".png", ".jpg", ".jpeg"}
+ALLOWED_MIME_TYPES = {
+    "application/pdf",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "text/plain",
+    "image/png",
+    "image/jpeg",
+    "image/pjpeg"
+}
+MAX_FILE_SIZE = 20 * 1024 * 1024  # 20 MB
+
+@router.post("/upload", response_model=DocumentResponse, status_code=status.HTTP_201_CREATED)
+async def upload_document(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    # 1. Validate Extension
+    original_filename = file.filename or "unnamed_document"
+    _, ext = os.path.splitext(original_filename)
+    ext = ext.lower()
+
+    if ext not in ALLOWED_EXTENSIONS:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Unsupported file extension '{ext}'. Supported formats: PDF, DOCX, TXT, PNG, JPG, JPEG."
+        )
+
+    # 2. Validate MIME Type
+    if file.content_type not in ALLOWED_MIME_TYPES:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Unsupported file content type '{file.content_type}'. Supported formats: PDF, DOCX, TXT, PNG, JPG, JPEG."
+        )
+
+    # 3. Validate File Size in a highly robust manner
+    file_size = 0
+    if hasattr(file, "size") and file.size is not None:
+        file_size = file.size
+
+    if file_size <= 0:
+        try:
+            # Safely handle both synchronous and asynchronous seek/tell across Starlette versions
+            if inspect.iscoroutinefunction(file.seek):
+                await file.seek(0, 2)
+                file_size = await file.tell()
+                await file.seek(0)
+            else:
+                file.file.seek(0, 2)
+                file_size = file.file.tell()
+                file.file.seek(0)
+        except Exception as e:
+            # Fallback to content-length if seek fails
+            file_size = int(file.headers.get("content-length", 0))
+
+    if file_size > MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="File size exceeds the maximum limit of 20 MB."
+        )
+    if file_size <= 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid empty file uploaded."
+        )
+
+    # 4. Generate metadata IDs & paths
+    doc_id = uuid.uuid4()
+    stored_filename = f"{uuid.uuid4()}{ext}"
+    user_upload_dir = os.path.join(UPLOADS_DIR, str(current_user.id), str(doc_id))
+    os.makedirs(user_upload_dir, exist_ok=True)
+    
+    storage_path = os.path.join(user_upload_dir, stored_filename)
+
+    # 5. Save the physical file on disk
+    try:
+        with open(storage_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to write uploaded file to disk storage: {str(e)}"
+        )
+
+    # 6. Save document record in PostgreSQL
+    new_doc = Document(
+        id=doc_id,
+        user_id=current_user.id,
+        original_filename=original_filename,
+        stored_filename=stored_filename,
+        file_type=ext.lstrip('.'),
+        file_size=file_size,
+        upload_status="UPLOADED",
+        storage_path=storage_path
+    )
+
+    db.add(new_doc)
+    await db.commit()
+    await db.refresh(new_doc)
+    return new_doc
+
+@router.get("", response_model=List[DocumentResponse])
+async def list_documents(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    query = select(Document).where(Document.user_id == current_user.id).order_by(Document.created_at.desc())
+    res = await db.execute(query)
+    return res.scalars().all()
+
+@router.get("/{document_id}", response_model=DocumentResponse)
+async def get_document(
+    document_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    query = select(Document).where(Document.id == document_id)
+    res = await db.execute(query)
+    doc = res.scalar_one_or_none()
+
+    if not doc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Document not found."
+        )
+
+    # Auth check: each user can only access their own documents
+    if doc.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have permission to access this document."
+        )
+
+    return doc
+
+@router.delete("/{document_id}", status_code=status.HTTP_200_OK)
+async def delete_document(
+    document_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    query = select(Document).where(Document.id == document_id)
+    res = await db.execute(query)
+    doc = res.scalar_one_or_none()
+
+    if not doc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Document not found."
+        )
+
+    # Auth check: each user can only delete their own documents
+    if doc.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have permission to delete this document."
+        )
+
+    # Remove the physical file and container folder from disk
+    if os.path.exists(doc.storage_path):
+        try:
+            os.remove(doc.storage_path)
+            parent_dir = os.path.dirname(doc.storage_path)
+            if os.path.exists(parent_dir) and not os.listdir(parent_dir):
+                os.rmdir(parent_dir)
+        except Exception as e:
+            print(f"[CLEANUP ERROR] Failed to clean document directories: {str(e)}")
+
+    # Remove record from database
+    await db.delete(doc)
+    await db.commit()
+    return {"message": "Document deleted successfully."}
