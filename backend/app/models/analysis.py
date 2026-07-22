@@ -9,13 +9,13 @@ class Analysis(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     document_id = Column(UUID(as_uuid=True), ForeignKey("documents.id", ondelete="CASCADE"), nullable=False, index=True, unique=True)
-    overall_risk_score = Column(Integer, nullable=False)
+    overall_risk_score = Column(Integer, nullable=False, index=True)
     summary = Column(Text, nullable=False)
     recommendations = Column(Text, nullable=False)
     processing_time = Column(Float, nullable=False)
     provider = Column(String(50), nullable=False)
     model_name = Column(String(50), nullable=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
 
     # Establish one-to-many relationship to individual clauses items
     items = relationship("AnalysisItem", back_populates="analysis", cascade="all, delete-orphan", lazy="selectin")
