@@ -62,9 +62,30 @@ async def list_history(
     if limit < 1:
         limit = 10
 
-    # Base query joining Document and Analysis
-    query = select(Document).outerjoin(Analysis, Document.id == Analysis.document_id).where(Document.user_id == current_user.id)
-    count_query = select(func.count(Document.id)).outerjoin(Analysis, Document.id == Analysis.document_id).where(Document.user_id == current_user.id)
+    # Fetch user subscription to apply history cap on FREE plan
+    from app.services.subscription_service import SubscriptionService
+    sub_service = SubscriptionService(db)
+    sub = await sub_service.get_or_create_subscription(current_user.id)
+
+    if sub.plan == "FREE":
+        # Find latest 10 document ids
+        latest_ids_query = (
+            select(Document.id)
+            .where(Document.user_id == current_user.id)
+            .order_by(Document.created_at.desc())
+            .limit(10)
+        )
+        latest_ids_res = await db.execute(latest_ids_query)
+        latest_ids = latest_ids_res.scalars().all()
+        if not latest_ids:
+            latest_ids = [uuid.uuid4()]  # Non-matching fallback if empty
+        
+        query = select(Document).outerjoin(Analysis, Document.id == Analysis.document_id).where(Document.id.in_(latest_ids))
+        count_query = select(func.count(Document.id)).outerjoin(Analysis, Document.id == Analysis.document_id).where(Document.id.in_(latest_ids))
+    else:
+        # Base query joining Document and Analysis
+        query = select(Document).outerjoin(Analysis, Document.id == Analysis.document_id).where(Document.user_id == current_user.id)
+        count_query = select(func.count(Document.id)).outerjoin(Analysis, Document.id == Analysis.document_id).where(Document.user_id == current_user.id)
 
     # Search filter
     if search:
@@ -174,6 +195,26 @@ async def get_history_detail(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
+    # Fetch user subscription to enforce history cap on FREE plan
+    from app.services.subscription_service import SubscriptionService
+    sub_service = SubscriptionService(db)
+    sub = await sub_service.get_or_create_subscription(current_user.id)
+
+    if sub.plan == "FREE":
+        latest_ids_query = (
+            select(Document.id)
+            .where(Document.user_id == current_user.id)
+            .order_by(Document.created_at.desc())
+            .limit(10)
+        )
+        latest_ids_res = await db.execute(latest_ids_query)
+        latest_ids = latest_ids_res.scalars().all()
+        if document_id not in latest_ids:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access to older history records is restricted on the Free plan. Please upgrade to Pro."
+            )
+
     query = select(Document).where(Document.id == document_id)
     res = await db.execute(query)
     doc = res.scalars().first()
@@ -244,6 +285,18 @@ async def reanalyze_document(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
+    # Check subscription quota
+    from app.services.subscription_service import SubscriptionService
+    sub_service = SubscriptionService(db)
+    sub = await sub_service.get_or_create_subscription(current_user.id)
+    usage = await sub_service.get_or_create_usage(current_user.id)
+    
+    if sub.plan == "FREE" and usage.analysis_count >= 5:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Free plan limit reached. Upgrade to Pro."
+        )
+
     # 1. Fetch document and validate ownership
     doc_query = select(Document).where(Document.id == document_id)
     doc_res = await db.execute(doc_query)
@@ -323,4 +376,8 @@ async def reanalyze_document(
 
     await db.commit()
     await db.refresh(analysis)
+
+    # Increment analysis count in usage tracking
+    await sub_service.increment_analysis_count(current_user.id)
+
     return analysis

@@ -14,6 +14,8 @@ import { History } from '@/pages/History';
 import { Settings } from '@/pages/Settings';
 import { NotFound } from '@/pages/NotFound';
 import { ForgotPassword } from '@/pages/ForgotPassword';
+import { SubscriptionPage } from '@/pages/SubscriptionPage';
+import { PricingPage } from '@/pages/PricingPage';
 
 import { AppLayout } from '@/layouts/AppLayout';
 import { AuthLayout } from '@/layouts/AuthLayout';
@@ -57,6 +59,8 @@ export const App: React.FC = () => {
               <Route path="/results/:id" element={<Results />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/history" element={<History />} />
+              <Route path="/subscription" element={<SubscriptionPage />} />
+              <Route path="/pricing" element={<PricingPage />} />
               <Route path="/settings" element={<Settings />} />
             </Route>
 

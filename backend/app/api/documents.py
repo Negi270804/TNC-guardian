@@ -55,7 +55,14 @@ async def upload_document(
             detail=f"Unsupported file content type '{file.content_type}'. Supported formats: PDF, DOCX, TXT, PNG, JPG, JPEG."
         )
 
-    # 3. Validate File Size in a highly robust manner
+    # 3. Fetch subscription and validate File Size based on plan
+    from app.services.subscription_service import SubscriptionService
+    sub_service = SubscriptionService(db)
+    sub = await sub_service.get_or_create_subscription(current_user.id)
+    
+    max_size = 5 * 1024 * 1024 if sub.plan == "FREE" else 25 * 1024 * 1024
+    max_size_str = "5 MB" if sub.plan == "FREE" else "25 MB"
+
     file_size = 0
     if hasattr(file, "size") and file.size is not None:
         file_size = file.size
@@ -73,10 +80,10 @@ async def upload_document(
         except Exception:
             file_size = int(file.headers.get("content-length", 0))
 
-    if file_size > MAX_FILE_SIZE:
+    if file_size > max_size:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="File size exceeds the maximum limit of 20 MB."
+            detail=f"File size exceeds the maximum limit of {max_size_str} for your {sub.plan.capitalize()} plan."
         )
     if file_size <= 0:
         raise HTTPException(
@@ -118,6 +125,10 @@ async def upload_document(
     db.add(new_doc)
     await db.commit()
     await db.refresh(new_doc)
+    
+    # Increment uploads counter and storage usage in usage tracking
+    await sub_service.increment_uploads(current_user.id, file_size)
+    
     return new_doc
 
 @router.get("", response_model=List[DocumentResponse])

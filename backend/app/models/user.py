@@ -1,6 +1,7 @@
 import uuid
 from sqlalchemy import Column, String, Boolean, DateTime, func
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
 from app.database import Base
 
 class User(Base):
@@ -21,3 +22,7 @@ class User(Base):
     designation = Column(String(255), nullable=True)
     bio = Column(String(1000), nullable=True)
     last_login = Column(DateTime(timezone=True), nullable=True)
+
+    # SaaS Relationships
+    subscription = relationship("Subscription", back_populates="user", uselist=False, cascade="all, delete-orphan", lazy="selectin")
+    usages = relationship("Usage", back_populates="user", cascade="all, delete-orphan", lazy="selectin")

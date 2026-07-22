@@ -2,9 +2,28 @@ import React from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { formatDate } from '@/utils';
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { apiClient } from '@/services/api-client';
+import { PlanBadge } from '@/components/subscription';
 
 export const Dashboard: React.FC = () => {
   const { user } = useAuth();
+
+  const { data: currentSub } = useQuery<any>({
+    queryKey: ['current-subscription'],
+    queryFn: async () => {
+      const res = await apiClient.get('/subscription/current');
+      return res.data;
+    },
+  });
+
+  const { data: usage } = useQuery<any>({
+    queryKey: ['subscription-usage'],
+    queryFn: async () => {
+      const res = await apiClient.get('/subscription/usage');
+      return res.data;
+    },
+  });
 
   return (
     <div className="space-y-8">
@@ -68,6 +87,52 @@ export const Dashboard: React.FC = () => {
 
         {/* Right side: Profile Snapshot Details */}
         <div className="space-y-6">
+          {/* Subscription Status Widget */}
+          <section className="p-6 rounded-lg bg-slate-900 border border-slate-800 space-y-4">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-semibold text-slate-200 font-display">Subscription</h3>
+              {currentSub && <PlanBadge plan={currentSub.plan} size="sm" />}
+            </div>
+            
+            {currentSub && usage && (
+              <div className="space-y-4 pt-2">
+                <div className="flex justify-between text-xs font-medium">
+                  <span className="text-slate-400">Monthly Usage</span>
+                  <span className="text-slate-200">
+                    {currentSub.plan === 'FREE' 
+                      ? `${usage.analysis_count} / 5 scans` 
+                      : `${usage.analysis_count} scans`}
+                  </span>
+                </div>
+                <div className="h-1.5 w-full bg-slate-950 border border-slate-850 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-green-500 rounded-full"
+                    style={{ width: `${currentSub.plan === 'FREE' ? (usage.analysis_count / 5) * 100 : 100}%` }}
+                  />
+                </div>
+                {currentSub.plan === 'FREE' && (
+                  <div className="pt-2">
+                    <p className="text-xs text-slate-500 leading-relaxed">
+                      Upgrade to PRO for unlimited scans, priority processing and layout analysis.
+                    </p>
+                    <Link
+                      to="/subscription"
+                      className="mt-3 w-full py-2 bg-green-600 hover:bg-green-500 text-white rounded text-xs font-bold transition block text-center shadow-lg"
+                    >
+                      Upgrade to Pro
+                    </Link>
+                  </div>
+                )}
+                {currentSub.plan === 'PRO' && (
+                  <div className="pt-2 text-xs text-slate-400 flex justify-between border-t border-slate-850 pt-3">
+                    <span>Renewal Period:</span>
+                    <span className="text-slate-200 font-semibold">Monthly</span>
+                  </div>
+                )}
+              </div>
+            )}
+          </section>
+
           <section className="p-6 rounded-lg bg-slate-900 border border-slate-800 space-y-4">
             <h3 className="text-lg font-semibold text-slate-200 font-display">Profile Overview</h3>
             <div className="flex flex-col items-center justify-center py-4 border-b border-slate-850 space-y-3">

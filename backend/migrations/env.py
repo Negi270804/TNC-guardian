@@ -18,6 +18,8 @@ from app.database import Base
 from app.models.user import User
 from app.models.document import Document
 from app.models.analysis import Analysis, AnalysisItem
+from app.models.subscription import Subscription
+from app.models.usage import Usage
 target_metadata = Base.metadata
 
 # Inject database URL configuration dynamically

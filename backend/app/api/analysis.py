@@ -21,6 +21,18 @@ async def analyze_document(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
+    # Check subscription quota
+    from app.services.subscription_service import SubscriptionService
+    sub_service = SubscriptionService(db)
+    sub = await sub_service.get_or_create_subscription(current_user.id)
+    usage = await sub_service.get_or_create_usage(current_user.id)
+    
+    if sub.plan == "FREE" and usage.analysis_count >= 5:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Free plan limit reached. Upgrade to Pro."
+        )
+
     # 1. Fetch document and validate ownership
     doc_query = select(Document).where(Document.id == document_id)
     doc_res = await db.execute(doc_query)
@@ -100,6 +112,10 @@ async def analyze_document(
 
     await db.commit()
     await db.refresh(analysis)
+
+    # Increment analysis count in usage tracking
+    await sub_service.increment_analysis_count(current_user.id)
+
     return analysis
 
 @router.get("/{document_id}", response_model=AnalysisResponse)

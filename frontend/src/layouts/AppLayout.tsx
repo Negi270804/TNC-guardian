@@ -54,6 +54,16 @@ export const AppLayout: React.FC = () => {
               Analysis History
             </Link>
             <Link
+              to="/subscription"
+              className={`block px-3 py-2 rounded-md text-sm font-medium transition ${
+                isActive('/subscription') || isActive('/pricing')
+                  ? 'bg-green-600/10 text-green-400 border-l-2 border-green-500'
+                  : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+              }`}
+            >
+              Subscription
+            </Link>
+            <Link
               to="/profile"
               className={`block px-3 py-2 rounded-md text-sm font-medium transition ${
                 isActive('/profile')

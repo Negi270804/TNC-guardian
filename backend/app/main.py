@@ -11,6 +11,7 @@ from app.api.documents import router as documents_router
 from app.api.analysis import router as analysis_router
 from app.api.results import router as results_router
 from app.api.history import router as history_router
+from app.api.subscription import router as subscription_router
 from app.database import test_db_connection
 
 @asynccontextmanager
@@ -83,6 +84,7 @@ app.include_router(documents_router, prefix="/api/documents", tags=["Document Wo
 app.include_router(analysis_router, prefix="/api/analysis", tags=["AI Analysis Engine"])
 app.include_router(results_router, prefix="/api/results", tags=["AI Results Dashboard"])
 app.include_router(history_router, prefix="/api/history", tags=["Analysis History"])
+app.include_router(subscription_router, prefix="/api/subscription", tags=["Subscription & Usage Management"])
 
 @app.get("/")
 def read_root():
