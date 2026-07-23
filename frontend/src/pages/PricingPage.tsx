@@ -1,35 +1,17 @@
-import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import React from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/services/api-client';
-import { PricingCard, UpgradeModal, FeatureComparisonTable } from '@/components/subscription';
-
-interface Plan {
-  name: string;
-  price: string;
-  features: string[];
-}
+import { FeatureComparisonTable } from '@/components/subscription';
 
 interface CurrentSubscription {
   plan: string;
   status: string;
   expiry_date: string | null;
   remaining_analyses: number | null;
+  demo_mode?: boolean;
 }
 
 export const PricingPage: React.FC = () => {
-  const queryClient = useQueryClient();
-  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
-
-  // Fetch plans
-  const { data: plansData, isLoading: isPlansLoading } = useQuery<{ plans: Plan[] }>({
-    queryKey: ['subscription-plans'],
-    queryFn: async () => {
-      const res = await apiClient.get('/subscription/plans');
-      return res.data;
-    },
-  });
-
   // Fetch current subscription
   const { data: currentSub, isLoading: isSubLoading } = useQuery<CurrentSubscription>({
     queryKey: ['current-subscription'],
@@ -39,32 +21,7 @@ export const PricingPage: React.FC = () => {
     },
   });
 
-  // Upgrade mutation
-  const upgradeMutation = useMutation<any, Error, string>({
-    mutationFn: async (planName: string) => {
-      const res = await apiClient.post('/subscription/upgrade', { plan: planName });
-      return res.data;
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['current-subscription'] });
-      queryClient.invalidateQueries({ queryKey: ['subscription-usage'] });
-      setSuccessMessage(`Successfully updated plan to ${data.plan}!`);
-      setSelectedPlan(null);
-      setTimeout(() => setSuccessMessage(null), 5000);
-    },
-  });
-
-  const handleUpgradeClick = (planName: string) => {
-    setSelectedPlan(planName);
-  };
-
-  const handleConfirmUpgrade = () => {
-    if (selectedPlan) {
-      upgradeMutation.mutate(selectedPlan);
-    }
-  };
-
-  if (isPlansLoading || isSubLoading) {
+  if (isSubLoading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500" />
@@ -72,35 +29,98 @@ export const PricingPage: React.FC = () => {
     );
   }
 
+  const plans = [
+    {
+      name: "Free Plan",
+      price: "₹0",
+      features: [
+        "10 AI analyses per month",
+        "Maximum upload size: 5 MB",
+        "Basic OCR",
+        "AI Summary",
+        "Last 10 analyses"
+      ],
+      isCurrent: true,
+      buttonText: "Your Current Plan",
+      disabled: true
+    },
+    {
+      name: "Pro (Coming Soon)",
+      price: "₹299",
+      features: [
+        "Unlimited analyses",
+        "Unlimited history",
+        "Large file uploads (25 MB)",
+        "Advanced OCR",
+        "PDF Export (future ready)",
+        "Priority processing"
+      ],
+      isCurrent: false,
+      buttonText: "Coming Soon",
+      disabled: true
+    },
+    {
+      name: "Enterprise (Coming Soon)",
+      price: "Custom",
+      features: [
+        "Custom checklists",
+        "Dedicated AI models",
+        "API Access",
+        "24/7 SLA Support",
+        "SSO/SAML Ingestions"
+      ],
+      isCurrent: false,
+      buttonText: "Coming Soon",
+      disabled: true
+    }
+  ];
+
   return (
     <div className="max-w-5xl mx-auto space-y-12 relative">
-      {successMessage && (
-        <div className="fixed top-4 right-4 z-50 p-4 rounded-md bg-green-950 border border-green-800 text-sm text-green-300 shadow-lg animate-bounce">
-          {successMessage}
-        </div>
-      )}
-
       <div className="text-center max-w-2xl mx-auto space-y-4">
         <h2 className="text-3xl font-extrabold text-white tracking-tight font-display sm:text-4xl">
-          Upgrade your Guardian workspace
+          Guardian Billing Plans
         </h2>
-        <p className="text-sm text-slate-400">
-          Unlock unlimited AI document scans, custom checklists, large file uploads, and prioritize your audits queue.
-        </p>
+        <div className="p-4 rounded-lg bg-green-950/40 border border-green-900 text-green-400 text-xs font-semibold max-w-xl mx-auto leading-relaxed shadow-lg">
+          This MVP provides unrestricted access to all features. Paid plans will be introduced in a future release.
+        </div>
       </div>
 
       {/* Pricing Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-        {plansData?.plans.map((plan) => (
-          <PricingCard
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
+        {plans.map((plan) => (
+          <div
             key={plan.name}
-            name={plan.name}
-            price={plan.price}
-            features={plan.features}
-            isCurrentPlan={currentSub?.plan.toUpperCase() === plan.name.toUpperCase()}
-            onUpgrade={handleUpgradeClick}
-            isLoading={upgradeMutation.isPending}
-          />
+            className={`rounded-xl p-6 border flex flex-col justify-between transition-all duration-300 bg-slate-900 border-slate-800 ${
+              plan.isCurrent && !currentSub?.demo_mode ? 'border-green-500 shadow-md shadow-green-950/10' : ''
+            }`}
+          >
+            <div className="space-y-4">
+              <h3 className="text-xl font-bold font-display text-slate-100 uppercase tracking-wide">
+                {plan.name}
+              </h3>
+              <div className="py-4 border-y border-slate-850">
+                <span className="text-3xl font-extrabold text-white">{plan.price}</span>
+                {plan.price !== 'Custom' && <span className="text-slate-500 text-xs ml-1">/ month</span>}
+              </div>
+              <ul className="space-y-3 pt-2">
+                {plan.features.map((feature, idx) => (
+                  <li key={idx} className="flex items-start gap-2.5 text-sm text-slate-350">
+                    <span className="text-green-500 font-bold mt-0.5">✓</span>
+                    <span>{feature}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="mt-8 pt-4">
+              <button
+                disabled={plan.disabled}
+                className="w-full py-3 bg-slate-950 border border-slate-850 text-slate-400 font-semibold rounded-lg text-sm cursor-not-allowed"
+              >
+                {plan.buttonText}
+              </button>
+            </div>
+          </div>
         ))}
       </div>
 
@@ -108,15 +128,6 @@ export const PricingPage: React.FC = () => {
       <div className="max-w-4xl mx-auto pt-4">
         <FeatureComparisonTable />
       </div>
-
-      {/* Upgrade Confirmation Modal */}
-      <UpgradeModal
-        isOpen={selectedPlan !== null}
-        planName={selectedPlan || ''}
-        onClose={() => setSelectedPlan(null)}
-        onConfirm={handleConfirmUpgrade}
-        isLoading={upgradeMutation.isPending}
-      />
     </div>
   );
 };

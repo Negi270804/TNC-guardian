@@ -158,6 +158,75 @@ async def run_tests():
             if os.path.exists(temp_doc.storage_path):
                 os.remove(temp_doc.storage_path) # Clean up if it failed
 
+        # 7. Test GET /api/dashboard/stats
+        print("\n--- Testing GET /api/dashboard/stats ---")
+        response_stats = await client.get("/api/dashboard/stats")
+        print("Status Code (expected 200):", response_stats.status_code)
+        if response_stats.status_code == 200:
+            stats_data = response_stats.json()
+            print("Total Analyses:", stats_data["total_analyses"])
+            print("PDF Count:", stats_data["pdf_count"])
+            print("Text Count:", stats_data["text_count"])
+            print("URL Count:", stats_data["url_count"])
+            print("Average Risk Score:", stats_data["average_risk_score"])
+            print("Recent Activity length:", len(stats_data["recent_activity"]))
+            print("Usage statistics plan:", stats_data["usage_statistics"]["plan"])
+
+        # 8. Test POST /api/history/bulk-delete
+        print("\n--- Testing POST /api/history/bulk-delete ---")
+        # Create 2 temp docs to delete bulk
+        async with AsyncSessionLocal() as session:
+            temp1 = Document(
+                id=uuid.uuid4(),
+                user_id=test_user.id,
+                original_filename="temp_bulk_1.txt",
+                stored_filename="temp_bulk_1.txt",
+                file_type="txt",
+                file_size=10,
+                upload_status="UPLOADED",
+                storage_path=os.path.join(os.path.expanduser("~"), "temp_bulk_1.txt"),
+                processing_status="COMPLETED",
+                text_extracted=True,
+                extracted_text="some text content"
+            )
+            temp2 = Document(
+                id=uuid.uuid4(),
+                user_id=test_user.id,
+                original_filename="temp_bulk_2.txt",
+                stored_filename="temp_bulk_2.txt",
+                file_type="txt",
+                file_size=10,
+                upload_status="UPLOADED",
+                storage_path=os.path.join(os.path.expanduser("~"), "temp_bulk_2.txt"),
+                processing_status="COMPLETED",
+                text_extracted=True,
+                extracted_text="some text content"
+            )
+            session.add(temp1)
+            session.add(temp2)
+            await session.commit()
+            
+            id1, id2 = temp1.id, temp2.id
+            # Create dummy files
+            with open(temp1.storage_path, "w") as f: f.write("1")
+            with open(temp2.storage_path, "w") as f: f.write("2")
+            print(f"Created two temp documents: {id1}, {id2}")
+            
+        # Bulk delete request
+        response_bulk_del = await client.post("/api/history/bulk-delete", json={"document_ids": [str(id1), str(id2)]})
+        print("Bulk Delete Status Code (expected 200):", response_bulk_del.status_code)
+        print("Response:", response_bulk_del.json())
+        
+        # Verify deletion
+        async with AsyncSessionLocal() as session:
+            c1 = await session.get(Document, id1)
+            c2 = await session.get(Document, id2)
+            print("Doc 1 present in DB (expected False):", c1 is not None)
+            print("Doc 2 present in DB (expected False):", c2 is not None)
+            print("Files deleted on disk (expected True):", not os.path.exists(temp1.storage_path) and not os.path.exists(temp2.storage_path))
+            if os.path.exists(temp1.storage_path): os.remove(temp1.storage_path)
+            if os.path.exists(temp2.storage_path): os.remove(temp2.storage_path)
+
     # Clean up overrides
     app.dependency_overrides.clear()
 

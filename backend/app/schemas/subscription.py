@@ -7,6 +7,7 @@ class SubscriptionCurrentResponse(BaseModel):
     status: str
     expiry_date: Optional[datetime] = None
     remaining_analyses: Optional[int] = None
+    demo_mode: Optional[bool] = False
 
 class PlanFeatureInfo(BaseModel):
     name: str
@@ -25,6 +26,7 @@ class SubscriptionUsageResponse(BaseModel):
     storage_used: int
     remaining_analyses: Optional[int] = None
     monthly_limits: MonthlyLimits
+    demo_mode: Optional[bool] = False
 
 class UpgradePlanRequest(BaseModel):
     plan: str

@@ -26,6 +26,8 @@ class HistoryItemResponse(BaseModel):
     storage_path: str
     created_at: datetime
     updated_at: datetime
+    source_type: str
+    source_url: Optional[str] = None
     processing_status: str
     text_extracted: bool
     page_count: Optional[int] = None
@@ -57,6 +59,8 @@ class HistoryDetailResponse(BaseModel):
     storage_path: str
     created_at: datetime
     updated_at: datetime
+    source_type: str
+    source_url: Optional[str] = None
     processing_status: str
     text_extracted: bool
     extracted_text: Optional[str] = None

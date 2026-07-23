@@ -12,10 +12,9 @@ const CircularProgress: React.FC<{ score: number }> = ({ score }) => {
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (score / 100) * circumference;
 
-  let strokeColor = '#10B981'; // Green (0-25)
-  if (score > 25 && score <= 50) strokeColor = '#F59E0B'; // Yellow (26-50)
-  else if (score > 50 && score <= 75) strokeColor = '#F97316'; // Orange (51-75)
-  else if (score > 75) strokeColor = '#EF4444'; // Red (76-100)
+  let strokeColor = '#10B981'; // Green (0-30)
+  if (score > 30 && score <= 60) strokeColor = '#F59E0B'; // Yellow (31-60)
+  else if (score > 60) strokeColor = '#EF4444'; // Red (61-100)
 
   return (
     <div className="relative flex items-center justify-center w-36 h-36">
@@ -89,6 +88,9 @@ export const Results: React.FC = () => {
     onSuccess: (newAnalysis) => {
       queryClient.invalidateQueries({ queryKey: ['document', id] });
       queryClient.invalidateQueries({ queryKey: ['analysis', id] });
+      queryClient.invalidateQueries({ queryKey: ['subscription-usage'] });
+      queryClient.invalidateQueries({ queryKey: ['current-subscription'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
       setSuccessToast(`AI Risk Audit refreshed! Risk Score: ${newAnalysis.overall_risk_score}/100`);
       setTimeout(() => setSuccessToast(null), 5000);
     },
@@ -134,6 +136,7 @@ export const Results: React.FC = () => {
     report += `====================================================\n\n`;
     report += `Document: ${doc.original_filename}\n`;
     report += `Overall Risk Score: ${analysis.overall_risk_score}/100\n`;
+    report += `AI Confidence Score: ${analysis.confidence_score ? (analysis.confidence_score <= 1 ? (analysis.confidence_score * 100).toFixed(0) + '%' : analysis.confidence_score + '%') : '95%'}\n`;
     report += `AI Model: ${analysis.model_name} (${analysis.provider})\n`;
     report += `Analysis Time: ${analysis.processing_time}s\n`;
     report += `Date Generated: ${formatDate(analysis.created_at)}\n\n`;
@@ -141,10 +144,29 @@ export const Results: React.FC = () => {
     report += `EXECUTIVE SUMMARY\n`;
     report += `----------------------------------------------------\n`;
     report += `${analysis.summary}\n\n`;
+
+    if (analysis.ai_explanation) {
+      report += `----------------------------------------------------\n`;
+      report += `AI AUDITOR ASSESSMENT\n`;
+      report += `----------------------------------------------------\n`;
+      report += `${analysis.ai_explanation}\n\n`;
+    }
+
     report += `----------------------------------------------------\n`;
     report += `KEY RECOMMENDATIONS\n`;
     report += `----------------------------------------------------\n`;
     report += `${analysis.recommendations}\n\n`;
+
+    if (analysis.missing_clauses && analysis.missing_clauses.length > 0) {
+      report += `----------------------------------------------------\n`;
+      report += `MISSING PROTECTIVE CLAUSES (${analysis.missing_clauses.length})\n`;
+      report += `----------------------------------------------------\n`;
+      analysis.missing_clauses.forEach((item, index) => {
+        report += `${index + 1}. ${item.title}\n`;
+        report += `   Why it is missing/important: ${item.explanation}\n\n`;
+      });
+    }
+
     report += `----------------------------------------------------\n`;
     report += `FLAGGED CLAUSES (${analysis.items.length})\n`;
     report += `----------------------------------------------------\n`;
@@ -189,7 +211,7 @@ export const Results: React.FC = () => {
   };
 
   const getRiskDetails = (score: number) => {
-    if (score <= 25) {
+    if (score <= 30) {
       return {
         label: 'Low Risk',
         colorClass: 'text-green-400',
@@ -198,32 +220,23 @@ export const Results: React.FC = () => {
         bgProgress: 'bg-green-500',
         description: 'This document contains standard operational terms with very low risk of user exploitation or privacy leaks.',
       };
-    } else if (score <= 50) {
+    } else if (score <= 60) {
       return {
-        label: 'Moderate Risk',
+        label: 'Medium Risk',
         colorClass: 'text-yellow-400',
         bgClass: 'bg-yellow-950/60',
         borderClass: 'border-yellow-800/40',
         bgProgress: 'bg-yellow-500',
         description: 'Contains standard tracking cookies or auto-renewal charges. Review before committing to automated billings.',
       };
-    } else if (score <= 75) {
-      return {
-        label: 'High Risk',
-        colorClass: 'text-orange-400',
-        bgClass: 'bg-orange-950/60',
-        borderClass: 'border-orange-800/40',
-        bgProgress: 'bg-orange-500',
-        description: 'Includes data sharing parameters, broad liability releases, or strict 30-day manual cancellation notifications.',
-      };
     } else {
       return {
-        label: 'Critical Risk',
+        label: 'High Risk',
         colorClass: 'text-red-400',
         bgClass: 'bg-red-950/60',
         borderClass: 'border-red-800/40',
         bgProgress: 'bg-red-500',
-        description: 'Contains mandatory class-action waivers, full ownership transfers of data, or immediate cancellation fees.',
+        description: 'Includes mandatory class-action waivers, broad liability releases, strict manual cancellation notifications, or data sharing marketing affiliates.',
       };
     }
   };
@@ -234,6 +247,17 @@ export const Results: React.FC = () => {
     if (norm === 'HIGH') return 'bg-orange-950/60 text-orange-400 border-orange-800/30';
     if (norm === 'MEDIUM') return 'bg-yellow-950/60 text-yellow-400 border-yellow-800/30';
     return 'bg-green-950/60 text-green-400 border-green-800/30';
+  };
+
+  const getClauseHighlightStyles = (level: string) => {
+    const norm = level.toUpperCase();
+    if (norm === 'CRITICAL' || norm === 'HIGH') {
+      return 'p-3 rounded border border-red-900/30 bg-red-950/10 font-mono text-red-200 text-[11px] leading-relaxed italic border-l-4 border-l-red-500';
+    }
+    if (norm === 'MEDIUM') {
+      return 'p-3 rounded border border-yellow-900/30 bg-yellow-950/10 font-mono text-yellow-200 text-[11px] leading-relaxed italic border-l-4 border-l-yellow-500';
+    }
+    return 'p-3 rounded border border-green-900/30 bg-green-950/10 font-mono text-green-200 text-[11px] leading-relaxed italic border-l-4 border-l-green-500';
   };
 
   const isPending = isDocLoading || isAnalysisLoading;
@@ -464,6 +488,37 @@ export const Results: React.FC = () => {
             <h4 className="text-xs font-bold text-slate-200 uppercase tracking-wider font-display">Audit Metadata</h4>
             <div className="space-y-2 text-xs text-slate-400">
               <div className="flex justify-between border-b border-slate-850 pb-1.5">
+                <span>Source Type:</span>
+                <span className="text-slate-200 font-semibold flex items-center gap-1">
+                  {doc.source_type === 'URL' && '🌐 URL'}
+                  {doc.source_type === 'TEXT' && '📝 TEXT'}
+                  {(doc.source_type === 'PDF' || !doc.source_type) && '📄 PDF'}
+                </span>
+              </div>
+              {doc.source_type === 'URL' && doc.source_url && (
+                <div className="border-b border-slate-850 pb-1.5 space-y-1">
+                  <span className="block text-slate-500">Source URL:</span>
+                  <a
+                    href={doc.source_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="block text-[11px] text-green-400 hover:text-green-300 hover:underline break-all font-mono"
+                  >
+                    {doc.source_url}
+                  </a>
+                </div>
+              )}
+              <div className="flex justify-between border-b border-slate-850 pb-1.5">
+                <span>AI Confidence Score:</span>
+                <span className="text-emerald-450 font-bold">
+                  {analysis.confidence_score 
+                    ? (analysis.confidence_score <= 1 
+                      ? `${(analysis.confidence_score * 100).toFixed(0)}%` 
+                      : `${analysis.confidence_score}%`)
+                    : '95%'}
+                </span>
+              </div>
+              <div className="flex justify-between border-b border-slate-850 pb-1.5">
                 <span>AI Engine Model:</span>
                 <span className="text-slate-200 font-mono">{analysis.model_name}</span>
               </div>
@@ -487,7 +542,7 @@ export const Results: React.FC = () => {
         <div className="lg:col-span-2 space-y-6 print:col-span-3">
           
           {/* Action triggers grid */}
-          <section className="p-4 rounded-xl bg-slate-900 border border-slate-800 flex flex-wrap gap-2 print:hidden">
+          <section className="p-4 rounded-xl bg-slate-900 border border-slate-800 flex flex-wrap items-center gap-2 print:hidden">
             <button
               onClick={handleCopySummary}
               className="px-3 py-1.5 bg-slate-950 hover:bg-slate-850 border border-slate-800 text-slate-300 hover:text-white rounded text-xs font-medium transition flex items-center gap-1.5"
@@ -515,7 +570,7 @@ export const Results: React.FC = () => {
             <button
               onClick={() => analyzeMutation.mutate(doc.id)}
               disabled={analyzeMutation.isPending}
-              className="ml-auto px-3 py-1.5 bg-emerald-950/30 hover:bg-emerald-950/60 border border-emerald-900/30 text-emerald-400 hover:text-emerald-300 rounded text-xs font-semibold transition flex items-center gap-1.5 disabled:opacity-50"
+              className="px-3 py-1.5 bg-emerald-950/30 hover:bg-emerald-950/60 border border-emerald-900/30 text-emerald-400 hover:text-emerald-300 rounded text-xs font-semibold transition flex items-center gap-1.5 disabled:opacity-50"
             >
               🔄 Re-analyze
             </button>
@@ -531,6 +586,18 @@ export const Results: React.FC = () => {
             </p>
           </section>
 
+          {/* Overall AI Explanation Card */}
+          {analysis.ai_explanation && (
+            <section className="p-6 rounded-xl bg-slate-900 border border-slate-800 space-y-3">
+              <h3 className="text-base font-bold text-slate-200 font-display flex items-center gap-2">
+                <span>🤖</span> AI Auditor Assessment
+              </h3>
+              <p className="text-xs text-slate-350 leading-relaxed font-sans whitespace-pre-line">
+                {analysis.ai_explanation}
+              </p>
+            </section>
+          )}
+
           {/* Key Recommendations Panel */}
           <section className="p-6 rounded-xl border border-emerald-900/20 bg-emerald-950/5 space-y-3">
             <h3 className="text-base font-bold text-emerald-400 font-display flex items-center gap-2">
@@ -539,6 +606,31 @@ export const Results: React.FC = () => {
             <p className="text-xs text-slate-300 leading-relaxed font-sans whitespace-pre-line">
               {analysis.recommendations}
             </p>
+          </section>
+
+          {/* Missing Critical Clauses Card */}
+          <section className="p-6 rounded-xl bg-slate-900 border border-slate-800 space-y-4">
+            <h3 className="text-base font-bold text-slate-200 font-display flex items-center gap-2">
+              <span>⚠️</span> Missing Protective Clauses ({analysis.missing_clauses?.length || 0})
+            </h3>
+            {!analysis.missing_clauses || analysis.missing_clauses.length === 0 ? (
+              <div className="p-4 rounded-lg bg-green-950/20 border border-green-900/20 text-xs text-green-400">
+                ✓ No standard protective clauses were found missing. The terms are structurally complete.
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {analysis.missing_clauses.map((item: any, idx: number) => (
+                  <div key={idx} className="p-4 rounded-lg bg-slate-950 border border-slate-850 space-y-2">
+                    <h4 className="font-semibold text-slate-200 text-sm font-display">
+                      {item.title}
+                    </h4>
+                    <p className="text-xs text-slate-400 leading-relaxed">
+                      {item.explanation}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
           </section>
 
           {/* Detected Clauses List */}
@@ -613,7 +705,7 @@ export const Results: React.FC = () => {
                           {/* Original Text Block Quote */}
                           <div className="space-y-1">
                             <h5 className="font-bold text-slate-400 uppercase text-[9px] tracking-wider">Original Text Quote</h5>
-                            <div className="p-3 rounded border border-slate-850 bg-slate-950 font-mono text-slate-400 text-[11px] leading-relaxed italic">
+                            <div className={getClauseHighlightStyles(item.risk_level)}>
                               "{item.original_text}"
                             </div>
                           </div>

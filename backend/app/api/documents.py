@@ -233,6 +233,11 @@ async def extract_document_text(
     await db.commit()
     await db.refresh(doc)
 
+    import logging
+    logger = logging.getLogger("app.api.documents")
+    logger.info(f"Starting text extraction for document {doc.id} ({doc.original_filename})")
+    start_time = datetime.now(timezone.utc)
+
     try:
         # Run text extraction service
         extraction_result = await OCRService.extract_text(doc.storage_path, doc.file_type)
@@ -244,15 +249,43 @@ async def extract_document_text(
         doc.text_extracted = True
         doc.processing_status = "COMPLETED"
         doc.processing_completed_at = datetime.now(timezone.utc)
+        logger.info(f"Successfully extracted text for document {doc.id} in {(datetime.now(timezone.utc) - start_time).total_seconds():.2f}s. Pages: {doc.page_count}, Words: {doc.word_count}")
+    except FileNotFoundError as fnf:
+        doc.processing_status = "FAILED"
+        doc.processing_completed_at = datetime.now(timezone.utc)
+        db.add(doc)
+        await db.commit()
+        logger.error(f"File not found for document {doc.id}: {str(fnf)}")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Document file not found on server disk. Please re-upload. Details: {str(fnf)}"
+        )
+    except (ValueError, RuntimeError) as re:
+        doc.processing_status = "FAILED"
+        doc.processing_completed_at = datetime.now(timezone.utc)
+        db.add(doc)
+        await db.commit()
+        logger.error(f"Extraction processing failure for document {doc.id}: {str(re)}")
+        # Check if it sounds like a PDF layout or corrupt file error
+        err_msg = str(re)
+        if "pdf" in err_msg.lower() or "layout" in err_msg.lower():
+            detail_msg = f"Failed to extract text: The PDF file appears to be corrupted, password-protected, or invalid. Details: {err_msg}"
+        else:
+            detail_msg = f"Failed to extract text and execute OCR processing: {err_msg}"
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=detail_msg
+        )
     except Exception as e:
         # Gracefully handle failures
         doc.processing_status = "FAILED"
         doc.processing_completed_at = datetime.now(timezone.utc)
         db.add(doc)
         await db.commit()
+        logger.error(f"Unexpected exception during text extraction for document {doc.id}: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Text extraction and OCR engine processing failed: {str(e)}"
+            detail=f"Text extraction failed due to an unexpected system error: {str(e)}"
         )
 
     db.add(doc)

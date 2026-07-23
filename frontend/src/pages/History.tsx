@@ -12,10 +12,9 @@ const CircularRiskProgress: React.FC<{ score: number }> = ({ score }) => {
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (score / 100) * circumference;
 
-  let strokeColor = '#10B981'; // Green
-  if (score > 25 && score <= 50) strokeColor = '#F59E0B'; // Yellow
-  else if (score > 50 && score <= 75) strokeColor = '#F97316'; // Orange
-  else if (score > 75) strokeColor = '#EF4444'; // Red
+  let strokeColor = '#10B981'; // Green (0-30)
+  if (score > 30 && score <= 60) strokeColor = '#F59E0B'; // Yellow (31-60)
+  else if (score > 60) strokeColor = '#EF4444'; // Red (61-100)
 
   return (
     <div className="relative flex items-center justify-center w-24 h-24">
@@ -76,6 +75,27 @@ export const History: React.FC = () => {
   const [successToast, setSuccessToast] = useState<string | null>(null);
   const [errorToast, setErrorToast] = useState<string | null>(null);
   const [isDownloadingId, setIsDownloadingId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkDeleteModalOpen, setBulkDeleteModalOpen] = useState(false);
+
+  // Clear selections on query changes
+  React.useEffect(() => {
+    setSelectedIds([]);
+  }, [page, limit, search, riskLevel, fileType, statusFilter, uploadDate, analysisDate, sortBy, order]);
+
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setSelectedIds(historyItems.map((item: any) => item.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleSelectRow = (id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
 
   // Toggle sorting helper
   const handleSort = (column: string) => {
@@ -133,6 +153,9 @@ export const History: React.FC = () => {
     },
     onSuccess: (newAnalysis) => {
       queryClient.invalidateQueries({ queryKey: ['history'] });
+      queryClient.invalidateQueries({ queryKey: ['subscription-usage'] });
+      queryClient.invalidateQueries({ queryKey: ['current-subscription'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
       setSuccessToast(`AI Risk Audit refreshed! New score: ${newAnalysis.overall_risk_score}/100`);
       setTimeout(() => setSuccessToast(null), 5000);
       
@@ -153,17 +176,74 @@ export const History: React.FC = () => {
     mutationFn: async (docId: string) => {
       await apiClient.delete(`/history/${docId}`);
     },
+    onMutate: async (docId) => {
+      await queryClient.cancelQueries({ queryKey: ['history', queryParams] });
+      const previousHistory = queryClient.getQueryData(['history', queryParams]);
+      
+      queryClient.setQueryData(['history', queryParams], (old: any) => {
+        if (!old) return old;
+        return {
+          ...old,
+          items: old.items.filter((item: any) => item.id !== docId),
+          total: Math.max(0, old.total - 1),
+        };
+      });
+
+      return { previousHistory };
+    },
+    onError: (err: any, _, context: any) => {
+      if (context?.previousHistory) {
+        queryClient.setQueryData(['history', queryParams], context.previousHistory);
+      }
+      const msg = err.response?.data?.detail || 'Failed to delete history record.';
+      setErrorToast(msg);
+      setTimeout(() => setErrorToast(null), 4000);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['history'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
       setSuccessToast('History record and physical files deleted successfully.');
       setDeleteModalOpen(false);
       setDocToDelete(null);
       setTimeout(() => setSuccessToast(null), 4000);
     },
-    onError: (err: any) => {
-      const msg = err.response?.data?.detail || 'Failed to delete history record.';
+  });
+
+  // Bulk Delete Mutation
+  const bulkDeleteMutation = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const response = await apiClient.post('/history/bulk-delete', { document_ids: ids });
+      return response.data;
+    },
+    onMutate: async (ids) => {
+      await queryClient.cancelQueries({ queryKey: ['history', queryParams] });
+      const previousHistory = queryClient.getQueryData(['history', queryParams]);
+      
+      queryClient.setQueryData(['history', queryParams], (old: any) => {
+        if (!old) return old;
+        return {
+          ...old,
+          items: old.items.filter((item: any) => !ids.includes(item.id)),
+          total: Math.max(0, old.total - ids.length),
+        };
+      });
+
+      return { previousHistory };
+    },
+    onError: (err: any, _, context: any) => {
+      if (context?.previousHistory) {
+        queryClient.setQueryData(['history', queryParams], context.previousHistory);
+      }
+      const msg = err.response?.data?.detail || 'Bulk deletion failed.';
       setErrorToast(msg);
-      setTimeout(() => setErrorToast(null), 4000);
+      setTimeout(() => setErrorToast(null), 5000);
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['history'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+      setSuccessToast(data.message || 'Selected records deleted successfully!');
+      setSelectedIds([]);
+      setTimeout(() => setSuccessToast(null), 4000);
     },
   });
 
@@ -187,12 +267,40 @@ export const History: React.FC = () => {
 `).join('\n')
       : 'No risk clauses detected.';
 
+    // Deserialize missing clauses if it is a JSON string
+    let parsedMissing: any[] = [];
+    if (analysis.missing_clauses) {
+      if (typeof analysis.missing_clauses === 'string') {
+        try {
+          parsedMissing = JSON.parse(analysis.missing_clauses);
+        } catch (e) {
+          parsedMissing = [];
+        }
+      } else if (Array.isArray(analysis.missing_clauses)) {
+        parsedMissing = analysis.missing_clauses;
+      }
+    }
+
+    const missingClausesText = parsedMissing.length > 0
+      ? parsedMissing.map((m: any, idx: number) => `
+### Missing Clause ${idx + 1}: ${m.title}
+- **Explanation**: ${m.explanation}
+`).join('\n')
+      : 'No standard protective clauses were identified as missing.';
+
+    const confidenceScoreText = analysis.confidence_score 
+      ? (analysis.confidence_score <= 1 
+        ? `${(analysis.confidence_score * 100).toFixed(0)}%` 
+        : `${analysis.confidence_score}%`)
+      : '95%';
+
     const reportContent = `# Legal Risk Audit Report: ${doc.original_filename}
-- **File Type**: ${doc.file_type.toUpperCase()}
+- **Source Type**: ${doc.source_type || 'PDF'}
 - **File Size**: ${formatBytes(doc.file_size)}
 - **Upload Date**: ${formatDate(doc.created_at)}
 - **Analysis Date**: ${formatDate(analysis.created_at)}
 - **AI Audit Provider**: ${analysis.provider} (${analysis.model_name})
+- **Confidence Score**: ${confidenceScoreText}
 
 ---
 
@@ -203,8 +311,15 @@ export const History: React.FC = () => {
 ### 📝 Summary
 ${analysis.summary}
 
+${analysis.ai_explanation ? `### 🤖 AI Auditor Assessment\n${analysis.ai_explanation}\n` : ''}
+
 ### 💡 Precautionary Recommendations
 ${analysis.recommendations}
+
+---
+
+## ⚠️ Missing Protective Clauses
+${missingClausesText}
 
 ---
 
@@ -223,6 +338,7 @@ ${clausesText}
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
 
     setSuccessToast('Audit report downloaded successfully.');
     setTimeout(() => setSuccessToast(null), 4000);
@@ -408,11 +524,38 @@ ${clausesText}
         </div>
       </div>
 
+      {selectedIds.length > 0 && (
+        <div className="flex items-center justify-between p-4 bg-red-950/10 border border-red-900/20 rounded-xl animate-fade-in">
+          <span className="text-xs text-slate-350">
+            Selected <span className="font-bold text-red-400">{selectedIds.length}</span> audit logs for batch deletion.
+          </span>
+          <button
+            onClick={() => setBulkDeleteModalOpen(true)}
+            className="px-3.5 py-1.5 bg-red-600 hover:bg-red-500 text-xs font-semibold text-white rounded-lg border border-red-700 transition shadow-lg"
+          >
+            🗑️ Delete Selected
+          </button>
+        </div>
+      )}
+
       {/* Main logs list container */}
       <div className="overflow-x-auto rounded-xl bg-slate-900 border border-slate-850 shadow-md">
         <table className="w-full text-left border-collapse min-w-[900px]">
           <thead>
             <tr className="border-b border-slate-850 bg-slate-950 text-xs font-bold text-slate-400 uppercase tracking-wider select-none">
+              <th className="p-4 w-12 text-center">
+                <input
+                  type="checkbox"
+                  checked={historyItems.length > 0 && selectedIds.length === historyItems.length}
+                  ref={(input) => {
+                    if (input) {
+                      input.indeterminate = selectedIds.length > 0 && selectedIds.length < historyItems.length;
+                    }
+                  }}
+                  onChange={handleSelectAll}
+                  className="rounded bg-slate-950 border-slate-800 text-green-600 focus:ring-green-500/20 w-4 h-4 cursor-pointer"
+                />
+              </th>
               <th onClick={() => handleSort('original_filename')} className="p-4 cursor-pointer hover:bg-slate-900 transition">
                 <div className="flex items-center gap-1.5">
                   <span>File Name</span>
@@ -421,7 +564,7 @@ ${clausesText}
               </th>
               <th onClick={() => handleSort('file_type')} className="p-4 cursor-pointer hover:bg-slate-900 transition w-28">
                 <div className="flex items-center gap-1.5">
-                  <span>Type</span>
+                  <span>Source</span>
                   {sortBy === 'file_type' && (order === 'asc' ? '▲' : '▼')}
                 </div>
               </th>
@@ -453,6 +596,7 @@ ${clausesText}
               // Loading Skeleton
               Array.from({ length: limit }).map((_, idx) => (
                 <tr key={idx} className="bg-slate-900/50">
+                  <td className="p-4 text-center"><div className="w-4 h-4 bg-slate-800/80 rounded mx-auto animate-pulse" /></td>
                   <td className="p-4"><div className="h-4 bg-slate-800/80 rounded w-48 animate-pulse" /></td>
                   <td className="p-4"><div className="h-4 bg-slate-800/80 rounded w-12 animate-pulse" /></td>
                   <td className="p-4"><div className="h-4 bg-slate-800/80 rounded w-24 animate-pulse" /></td>
@@ -466,7 +610,7 @@ ${clausesText}
             ) : historyItems.length === 0 ? (
               // Empty State
               <tr>
-                <td colSpan={8} className="p-16 text-center space-y-4">
+                <td colSpan={9} className="p-16 text-center space-y-4">
                   <div className="text-5xl block animate-bounce">🔍</div>
                   <h4 className="text-slate-200 font-semibold text-base font-display">No history logs found</h4>
                   <p className="text-xs text-slate-500 max-w-sm mx-auto">
@@ -491,21 +635,40 @@ ${clausesText}
             ) : (
               // Document History Rows
               historyItems.map((doc: any) => (
-                <tr key={doc.id} className="hover:bg-slate-850/30 transition group duration-100">
+                <tr key={doc.id} className={`${selectedIds.includes(doc.id) ? 'bg-green-950/10 hover:bg-green-950/20' : 'hover:bg-slate-850/30'} transition group duration-100`}>
+                  <td className="p-4 text-center">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.includes(doc.id)}
+                      onChange={() => handleSelectRow(doc.id)}
+                      className="rounded bg-slate-950 border-slate-800 text-green-600 focus:ring-green-500/20 w-4 h-4 cursor-pointer"
+                    />
+                  </td>
                   {/* File Name */}
                   <td className="p-4 font-medium text-slate-100 font-display">
                     <span 
                       onClick={() => openDetails(doc.id)} 
                       className="hover:text-green-400 cursor-pointer transition underline decoration-dotted decoration-slate-600 hover:decoration-green-500"
                     >
-                      {doc.original_filename}
+                      {doc.source_type === 'URL' && doc.source_url ? (
+                        (() => {
+                          try {
+                            const parsed = new URL(doc.source_url);
+                            return parsed.hostname.replace('www.', '');
+                          } catch (e) {
+                            return doc.original_filename;
+                          }
+                        })()
+                      ) : doc.original_filename}
                     </span>
                   </td>
                   
-                  {/* File Type */}
+                  {/* Source */}
                   <td className="p-4">
-                    <span className="px-2 py-1 rounded bg-slate-950 border border-slate-850 text-xs text-slate-400 font-semibold uppercase font-display">
-                      {doc.file_type}
+                    <span className="px-2 py-1 rounded bg-slate-950 border border-slate-850 text-xs text-slate-400 font-semibold uppercase font-display flex items-center gap-1.5 w-fit">
+                      {doc.source_type === 'URL' && '🌐 URL'}
+                      {doc.source_type === 'TEXT' && '📝 TEXT'}
+                      {(doc.source_type === 'PDF' || !doc.source_type) && '📄 PDF'}
                     </span>
                   </td>
 
@@ -742,8 +905,12 @@ ${clausesText}
                           <span className="text-slate-200 font-medium break-all">{detailDoc.original_filename}</span>
                         </div>
                         <div>
-                          <span className="block text-[10px] text-slate-500 font-semibold uppercase">File Type</span>
-                          <span className="text-slate-200 font-semibold uppercase">{detailDoc.file_type}</span>
+                          <span className="block text-[10px] text-slate-500 font-semibold uppercase">Source Type</span>
+                          <span className="text-slate-200 font-semibold uppercase flex items-center gap-1.5">
+                            {detailDoc.source_type === 'URL' && '🌐 URL'}
+                            {detailDoc.source_type === 'TEXT' && '📝 TEXT'}
+                            {(detailDoc.source_type === 'PDF' || !detailDoc.source_type) && '📄 PDF'}
+                          </span>
                         </div>
                         <div>
                           <span className="block text-[10px] text-slate-500 font-semibold uppercase">File Size</span>
@@ -753,6 +920,19 @@ ${clausesText}
                           <span className="block text-[10px] text-slate-500 font-semibold uppercase">Upload Date</span>
                           <span className="text-slate-200 font-medium">{formatDate(detailDoc.created_at)}</span>
                         </div>
+                        {detailDoc.source_type === 'URL' && detailDoc.source_url && (
+                          <div className="col-span-2">
+                            <span className="block text-[10px] text-slate-500 font-semibold uppercase">Source URL</span>
+                            <a
+                              href={detailDoc.source_url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-green-400 hover:text-green-300 hover:underline break-all font-mono"
+                            >
+                              {detailDoc.source_url}
+                            </a>
+                          </div>
+                        )}
                         {detailDoc.page_count && (
                           <div>
                             <span className="block text-[10px] text-slate-500 font-semibold uppercase">Page Count</span>
@@ -765,33 +945,84 @@ ${clausesText}
                             <span className="text-slate-200 font-medium">{detailDoc.word_count} words</span>
                           </div>
                         )}
+                        {detailDoc.analysis && (
+                          <div>
+                            <span className="block text-[10px] text-slate-500 font-semibold uppercase">Confidence Score</span>
+                            <span className="text-slate-200 font-medium">
+                              {detailDoc.analysis.confidence_score 
+                                ? (detailDoc.analysis.confidence_score <= 1 
+                                  ? `${(detailDoc.analysis.confidence_score * 100).toFixed(0)}%` 
+                                  : `${detailDoc.analysis.confidence_score}%`)
+                                : '95%'}
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
 
                   {/* Section: Analysis Summary & recommendations */}
                   {detailDoc.analysis ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {/* Summary */}
-                      <div className="p-5 bg-slate-900 border border-slate-800 rounded-xl space-y-3">
-                        <div className="flex items-center gap-2">
-                          <span className="text-lg">📝</span>
-                          <h4 className="font-bold text-slate-200 font-display text-sm">Executive Summary</h4>
+                    <div className="space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Summary */}
+                        <div className="p-5 bg-slate-900 border border-slate-800 rounded-xl space-y-3">
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg">📝</span>
+                            <h4 className="font-bold text-slate-200 font-display text-sm">Executive Summary</h4>
+                          </div>
+                          <p className="text-xs text-slate-350 leading-relaxed whitespace-pre-wrap">
+                            {detailDoc.analysis.summary}
+                          </p>
                         </div>
-                        <p className="text-xs text-slate-350 leading-relaxed whitespace-pre-wrap">
-                          {detailDoc.analysis.summary}
-                        </p>
+
+                        {/* Recommendations */}
+                        <div className="p-5 bg-slate-900 border border-slate-800 rounded-xl space-y-3">
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg">💡</span>
+                            <h4 className="font-bold text-slate-200 font-display text-sm">Precautionary Recommendations</h4>
+                          </div>
+                          <p className="text-xs text-slate-350 leading-relaxed whitespace-pre-wrap">
+                            {detailDoc.analysis.recommendations}
+                          </p>
+                        </div>
                       </div>
 
-                      {/* Recommendations */}
+                      {/* AI Auditor Assessment */}
+                      {detailDoc.analysis.ai_explanation && (
+                        <div className="p-5 bg-slate-900 border border-slate-800 rounded-xl space-y-3">
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg">🤖</span>
+                            <h4 className="font-bold text-slate-200 font-display text-sm">AI Auditor Assessment</h4>
+                          </div>
+                          <p className="text-xs text-slate-350 leading-relaxed whitespace-pre-wrap">
+                            {detailDoc.analysis.ai_explanation}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Missing Clauses Card */}
                       <div className="p-5 bg-slate-900 border border-slate-800 rounded-xl space-y-3">
                         <div className="flex items-center gap-2">
-                          <span className="text-lg">💡</span>
-                          <h4 className="font-bold text-slate-200 font-display text-sm">Precautionary Recommendations</h4>
+                          <span className="text-lg">⚠️</span>
+                          <h4 className="font-bold text-slate-200 font-display text-sm">
+                            Missing Protective Clauses ({detailDoc.analysis.missing_clauses?.length || 0})
+                          </h4>
                         </div>
-                        <p className="text-xs text-slate-350 leading-relaxed whitespace-pre-wrap">
-                          {detailDoc.analysis.recommendations}
-                        </p>
+                        {!detailDoc.analysis.missing_clauses || detailDoc.analysis.missing_clauses.length === 0 ? (
+                          <p className="text-xs text-slate-400 italic">
+                            No standard protective clauses were found missing from this document.
+                          </p>
+                        ) : (
+                          <div className="space-y-3 pt-2">
+                            {detailDoc.analysis.missing_clauses.map((item: any, idx: number) => (
+                              <div key={idx} className="p-3 bg-slate-950 border border-slate-850 rounded-lg space-y-1">
+                                <h5 className="font-semibold text-slate-200 text-xs">{item.title}</h5>
+                                <p className="text-[11px] text-slate-400 leading-relaxed">{item.explanation}</p>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
                   ) : (
@@ -931,6 +1162,50 @@ ${clausesText}
                 className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg text-xs font-semibold transition flex items-center gap-1.5"
               >
                 {deleteMutation.isPending ? 'Deleting...' : 'Confirm Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 3. Bulk Delete Confirmation Dialog */}
+      {bulkDeleteModalOpen && selectedIds.length > 0 && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-xl shadow-2xl p-6 space-y-6 animate-zoom-in">
+            <div className="flex items-center gap-3 text-red-500">
+              <span className="text-3xl">⚠️</span>
+              <div>
+                <h3 className="text-lg font-bold text-white font-display">Delete Multiple Records?</h3>
+                <p className="text-xs text-red-400/80">This action is permanent and cannot be undone.</p>
+              </div>
+            </div>
+
+            <div className="p-4 bg-slate-950 border border-slate-850 rounded-lg text-center space-y-1">
+              <p className="text-xs text-slate-400 font-semibold uppercase">Documents Selected</p>
+              <p className="text-xl font-bold text-red-400">{selectedIds.length}</p>
+              <p className="text-xs text-slate-500">Audit logs and physical files will be deleted.</p>
+            </div>
+
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Confirming deletion will remove the selected files, clear all OCR records, and wipe the associated AI legal reports from the database.
+            </p>
+
+            <div className="flex items-center justify-end gap-2.5">
+              <button
+                onClick={() => { setBulkDeleteModalOpen(false); }}
+                className="px-4 py-2 bg-slate-950 hover:bg-slate-900 border border-slate-850 hover:border-slate-800 text-slate-400 hover:text-slate-350 rounded-lg text-xs font-semibold transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  bulkDeleteMutation.mutate(selectedIds);
+                  setBulkDeleteModalOpen(false);
+                }}
+                disabled={bulkDeleteMutation.isPending}
+                className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg text-xs font-semibold transition flex items-center gap-1.5"
+              >
+                {bulkDeleteMutation.isPending ? 'Deleting...' : 'Confirm Bulk Delete'}
               </button>
             </div>
           </div>

@@ -15,6 +15,9 @@ class Analysis(Base):
     processing_time = Column(Float, nullable=False)
     provider = Column(String(50), nullable=False)
     model_name = Column(String(50), nullable=False)
+    missing_clauses = Column(Text, nullable=True)
+    ai_explanation = Column(Text, nullable=True)
+    confidence_score = Column(Float, nullable=True, default=95.0)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
 
     # Establish one-to-many relationship to individual clauses items

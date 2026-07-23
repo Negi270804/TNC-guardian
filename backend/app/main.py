@@ -2,7 +2,10 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.exceptions import RequestValidationError
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from sqlalchemy.exc import SQLAlchemyError
+import logging
 
 from app.api.v1.health import router as health_router
 from app.api.auth import router as auth_router
@@ -76,15 +79,34 @@ async def sqlalchemy_exception_handler(request: Request, exc: SQLAlchemyError):
         }
     )
 
+@app.exception_handler(Exception)
+async def generic_exception_handler(request: Request, exc: Exception):
+    if isinstance(exc, (StarletteHTTPException, RequestValidationError)):
+        raise exc
+    
+    logger = logging.getLogger("app.main")
+    logger.exception(f"Unhandled exception caught by global handler: {str(exc)}")
+    
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={
+            "detail": "An internal server error occurred. Please try again later."
+        }
+    )
+
 # Include core routes
+from app.api.dashboard import router as dashboard_router
+
 app.include_router(health_router, prefix="/api/v1", tags=["Health Checks"])
 app.include_router(auth_router, prefix="/api/auth", tags=["User Authentication"])
 app.include_router(users_router, prefix="/api/users", tags=["Users Profile Workspace"])
 app.include_router(documents_router, prefix="/api/documents", tags=["Document Workspace"])
 app.include_router(analysis_router, prefix="/api/analysis", tags=["AI Analysis Engine"])
+app.include_router(analysis_router, prefix="/api/analyze", tags=["AI Analysis Engine"])
 app.include_router(results_router, prefix="/api/results", tags=["AI Results Dashboard"])
 app.include_router(history_router, prefix="/api/history", tags=["Analysis History"])
 app.include_router(subscription_router, prefix="/api/subscription", tags=["Subscription & Usage Management"])
+app.include_router(dashboard_router, prefix="/api/dashboard", tags=["Dashboard Statistics"])
 
 @app.get("/")
 def read_root():

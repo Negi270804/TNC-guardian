@@ -35,6 +35,12 @@ class Settings(BaseSettings):
         alias="OPENAI_API_KEY"
     )
 
+    URL_INGESTION_TIMEOUT: float = Field(default=12.0, alias="URL_INGESTION_TIMEOUT")
+    URL_INGESTION_RETRIES: int = Field(default=3, alias="URL_INGESTION_RETRIES")
+    URL_INGESTION_MIN_THRESHOLD: int = Field(default=200, alias="URL_INGESTION_MIN_THRESHOLD")
+    FREE_PLAN_ANALYSIS_LIMIT: int = Field(default=10, alias="FREE_PLAN_ANALYSIS_LIMIT")
+    DEMO_MODE: bool = Field(default=True, alias="DEMO_MODE")
+
     # AWS Storage integrations
     AWS_ACCESS_KEY: str = Field(
         default="your-aws-access-key-placeholder",

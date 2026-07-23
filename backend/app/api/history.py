@@ -2,6 +2,7 @@ import os
 import uuid
 import time
 from typing import Optional, List
+from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, or_, and_, func, cast, Date, desc, asc
@@ -15,6 +16,7 @@ from app.schemas.analysis import AnalysisResponse
 from app.schemas.history import HistoryListResponse, HistoryItemResponse, HistoryDetailResponse
 from app.services.ai.factory import AIFactory
 from app.services.ai.openai_service import OpenAIService
+from app import config
 
 router = APIRouter()
 
@@ -32,14 +34,12 @@ def parse_date(date_str: Optional[str]):
 def get_risk_level(score: Optional[int]) -> Optional[str]:
     if score is None:
         return None
-    if score <= 35:
+    if score <= 30:
         return "LOW"
     elif score <= 60:
         return "MEDIUM"
-    elif score <= 85:
-        return "HIGH"
     else:
-        return "CRITICAL"
+        return "HIGH"
 
 @router.get("", response_model=HistoryListResponse)
 async def list_history(
@@ -67,7 +67,7 @@ async def list_history(
     sub_service = SubscriptionService(db)
     sub = await sub_service.get_or_create_subscription(current_user.id)
 
-    if sub.plan == "FREE":
+    if sub.plan == "FREE" and not config.DEMO_MODE:
         # Find latest 10 document ids
         latest_ids_query = (
             select(Document.id)
@@ -99,17 +99,15 @@ async def list_history(
         query = query.where(search_filter)
         count_query = count_query.where(search_filter)
 
-    # Risk level filter (LOW, MEDIUM, HIGH, CRITICAL mapped to risk score thresholds)
+    # Risk level filter (LOW, MEDIUM, HIGH mapped to risk score thresholds)
     if risk_level:
         rl = risk_level.upper()
         if rl == "LOW":
-            risk_filter = Analysis.overall_risk_score.between(0, 35)
+            risk_filter = Analysis.overall_risk_score.between(0, 30)
         elif rl == "MEDIUM":
-            risk_filter = Analysis.overall_risk_score.between(36, 60)
-        elif rl == "HIGH":
-            risk_filter = Analysis.overall_risk_score.between(61, 85)
-        elif rl == "CRITICAL":
-            risk_filter = Analysis.overall_risk_score.between(86, 100)
+            risk_filter = Analysis.overall_risk_score.between(31, 60)
+        elif rl in ("HIGH", "CRITICAL"):
+            risk_filter = Analysis.overall_risk_score.between(61, 100)
         else:
             risk_filter = None
             
@@ -200,7 +198,7 @@ async def get_history_detail(
     sub_service = SubscriptionService(db)
     sub = await sub_service.get_or_create_subscription(current_user.id)
 
-    if sub.plan == "FREE":
+    if sub.plan == "FREE" and not config.DEMO_MODE:
         latest_ids_query = (
             select(Document.id)
             .where(Document.user_id == current_user.id)
@@ -279,24 +277,50 @@ async def delete_history_record(
 
     return {"message": "History record and associated files deleted successfully."}
 
+class BulkDeleteRequest(BaseModel):
+    document_ids: List[uuid.UUID]
+
+@router.post("/bulk-delete", status_code=status.HTTP_200_OK)
+async def bulk_delete_history(
+    payload: BulkDeleteRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    query = select(Document).where(
+        Document.id.in_(payload.document_ids),
+        Document.user_id == current_user.id
+    )
+    res = await db.execute(query)
+    docs = res.scalars().all()
+    
+    if not docs:
+        return {"message": "No records found to delete."}
+        
+    deleted_count = 0
+    for doc in docs:
+        # Clean up physical files from disk
+        if doc.storage_path and os.path.exists(doc.storage_path):
+            try:
+                os.remove(doc.storage_path)
+                parent_dir = os.path.dirname(doc.storage_path)
+                if os.path.exists(parent_dir) and not os.listdir(parent_dir):
+                    os.rmdir(parent_dir)
+            except Exception as e:
+                print(f"[CLEANUP ERROR] Failed to delete file: {str(e)}")
+        
+        # Database deletion (cascades automatically to Analyses and AnalysisItems)
+        await db.delete(doc)
+        deleted_count += 1
+        
+    await db.commit()
+    return {"message": f"Successfully deleted {deleted_count} records."}
+
 @router.post("/{document_id}/reanalyze", response_model=AnalysisResponse, status_code=status.HTTP_201_CREATED)
 async def reanalyze_document(
     document_id: uuid.UUID,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    # Check subscription quota
-    from app.services.subscription_service import SubscriptionService
-    sub_service = SubscriptionService(db)
-    sub = await sub_service.get_or_create_subscription(current_user.id)
-    usage = await sub_service.get_or_create_usage(current_user.id)
-    
-    if sub.plan == "FREE" and usage.analysis_count >= 5:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Free plan limit reached. Upgrade to Pro."
-        )
-
     # 1. Fetch document and validate ownership
     doc_query = select(Document).where(Document.id == document_id)
     doc_res = await db.execute(doc_query)
@@ -321,63 +345,15 @@ async def reanalyze_document(
             detail="Text has not been extracted from this document yet. Please extract text first."
         )
 
-    # 3. Clean up any existing analysis for this document to avoid conflict
-    exist_query = select(Analysis).where(Analysis.document_id == document_id)
-    exist_res = await db.execute(exist_query)
-    existing_analysis = exist_res.scalars().first()
-    if existing_analysis:
-        await db.delete(existing_analysis)
-        await db.commit()
-
-    # 4. Resolve AI Service and execute analysis, tracking time
-    ai_service = AIFactory.get_service()
-    
-    start_time = time.time()
-    try:
-        result = await ai_service.analyze(doc.extracted_text)
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"AI Auditor failed to process text content: {str(e)}"
-        )
-    processing_time = round(time.time() - start_time, 2)
-
-    # 5. Determine engine details
-    provider_name = "openai" if isinstance(ai_service, OpenAIService) else "mock"
-    model_name = "gpt-4o-mini" if isinstance(ai_service, OpenAIService) else "mock-v1"
-
-    # 6. Save Analysis header
-    analysis = Analysis(
-        document_id=document_id,
-        overall_risk_score=result["overall_risk_score"],
-        summary=result["summary"],
-        recommendations=result["recommendations"],
-        processing_time=processing_time,
-        provider=provider_name,
-        model_name=model_name
+    # 3. Delegate to the unified pipeline
+    from app.services.analysis_pipeline import run_analysis_pipeline
+    analysis = await run_analysis_pipeline(
+        db=db,
+        user_id=current_user.id,
+        text=doc.extracted_text,
+        source_type=doc.source_type or "PDF",
+        source_url=doc.source_url,
+        existing_document_id=doc.id
     )
-
-    db.add(analysis)
-    await db.commit()
-    await db.refresh(analysis)
-
-    # 7. Save Analysis Items (Flagged Risk clauses)
-    for item in result.get("items", []):
-        clause_item = AnalysisItem(
-            analysis_id=analysis.id,
-            title=item["title"],
-            category=item["category"],
-            risk_level=item["risk_level"],
-            explanation=item["explanation"],
-            original_text=item["original_text"],
-            suggestion=item["suggestion"]
-        )
-        db.add(clause_item)
-
-    await db.commit()
-    await db.refresh(analysis)
-
-    # Increment analysis count in usage tracking
-    await sub_service.increment_analysis_count(current_user.id)
 
     return analysis

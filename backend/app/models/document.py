@@ -15,6 +15,8 @@ class Document(Base):
     file_size = Column(Integer, nullable=False)
     upload_status = Column(String(50), default="UPLOADED", nullable=False)
     storage_path = Column(String(512), nullable=False)
+    source_type = Column(String(50), default="PDF", nullable=False, index=True)
+    source_url = Column(String(2048), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 

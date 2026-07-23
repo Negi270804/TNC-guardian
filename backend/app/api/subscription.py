@@ -4,6 +4,8 @@ from app.database import get_db
 from app.dependencies.auth import get_current_user
 from app.models.user import User
 from app.services.subscription_service import SubscriptionService
+from app.config import FREE_PLAN_ANALYSIS_LIMIT
+from app import config
 from app.schemas.subscription import (
     SubscriptionCurrentResponse,
     SubscriptionPlansResponse,
@@ -27,13 +29,14 @@ async def get_current_subscription(
     
     remaining = None
     if sub.plan == "FREE":
-        remaining = max(0, 5 - usage.analysis_count)
+        remaining = max(0, FREE_PLAN_ANALYSIS_LIMIT - usage.analysis_count)
         
     return SubscriptionCurrentResponse(
         plan=sub.plan,
         status=sub.status,
         expiry_date=sub.renewal_date,
-        remaining_analyses=remaining
+        remaining_analyses=remaining,
+        demo_mode=config.DEMO_MODE
     )
 
 @router.get("/plans", response_model=SubscriptionPlansResponse)
@@ -44,7 +47,7 @@ async def get_plans(current_user: User = Depends(get_current_user)):
                 name="FREE",
                 price="₹0/month",
                 features=[
-                    "5 AI analyses per month",
+                    f"{FREE_PLAN_ANALYSIS_LIMIT} AI analyses per month",
                     "Maximum upload size: 5 MB",
                     "Basic OCR",
                     "AI Summary",
@@ -80,9 +83,9 @@ async def get_current_usage(
     remaining = None
     
     if sub.plan == "FREE":
-        analyses_limit = 5
+        analyses_limit = FREE_PLAN_ANALYSIS_LIMIT
         upload_limit = 5 * 1024 * 1024
-        remaining = max(0, 5 - usage.analysis_count)
+        remaining = max(0, FREE_PLAN_ANALYSIS_LIMIT - usage.analysis_count)
     elif sub.plan == "PRO":
         analyses_limit = None  # Unlimited
         upload_limit = 25 * 1024 * 1024  # 25 MB
@@ -95,7 +98,8 @@ async def get_current_usage(
         monthly_limits=MonthlyLimits(
             analyses=analyses_limit,
             upload_size=upload_limit
-        )
+        ),
+        demo_mode=config.DEMO_MODE
     )
 
 @router.post("/upgrade", response_model=SubscriptionCurrentResponse)
@@ -116,13 +120,14 @@ async def upgrade_plan(
     
     remaining = None
     if sub.plan == "FREE":
-        remaining = max(0, 5 - usage.analysis_count)
+        remaining = max(0, FREE_PLAN_ANALYSIS_LIMIT - usage.analysis_count)
         
     return SubscriptionCurrentResponse(
         plan=sub.plan,
         status=sub.status,
         expiry_date=sub.renewal_date,
-        remaining_analyses=remaining
+        remaining_analyses=remaining,
+        demo_mode=config.DEMO_MODE
     )
 
 @router.post("/cancel", response_model=SubscriptionCurrentResponse)
@@ -136,11 +141,12 @@ async def cancel_subscription(
     
     remaining = None
     if sub.plan == "FREE":
-        remaining = max(0, 5 - usage.analysis_count)
+        remaining = max(0, FREE_PLAN_ANALYSIS_LIMIT - usage.analysis_count)
         
     return SubscriptionCurrentResponse(
         plan=sub.plan,
         status=sub.status,
         expiry_date=sub.renewal_date,
-        remaining_analyses=remaining
+        remaining_analyses=remaining,
+        demo_mode=config.DEMO_MODE
     )

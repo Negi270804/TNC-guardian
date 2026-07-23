@@ -4,7 +4,7 @@ export const FeatureComparisonTable: React.FC = () => {
   const featuresList = [
     {
       name: 'AI Analyses quota',
-      free: '5 analyses / month',
+      free: '10 analyses / month',
       pro: 'Unlimited',
     },
     {

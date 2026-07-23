@@ -126,7 +126,7 @@ export const Settings: React.FC = () => {
         <button
           type="submit"
           disabled={mutation.isPending}
-          className="px-6 py-2.5 bg-green-600 hover:bg-green-500 disabled:bg-slate-700 text-white rounded text-sm font-semibold transition"
+          className="px-6 min-h-[44px] py-2 bg-green-600 hover:bg-green-500 disabled:bg-slate-700 text-white rounded text-sm font-semibold transition flex items-center justify-center"
         >
           {mutation.isPending ? 'Updating...' : 'Update Password'}
         </button>

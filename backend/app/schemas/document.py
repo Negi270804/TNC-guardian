@@ -25,6 +25,8 @@ class DocumentResponse(BaseModel):
     storage_path: str
     created_at: datetime
     updated_at: datetime
+    source_type: str
+    source_url: Optional[str] = None
 
     # Extended OCR details
     processing_status: str

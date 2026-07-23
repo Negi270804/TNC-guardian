@@ -43,6 +43,9 @@ export const DocumentDetails: React.FC = () => {
     onSuccess: (newAnalysis) => {
       queryClient.invalidateQueries({ queryKey: ['document', id] });
       queryClient.invalidateQueries({ queryKey: ['analysis', id] });
+      queryClient.invalidateQueries({ queryKey: ['subscription-usage'] });
+      queryClient.invalidateQueries({ queryKey: ['current-subscription'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
       setActiveTab('analysis');
       setSuccessToast(`AI Risk Audit completed! Risk Score: ${newAnalysis.overall_risk_score}/100`);
       setTimeout(() => setSuccessToast(null), 5000);
@@ -55,10 +58,9 @@ export const DocumentDetails: React.FC = () => {
   });
 
   const getRiskColor = (score: number) => {
-    if (score <= 35) return { text: 'text-green-400', bg: 'bg-green-950/60', border: 'border-green-800/40', bgProgress: 'bg-green-500', label: 'Low Risk' };
+    if (score <= 30) return { text: 'text-green-400', bg: 'bg-green-950/60', border: 'border-green-800/40', bgProgress: 'bg-green-500', label: 'Low Risk' };
     if (score <= 60) return { text: 'text-yellow-400', bg: 'bg-yellow-950/60', border: 'border-yellow-800/40', bgProgress: 'bg-yellow-500', label: 'Medium Risk' };
-    if (score <= 85) return { text: 'text-orange-400', bg: 'bg-orange-950/60', border: 'border-orange-800/40', bgProgress: 'bg-orange-500', label: 'High Risk' };
-    return { text: 'text-red-400', bg: 'bg-red-950/60', border: 'border-red-800/40', bgProgress: 'bg-red-500', label: 'Critical Risk' };
+    return { text: 'text-red-400', bg: 'bg-red-950/60', border: 'border-red-800/40', bgProgress: 'bg-red-500', label: 'High Risk' };
   };
 
   const handleCopy = async () => {

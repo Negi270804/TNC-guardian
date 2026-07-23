@@ -29,6 +29,8 @@ export interface Document {
   storage_path: string;
   created_at: string;
   updated_at: string;
+  source_type?: 'PDF' | 'TEXT' | 'URL';
+  source_url?: string | null;
   
   // Extended OCR fields
   processing_status: string;
@@ -71,6 +73,9 @@ export interface Analysis {
   processing_time: number;
   provider: string;
   model_name: string;
+  missing_clauses?: { title: string; explanation: string }[] | null;
+  ai_explanation?: string | null;
+  confidence_score?: number | null;
   created_at: string;
   items: AnalysisItem[];
 }

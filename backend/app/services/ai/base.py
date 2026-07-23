@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 
 class BaseAIService(ABC):
     @abstractmethod
-    async def analyze(self, text: str) -> dict:
+    async def analyze(self, text: str, detected_clauses: dict = None) -> dict:
         """
         Analyze extracted Terms & Conditions or Privacy Policy text.
         

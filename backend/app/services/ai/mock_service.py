@@ -1,9 +1,13 @@
 import asyncio
+import logging
 from app.services.ai.base import BaseAIService
 
+logger = logging.getLogger("app.services.ai.mock_service")
+
 class MockAIService(BaseAIService):
-    async def analyze(self, text: str) -> dict:
+    async def analyze(self, text: str, detected_clauses: dict = None) -> dict:
         """Simulate a legal risk audit with high-fidelity mock results for local debugging."""
+        logger.info(f"Initiating Mock AI analysis. Input size: {len(text) if text else 0} chars.")
         # Mock network latency delay
         await asyncio.sleep(1.0)
 
@@ -14,7 +18,7 @@ class MockAIService(BaseAIService):
         if "cancel" in text_lower or "refund" in text_lower:
             items.append({
                 "title": "Complicated Cancellation and Fee Retention",
-                "category": "Cancellation Policy",
+                "category": "Refund Policy",
                 "risk_level": "HIGH",
                 "explanation": "The document specifies that cancellation requests must be sent in writing at least 30 days prior to the end of the billing period, and no partial refunds are provided.",
                 "original_text": "Subscriptions must be canceled in writing at least 30 days before renewal. All fees paid are non-refundable.",
@@ -65,13 +69,22 @@ class MockAIService(BaseAIService):
                 "suggestion": "Disable cookies in your browser settings if you wish to block telemetry tracking."
             })
 
-        # Dynamically scale overall score based on risks discovered
-        score = 25 + (len(items) * 18)
-        score = min(score, 99)
-
-        return {
-            "overall_risk_score": score,
+        result = {
             "summary": "This document contains typical subscription clauses, with automated renewal charges, mandatory arbitration restrictions, and affiliate tracking permissions.",
             "recommendations": "Ensure automatic renewal is turned off and opt-out of data sharing parameters inside your dashboard settings.",
+            "ai_explanation": "Overall evaluation indicates standard commercial licensing covenants. The presence of mandatory arbitration individually waives class action options, which is a major factor driving the high risk rating. Telemetry disclosures are moderate and common.",
+            "confidence_score": 0.92,
+            "missing_clauses": [
+                {
+                    "title": "Clear Opt-Out Mechanism for Data Sharing",
+                    "explanation": "The terms specify that user data is shared with affiliates but do not outline a clear, user-accessible setting or contact address to opt-out of this sharing."
+                },
+                {
+                    "title": "Detailed Refund Grace Period",
+                    "explanation": "While fees are declared non-refundable, there is no mention of any cool-off period or statutory grace periods for regional consumers."
+                }
+            ],
             "items": items
         }
+        logger.info(f"Completed Mock AI analysis. Items: {len(items)}")
+        return result

@@ -17,3 +17,10 @@ easyocr>=1.7.1
 
 # --- AI & LLM ANALYSIS ---
 openai>=1.14.0
+beautifulsoup4>=4.12.0
+readability-lxml>=0.8.1
+brotli>=1.1.0
+zstandard>=0.22.0
+trafilatura>=1.8.0
+playwright>=1.40.0
+

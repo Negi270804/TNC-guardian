@@ -22,23 +22,23 @@ export const Landing: React.FC = () => {
 
       {/* Hero Content Section */}
       <main className="max-w-4xl mx-auto px-6 py-20 text-center space-y-8 flex-1 flex flex-col justify-center items-center">
-        <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight text-white leading-tight">
+        <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-white leading-tight">
           Understand Terms & Conditions <br />
           <span className="text-green-500">before clicking "I Agree"</span>
         </h1>
-        <p className="text-xl text-slate-400 max-w-2xl leading-relaxed">
+        <p className="text-base sm:text-xl text-slate-400 max-w-2xl leading-relaxed">
           TNC Guardian uses advanced AI analysis to extract text, run OCR on document snapshots, transcribe scrolling videos, and explain legal agreements in simple, plain English.
         </p>
-        <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
           <Link
             to="/register"
-            className="px-8 py-3 bg-green-600 hover:bg-green-500 text-white rounded-md text-base font-semibold transition"
+            className="px-6 py-3 bg-green-600 hover:bg-green-500 text-white rounded-md text-sm sm:text-base font-semibold transition text-center"
           >
             Start Scanning For Free
           </Link>
           <Link
             to="/login"
-            className="px-8 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-md text-base font-semibold transition border border-slate-700"
+            className="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-md text-sm sm:text-base font-semibold transition border border-slate-700 text-center"
           >
             Access Dashboard
           </Link>

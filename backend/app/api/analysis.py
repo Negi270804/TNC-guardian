@@ -1,39 +1,148 @@
 import uuid
 import time
-from typing import List
+from collections import defaultdict
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from pydantic import BaseModel, Field
+
 from app.database import get_db
 from app.dependencies.auth import get_current_user
 from app.models.user import User
 from app.models.document import Document
-from app.models.analysis import Analysis, AnalysisItem
+from app.models.analysis import Analysis
 from app.schemas.analysis import AnalysisResponse
-from app.services.ai.factory import AIFactory
-from app.services.ai.openai_service import OpenAIService
+from app.services.analysis_pipeline import run_analysis_pipeline
+from app.services.url_extractor import URLExtractorService
+
+class SimpleRateLimiter:
+    def __init__(self, limit: int = 10, window_seconds: int = 60):
+        self.limit = limit
+        self.window_seconds = window_seconds
+        self.history = defaultdict(list)
+
+    async def __call__(self, current_user: User = Depends(get_current_user)):
+        user_id = str(current_user.id)
+        now = time.time()
+        
+        user_history = self.history[user_id]
+        # Clean older requests from window
+        self.history[user_id] = [t for t in user_history if now - t < self.window_seconds]
+        
+        if len(self.history[user_id]) >= self.limit:
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail=f"Rate limit exceeded. Maximum of {self.limit} analyses per {self.window_seconds} seconds."
+            )
+            
+        self.history[user_id].append(now)
+
+# Limit to 15 requests per 60 seconds
+analysis_limiter = SimpleRateLimiter(limit=15, window_seconds=60)
 
 router = APIRouter()
 
-@router.post("/{document_id}", response_model=AnalysisResponse, status_code=status.HTTP_201_CREATED)
+class PDFAnalysisRequest(BaseModel):
+    document_id: uuid.UUID
+
+class TextAnalysisRequest(BaseModel):
+    text: str = Field(..., min_length=100, max_length=150000)
+
+class URLAnalysisRequest(BaseModel):
+    url: str
+
+@router.post("/pdf", response_model=AnalysisResponse, status_code=status.HTTP_201_CREATED, dependencies=[Depends(analysis_limiter)])
+async def analyze_pdf(
+    payload: PDFAnalysisRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Endpoint to trigger analysis on an already uploaded PDF document.
+    """
+    # Fetch the document to get the extracted text
+    doc_query = select(Document).where(Document.id == payload.document_id)
+    doc_res = await db.execute(doc_query)
+    doc = doc_res.scalars().first()
+
+    if not doc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Document not found."
+        )
+
+    if doc.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have permission to access this document."
+        )
+
+    if not doc.text_extracted or not doc.extracted_text:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Text has not been extracted from this document yet. Please extract text first."
+        )
+
+    return await run_analysis_pipeline(
+        db=db,
+        user_id=current_user.id,
+        text=doc.extracted_text,
+        source_type="PDF",
+        existing_document_id=payload.document_id
+    )
+
+@router.post("/text", response_model=AnalysisResponse, status_code=status.HTTP_201_CREATED, dependencies=[Depends(analysis_limiter)])
+async def analyze_text(
+    payload: TextAnalysisRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Endpoint to analyze raw pasted legal text.
+    """
+    if len(payload.text.strip()) < 100:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Text too short"
+        )
+
+    return await run_analysis_pipeline(
+        db=db,
+        user_id=current_user.id,
+        text=payload.text,
+        source_type="TEXT"
+    )
+
+@router.post("/url", response_model=AnalysisResponse, status_code=status.HTTP_201_CREATED, dependencies=[Depends(analysis_limiter)])
+async def analyze_url(
+    payload: URLAnalysisRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Endpoint to crawl a T&C URL and analyze its readable text.
+    """
+    # 1. Fetch and extract text content from the URL (includes SSRF check)
+    clean_text = await URLExtractorService.fetch_and_clean_url(payload.url)
+    
+    # 2. Run clean text through common pipeline
+    return await run_analysis_pipeline(
+        db=db,
+        user_id=current_user.id,
+        text=clean_text,
+        source_type="URL",
+        source_url=payload.url
+    )
+
+@router.post("/{document_id}", response_model=AnalysisResponse, status_code=status.HTTP_201_CREATED, dependencies=[Depends(analysis_limiter)])
 async def analyze_document(
     document_id: uuid.UUID,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    # Check subscription quota
-    from app.services.subscription_service import SubscriptionService
-    sub_service = SubscriptionService(db)
-    sub = await sub_service.get_or_create_subscription(current_user.id)
-    usage = await sub_service.get_or_create_usage(current_user.id)
-    
-    if sub.plan == "FREE" and usage.analysis_count >= 5:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Free plan limit reached. Upgrade to Pro."
-        )
-
-    # 1. Fetch document and validate ownership
+    """
+    Backwards compatible endpoint to trigger analysis on document_id path parameter.
+    """
     doc_query = select(Document).where(Document.id == document_id)
     doc_res = await db.execute(doc_query)
     doc = doc_res.scalars().first()
@@ -50,73 +159,19 @@ async def analyze_document(
             detail="You do not have permission to access this document."
         )
 
-    # 2. Check if text is extracted
     if not doc.text_extracted or not doc.extracted_text:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Text has not been extracted from this document yet. Please extract text first."
         )
 
-    # 3. Clean up any existing analysis for this document to avoid conflict
-    exist_query = select(Analysis).where(Analysis.document_id == document_id)
-    exist_res = await db.execute(exist_query)
-    existing_analysis = exist_res.scalars().first()
-    if existing_analysis:
-        await db.delete(existing_analysis)
-        await db.commit()
-
-    # 4. Resolve AI Service and execute analysis, tracking time
-    ai_service = AIFactory.get_service()
-    
-    start_time = time.time()
-    try:
-        result = await ai_service.analyze(doc.extracted_text)
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"AI Auditor failed to process text content: {str(e)}"
-        )
-    processing_time = round(time.time() - start_time, 2)
-
-    # 5. Determine engine details
-    provider_name = "openai" if isinstance(ai_service, OpenAIService) else "mock"
-    model_name = "gpt-4o-mini" if isinstance(ai_service, OpenAIService) else "mock-v1"
-
-    # 6. Save Analysis header
-    analysis = Analysis(
-        document_id=document_id,
-        overall_risk_score=result["overall_risk_score"],
-        summary=result["summary"],
-        recommendations=result["recommendations"],
-        processing_time=processing_time,
-        provider=provider_name,
-        model_name=model_name
+    return await run_analysis_pipeline(
+        db=db,
+        user_id=current_user.id,
+        text=doc.extracted_text,
+        source_type="PDF",
+        existing_document_id=document_id
     )
-
-    db.add(analysis)
-    await db.commit()
-    await db.refresh(analysis)
-
-    # 7. Save Analysis Items (Flagged Risk clauses)
-    for item in result.get("items", []):
-        clause_item = AnalysisItem(
-            analysis_id=analysis.id,
-            title=item["title"],
-            category=item["category"],
-            risk_level=item["risk_level"],
-            explanation=item["explanation"],
-            original_text=item["original_text"],
-            suggestion=item["suggestion"]
-        )
-        db.add(clause_item)
-
-    await db.commit()
-    await db.refresh(analysis)
-
-    # Increment analysis count in usage tracking
-    await sub_service.increment_analysis_count(current_user.id)
-
-    return analysis
 
 @router.get("/{document_id}", response_model=AnalysisResponse)
 async def get_document_analysis(
@@ -124,6 +179,9 @@ async def get_document_analysis(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
+    """
+    Retrieve saved analysis for a document.
+    """
     # 1. Fetch document and validate ownership
     doc_query = select(Document).where(Document.id == document_id)
     doc_res = await db.execute(doc_query)
