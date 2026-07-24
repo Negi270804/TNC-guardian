@@ -5,71 +5,79 @@ services:
     image: postgres:15-alpine
     container_name: tnc-guardian-db
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres_password
-      POSTGRES_DB: TNC-guardian
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres_password}
+      POSTGRES_DB: ${POSTGRES_DB:-TNC-guardian}
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - tnc-network
 
   redis:
     image: redis:7-alpine
     container_name: tnc-guardian-redis
     ports:
       - "6379:6379"
+    restart: always
+    networks:
+      - tnc-network
 
   backend:
     build:
       context: ./backend
-      dockerfile: ../docker/backend/Dockerfile
+      dockerfile: Dockerfile
     container_name: tnc-guardian-backend
-    volumes:
-      - ./backend:/app
+    restart: always
+    env_file:
+      - ./backend/.env
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres_password}@db:5432/${POSTGRES_DB:-TNC-guardian}
     ports:
       - "8000:8000"
-    environment:
-      - DATABASE_URL=${DATABASE_URL}
-      - JWT_SECRET=${JWT_SECRET}
-      - JWT_ALGORITHM=${JWT_ALGORITHM:-HS256}
-      - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES:-15}
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - GEMINI_API_KEY=${GEMINI_API_KEY}
-      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o-mini}
-      - APP_ENV=${APP_ENV:-development}
-      - LOG_LEVEL=${LOG_LEVEL:-INFO}
-      - CORS_ORIGINS=${CORS_ORIGINS:-*}
-      - FREE_PLAN_UPLOAD_LIMIT_MB=${FREE_PLAN_UPLOAD_LIMIT_MB:-5}
-      - PRO_PLAN_UPLOAD_LIMIT_MB=${PRO_PLAN_UPLOAD_LIMIT_MB:-25}
-      - OCR_USE_GPU=${OCR_USE_GPU:-true}
-      - OCR_LANGUAGES=${OCR_LANGUAGES:-en}
-      - RATE_LIMIT_LIMIT=${RATE_LIMIT_LIMIT:-15}
-      - RATE_LIMIT_WINDOW_SECONDS=${RATE_LIMIT_WINDOW_SECONDS:-60}
-      - AWS_ACCESS_KEY=${AWS_ACCESS_KEY}
-      - AWS_SECRET_KEY=${AWS_SECRET_KEY}
-      - S3_BUCKET=${S3_BUCKET}
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - tnc-network
 
   frontend:
     build:
       context: ./frontend
-      dockerfile: ../docker/frontend/Dockerfile
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=${VITE_API_URL:-http://localhost:8000/api}
+        - VITE_APP_NAME=${VITE_APP_NAME:-TNC Guardian}
+        - VITE_ENV=${VITE_ENV:-production}
+        - VITE_ENABLE_DEMO_MODE=${VITE_ENABLE_DEMO_MODE:-false}
     container_name: tnc-guardian-frontend
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
+    restart: always
     ports:
-      - "3000:3000"
-    environment:
-      - VITE_API_URL=${VITE_API_URL:-http://localhost:8000/api}
-      - VITE_APP_NAME=${VITE_APP_NAME:-TNC Guardian}
-      - VITE_ENV=${VITE_ENV:-development}
-      - VITE_ENABLE_DEMO_MODE=${VITE_ENABLE_DEMO_MODE:-true}
+      - "80:80"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
+    networks:
+      - tnc-network
 
 volumes:
   pgdata:
+
+networks:
+  tnc-network:
+    driver: bridge
