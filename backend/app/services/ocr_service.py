@@ -1,6 +1,5 @@
 import os
 import sys
-import inspect
 import time
 import logging
 from typing import TypedDict, Optional
@@ -100,7 +99,7 @@ class OCRService:
                                 if ocr_text.strip():
                                     text += ocr_text + "\n"
                             except Exception as ocr_err:
-                                print(f"[OCR WARNING] Failed to OCR PDF Page {i+1}: {str(ocr_err)}", file=sys.stderr)
+                                logger.warning(f"[OCR WARNING] Failed to OCR PDF Page {i+1}: {str(ocr_err)}")
                                 text += f"[Page {i+1} OCR Extraction Failure]\n"
                 
                 return {

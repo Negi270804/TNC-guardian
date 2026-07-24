@@ -1,11 +1,16 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request, status
+from fastapi import FastAPI, Request, status, Depends, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
 import logging
+
+from app.settings import settings
+from app.database import get_db
 
 from app.api.v1.health import router as health_router
 from app.api.auth import router as auth_router
@@ -30,10 +35,13 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Set global CORS rules to interface with client applications
+# Set global CORS rules based on configuration
+cors_origins_raw = settings.CORS_ORIGINS
+origins = [o.strip() for o in cors_origins_raw.split(",") if o.strip()] if cors_origins_raw != "*" else ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Restrict origins in production deployment
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -115,3 +123,19 @@ def read_root():
         "status": "online",
         "documentation": "/docs"
     }
+
+@app.get("/health", tags=["Health Checks"])
+async def root_health_check(db: AsyncSession = Depends(get_db)):
+    try:
+        # Validate PostgreSQL session query execution
+        await db.execute(text("SELECT 1"))
+        return {
+            "status": "healthy",
+            "database": "connected",
+            "message": "TNC Guardian api service is boot ready."
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Database connection check failure: {str(e)}"
+        )

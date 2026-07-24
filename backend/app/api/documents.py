@@ -1,7 +1,6 @@
 import os
 import uuid
-import shutil
-import inspect
+import logging
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,6 +12,8 @@ from app.models.user import User
 from app.models.document import Document
 from app.schemas.document import DocumentResponse
 from app.services.ocr_service import OCRService
+
+logger = logging.getLogger("app.api.documents")
 
 router = APIRouter()
 
@@ -199,7 +200,7 @@ async def delete_document(
             if os.path.exists(parent_dir) and not os.listdir(parent_dir):
                 os.rmdir(parent_dir)
         except Exception as e:
-            print(f"[CLEANUP ERROR] Failed to clean document directories: {str(e)}")
+            logger.error(f"[CLEANUP ERROR] Failed to clean document directories: {str(e)}")
 
     # Remove record from database
     await db.delete(doc)
@@ -236,8 +237,6 @@ async def extract_document_text(
     await db.commit()
     await db.refresh(doc)
 
-    import logging
-    logger = logging.getLogger("app.api.documents")
     logger.info(f"Starting text extraction for document {doc.id} ({doc.original_filename})")
     start_time = datetime.now(timezone.utc)
 

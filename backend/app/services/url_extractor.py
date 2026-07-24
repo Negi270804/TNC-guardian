@@ -16,15 +16,7 @@ from app.config import URL_INGESTION_TIMEOUT, URL_INGESTION_RETRIES, URL_INGESTI
 logger = logging.getLogger("app.services.url_extractor")
 
 def safe_print(text: str):
-    import sys
-    try:
-        print(text)
-    except Exception:
-        try:
-            encoding = sys.stdout.encoding or 'utf-8'
-            print(text.encode(encoding, errors='replace').decode(encoding))
-        except Exception:
-            pass
+    logger.info(text)
 
 def raise_url_extraction_error(
     status_code: int,

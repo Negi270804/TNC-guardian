@@ -1,7 +1,10 @@
+import logging
 from app.config import OPENAI_API_KEY
 from app.services.ai.base import BaseAIService
 from app.services.ai.openai_service import OpenAIService
 from app.services.ai.mock_service import MockAIService
+
+logger = logging.getLogger("app.services.ai.factory")
 
 class AIFactory:
     @staticmethod
@@ -15,8 +18,8 @@ class AIFactory:
         )
 
         if has_key:
-            print("[AI FACTORY] Active Service Provider: OpenAIService (GPT-4o-mini)")
+            logger.info("[AI FACTORY] Active Service Provider: OpenAIService (GPT-4o-mini)")
             return OpenAIService()
         else:
-            print("[AI FACTORY] Active Service Provider: MockAIService (Offline Mock Fallback)")
+            logger.info("[AI FACTORY] Active Service Provider: MockAIService (Offline Mock Fallback)")
             return MockAIService()

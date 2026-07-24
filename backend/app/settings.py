@@ -55,5 +55,11 @@ class Settings(BaseSettings):
         alias="S3_BUCKET"
     )
 
+    # CORS settings
+    CORS_ORIGINS: str = Field(
+        default="*",
+        alias="CORS_ORIGINS"
+    )
+
 # Instantiate the settings instance
 settings = Settings()

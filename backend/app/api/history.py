@@ -1,6 +1,7 @@
 import os
 import uuid
 import time
+import logging
 from typing import Optional, List
 from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -15,8 +16,9 @@ from app.models.analysis import Analysis, AnalysisItem
 from app.schemas.analysis import AnalysisResponse
 from app.schemas.history import HistoryListResponse, HistoryItemResponse, HistoryDetailResponse
 from app.services.ai.factory import AIFactory
-from app.services.ai.openai_service import OpenAIService
 from app import config
+
+logger = logging.getLogger("app.api.history")
 
 router = APIRouter()
 
@@ -269,7 +271,7 @@ async def delete_history_record(
                 os.rmdir(parent_dir)
         except Exception as e:
             # Log disk clean up error, but do not block db removal
-            print(f"[CLEANUP ERROR] Failed to delete document file: {str(e)}")
+            logger.error(f"[CLEANUP ERROR] Failed to delete document file: {str(e)}")
 
     # 2. Database deletion (cascades automatically to Analyses and AnalysisItems due to Cascade constraints)
     await db.delete(doc)
@@ -306,7 +308,7 @@ async def bulk_delete_history(
                 if os.path.exists(parent_dir) and not os.listdir(parent_dir):
                     os.rmdir(parent_dir)
             except Exception as e:
-                print(f"[CLEANUP ERROR] Failed to delete file: {str(e)}")
+                logger.error(f"[CLEANUP ERROR] Failed to delete file: {str(e)}")
         
         # Database deletion (cascades automatically to Analyses and AnalysisItems)
         await db.delete(doc)
