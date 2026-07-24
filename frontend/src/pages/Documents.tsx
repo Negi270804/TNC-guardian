@@ -4,6 +4,7 @@ import { apiClient } from '@/services/api-client';
 import { Document } from '@/types';
 import { formatDate, formatBytes } from '@/utils';
 import { Link, useNavigate } from 'react-router-dom';
+import { env } from '@/config/env';
 
 const ALLOWED_EXTENSIONS = ['.pdf', '.docx', '.txt', '.png', '.jpg', '.jpeg', '.webp', '.bmp'];
 const ALLOWED_MIME_TYPES = [
@@ -623,7 +624,7 @@ export const Documents: React.FC = () => {
           <div>
             <h3 className="text-lg font-semibold text-slate-200 font-display">Analyze Terms & Conditions from URL</h3>
             <p className="text-xs text-slate-450 mt-1">
-              Provide the direct address of the T&C page. TNC Guardian will scrape the page, remove cookie banners/newsletters, bypass boilerplate scripts, and feed clean legal blocks to the AI analyzer.
+              Provide the direct address of the T&C page. {env.VITE_APP_NAME} will scrape the page, remove cookie banners/newsletters, bypass boilerplate scripts, and feed clean legal blocks to the AI analyzer.
             </p>
           </div>
 

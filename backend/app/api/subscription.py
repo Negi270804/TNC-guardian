@@ -79,16 +79,16 @@ async def get_current_usage(
     usage = await sub_service.get_or_create_usage(current_user.id)
     
     analyses_limit = None
-    upload_limit = 5 * 1024 * 1024  # 5 MB default
+    upload_limit = config.FREE_PLAN_UPLOAD_LIMIT_MB * 1024 * 1024  # default FREE plan limit
     remaining = None
     
     if sub.plan == "FREE":
         analyses_limit = FREE_PLAN_ANALYSIS_LIMIT
-        upload_limit = 5 * 1024 * 1024
+        upload_limit = config.FREE_PLAN_UPLOAD_LIMIT_MB * 1024 * 1024
         remaining = max(0, FREE_PLAN_ANALYSIS_LIMIT - usage.analysis_count)
     elif sub.plan == "PRO":
         analyses_limit = None  # Unlimited
-        upload_limit = 25 * 1024 * 1024  # 25 MB
+        upload_limit = config.PRO_PLAN_UPLOAD_LIMIT_MB * 1024 * 1024  # default PRO plan limit
         remaining = None  # Unlimited
         
     return SubscriptionUsageResponse(

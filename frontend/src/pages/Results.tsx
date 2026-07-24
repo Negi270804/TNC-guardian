@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/services/api-client';
 import { Document, Analysis } from '@/types';
 import { formatDate } from '@/utils';
+import { env } from '@/config/env';
 
 // Helper component for drawing the circular progress SVG ring
 const CircularProgress: React.FC<{ score: number }> = ({ score }) => {
@@ -132,7 +133,7 @@ export const Results: React.FC = () => {
     if (!analysis || !doc) return;
 
     let report = `====================================================\n`;
-    report += `TNC GUARDIAN - AI LEGAL RISK ANALYSIS REPORT\n`;
+    report += `${env.VITE_APP_NAME.toUpperCase()} - AI LEGAL RISK ANALYSIS REPORT\n`;
     report += `====================================================\n\n`;
     report += `Document: ${doc.original_filename}\n`;
     report += `Overall Risk Score: ${analysis.overall_risk_score}/100\n`;

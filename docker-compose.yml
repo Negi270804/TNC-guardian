@@ -29,13 +29,26 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql+asyncpg://postgres:postgres_password@db:5432/TNC-guardian
-      - JWT_SECRET=your_jwt_secret_key_placeholder_here
-      - ANTHROPIC_API_KEY=your_anthropic_api_key_here
-      - OPENAI_API_KEY=your_openai_api_key_here
-      - AWS_ACCESS_KEY=your_aws_access_key_here
-      - AWS_SECRET_KEY=your_aws_secret_key_here
-      - S3_BUCKET=tnc-guardian-uploads
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_ALGORITHM=${JWT_ALGORITHM:-HS256}
+      - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES:-15}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o-mini}
+      - APP_ENV=${APP_ENV:-development}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - CORS_ORIGINS=${CORS_ORIGINS:-*}
+      - FREE_PLAN_UPLOAD_LIMIT_MB=${FREE_PLAN_UPLOAD_LIMIT_MB:-5}
+      - PRO_PLAN_UPLOAD_LIMIT_MB=${PRO_PLAN_UPLOAD_LIMIT_MB:-25}
+      - OCR_USE_GPU=${OCR_USE_GPU:-true}
+      - OCR_LANGUAGES=${OCR_LANGUAGES:-en}
+      - RATE_LIMIT_LIMIT=${RATE_LIMIT_LIMIT:-15}
+      - RATE_LIMIT_WINDOW_SECONDS=${RATE_LIMIT_WINDOW_SECONDS:-60}
+      - AWS_ACCESS_KEY=${AWS_ACCESS_KEY}
+      - AWS_SECRET_KEY=${AWS_SECRET_KEY}
+      - S3_BUCKET=${S3_BUCKET}
     depends_on:
       - db
       - redis
@@ -51,7 +64,10 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - VITE_API_URL=http://localhost:8000/api/v1
+      - VITE_API_URL=${VITE_API_URL:-http://localhost:8000/api}
+      - VITE_APP_NAME=${VITE_APP_NAME:-TNC Guardian}
+      - VITE_ENV=${VITE_ENV:-development}
+      - VITE_ENABLE_DEMO_MODE=${VITE_ENABLE_DEMO_MODE:-true}
     depends_on:
       - backend
 

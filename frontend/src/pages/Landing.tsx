@@ -1,12 +1,13 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { env } from '@/config/env';
 
 export const Landing: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-950 flex flex-col justify-between">
       {/* Header Bar */}
       <header className="max-w-7xl mx-auto w-full px-6 py-6 flex items-center justify-between">
-        <span className="text-xl font-bold text-green-500">TNC Guardian</span>
+        <span className="text-xl font-bold text-green-500">{env.VITE_APP_NAME}</span>
         <div className="flex items-center gap-4">
           <Link to="/login" className="text-sm font-medium text-slate-300 hover:text-white">
             Log In
@@ -27,7 +28,7 @@ export const Landing: React.FC = () => {
           <span className="text-green-500">before clicking "I Agree"</span>
         </h1>
         <p className="text-base sm:text-xl text-slate-400 max-w-2xl leading-relaxed">
-          TNC Guardian uses advanced AI analysis to extract text, run OCR on document snapshots, transcribe scrolling videos, and explain legal agreements in simple, plain English.
+          {env.VITE_APP_NAME} uses advanced AI analysis to extract text, run OCR on document snapshots, transcribe scrolling videos, and explain legal agreements in simple, plain English.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
           <Link
@@ -47,7 +48,7 @@ export const Landing: React.FC = () => {
 
       {/* Footer Branding */}
       <footer className="border-t border-slate-900 py-8 text-center text-sm text-slate-600">
-        &copy; 2026 TNC Guardian. All rights reserved. Powered by Anthropic Claude API.
+        &copy; 2026 {env.VITE_APP_NAME}. All rights reserved. Powered by Anthropic Claude API.
       </footer>
     </div>
   );

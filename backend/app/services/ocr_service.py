@@ -23,9 +23,11 @@ class OCRService:
             try:
                 import easyocr
                 import torch
-                use_gpu = torch.cuda.is_available()
-                logger.info(f"[OCR SERVICE] Initializing EasyOCR Reader (GPU Enabled: {use_gpu})...")
-                cls._reader = easyocr.Reader(['en'], gpu=use_gpu)
+                from app import config
+                use_gpu = torch.cuda.is_available() if config.OCR_USE_GPU else False
+                langs = [lang.strip() for lang in config.OCR_LANGUAGES.split(",") if lang.strip()]
+                logger.info(f"[OCR SERVICE] Initializing EasyOCR Reader with languages {langs} (GPU Enabled: {use_gpu})...")
+                cls._reader = easyocr.Reader(langs, gpu=use_gpu)
             except Exception as e:
                 logger.error(f"[OCR SERVICE] Failed to initialize EasyOCR library: {str(e)}", exc_info=True)
                 raise RuntimeError(f"OCR Reader engine failed to start: {str(e)}")
@@ -122,8 +124,11 @@ class OCRService:
                 # Validate file size
                 if file_size <= 0:
                     raise ValueError("Invalid empty file uploaded.")
-                if file_size > 25 * 1024 * 1024:
-                    raise ValueError("File size exceeds the maximum limit of 25 MB.")
+                
+                from app import config
+                pro_limit_bytes = config.PRO_PLAN_UPLOAD_LIMIT_MB * 1024 * 1024
+                if file_size > pro_limit_bytes:
+                    raise ValueError(f"File size exceeds the maximum limit of {config.PRO_PLAN_UPLOAD_LIMIT_MB} MB.")
 
                 # Open and validate image format
                 try:

@@ -8,8 +8,14 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 import logging
-
 from app.settings import settings
+
+# Configure logging using environment settings
+logging.basicConfig(
+    level=settings.LOG_LEVEL,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+)
+
 from app.database import get_db
 
 from app.api.v1.health import router as health_router

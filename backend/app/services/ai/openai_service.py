@@ -44,9 +44,10 @@ class OpenAIService(BaseAIService):
             start_time = time.time()
             try:
                 logger.info(f"OpenAI API Request: Attempt {attempt + 1}/{max_retries}")
+                from app import config
                 # Dispatch async chat completion payload requesting structured JSON formats
                 response = await self.client.chat.completions.create(
-                    model="gpt-4o-mini",
+                    model=config.OPENAI_MODEL,
                     messages=[
                         {"role": "system", "content": SYSTEM_PROMPT},
                         {"role": "user", "content": USER_PROMPT_TEMPLATE.format(

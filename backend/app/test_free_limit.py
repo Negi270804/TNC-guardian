@@ -5,7 +5,7 @@ import asyncio
 import httpx
 from datetime import datetime, timezone
 
-sys.path.append(r"c:\Users\91886\Desktop\TNC-guardian\backend")
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from sqlalchemy import select
 from app.main import app

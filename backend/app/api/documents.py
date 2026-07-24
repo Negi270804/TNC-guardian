@@ -12,6 +12,7 @@ from app.models.user import User
 from app.models.document import Document
 from app.schemas.document import DocumentResponse
 from app.services.ocr_service import OCRService
+from app import config
 
 logger = logging.getLogger("app.api.documents")
 
@@ -33,7 +34,8 @@ ALLOWED_MIME_TYPES = {
     "image/bmp",
     "image/x-ms-bmp"
 }
-MAX_FILE_SIZE = 20 * 1024 * 1024  # 20 MB
+MAX_FILE_SIZE = config.PRO_PLAN_UPLOAD_LIMIT_MB * 1024 * 1024  # Dynamic fallback limit
+
 
 @router.post("/upload", response_model=DocumentResponse, status_code=status.HTTP_201_CREATED)
 async def upload_document(
@@ -64,8 +66,11 @@ async def upload_document(
     sub_service = SubscriptionService(db)
     sub = await sub_service.get_or_create_subscription(current_user.id)
     
-    max_size = 5 * 1024 * 1024 if sub.plan == "FREE" else 25 * 1024 * 1024
-    max_size_str = "5 MB" if sub.plan == "FREE" else "25 MB"
+    free_limit = config.FREE_PLAN_UPLOAD_LIMIT_MB * 1024 * 1024
+    pro_limit = config.PRO_PLAN_UPLOAD_LIMIT_MB * 1024 * 1024
+    max_size = free_limit if sub.plan == "FREE" else pro_limit
+    max_size_str = f"{config.FREE_PLAN_UPLOAD_LIMIT_MB} MB" if sub.plan == "FREE" else f"{config.PRO_PLAN_UPLOAD_LIMIT_MB} MB"
+
 
     file_size = 0
     if hasattr(file, "size") and file.size is not None:

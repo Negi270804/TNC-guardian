@@ -2,7 +2,7 @@ import sys
 import os
 import uuid
 from datetime import datetime, timezone
-sys.path.append(r"c:\Users\91886\Desktop\TNC-guardian\backend")
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import asyncio
 import httpx
@@ -15,25 +15,28 @@ from app.models.user import User
 from app.models.document import Document
 from app.models.analysis import Analysis
 
-# Fetch a user to run the tests as
-async def get_test_user():
+# Helper to get or create test users dynamically
+async def get_or_create_user(email: str, name: str):
     async with AsyncSessionLocal() as session:
-        res = await session.execute(select(User).where(User.email == "neginikhil424@gmail.com"))
-        return res.scalars().first()
-
-# Fetch another user to test auth violations
-async def get_other_user():
-    async with AsyncSessionLocal() as session:
-        res = await session.execute(select(User).where(User.email == "user@example.com"))
-        return res.scalars().first()
+        res = await session.execute(select(User).where(User.email == email))
+        user = res.scalars().first()
+        if not user:
+            user = User(
+                id=uuid.uuid4(),
+                email=email,
+                password_hash="hashed_password",
+                full_name=name,
+                is_verified=True,
+                created_at=datetime.now(timezone.utc)
+            )
+            session.add(user)
+            await session.commit()
+            await session.refresh(user)
+        return user
 
 async def run_tests():
-    test_user = await get_test_user()
-    other_user = await get_other_user()
-    
-    if not test_user or not other_user:
-        print("Test users not found! Make sure DB is populated.")
-        return
+    test_user = await get_or_create_user("neginikhil424@gmail.com", "Nikhil Negi")
+    other_user = await get_or_create_user("user@example.com", "Example User")
         
     print(f"Testing as user: {test_user.email} ({test_user.id})")
     print(f"Other user: {other_user.email} ({other_user.id})")

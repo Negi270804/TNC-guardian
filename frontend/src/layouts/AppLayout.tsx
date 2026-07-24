@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import { env } from '@/config/env';
 
 export const AppLayout: React.FC = () => {
   const navigate = useNavigate();
@@ -41,7 +42,7 @@ export const AppLayout: React.FC = () => {
       >
         <div>
           <div className="flex items-center justify-between mb-8 px-2">
-            <span className="text-xl font-bold text-green-500 font-display">TNC Guardian</span>
+            <span className="text-xl font-bold text-green-500 font-display">{env.VITE_APP_NAME}</span>
             {/* Close button for mobile */}
             <button 
               onClick={closeSidebar}
@@ -100,7 +101,7 @@ export const AppLayout: React.FC = () => {
               </svg>
             </button>
             <h1 className="text-sm sm:text-lg font-semibold font-display truncate max-w-[150px] sm:max-w-none">
-              TNC Guardian Workspace
+              {env.VITE_APP_NAME} Workspace
             </h1>
           </div>
           

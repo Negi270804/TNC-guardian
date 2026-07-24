@@ -37,8 +37,13 @@ class SimpleRateLimiter:
             
         self.history[user_id].append(now)
 
-# Limit to 15 requests per 60 seconds
-analysis_limiter = SimpleRateLimiter(limit=15, window_seconds=60)
+from app import config
+
+# Limit to configured requests per window seconds
+analysis_limiter = SimpleRateLimiter(
+    limit=config.RATE_LIMIT_LIMIT, 
+    window_seconds=config.RATE_LIMIT_WINDOW_SECONDS
+)
 
 router = APIRouter()
 

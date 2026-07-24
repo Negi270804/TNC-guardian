@@ -22,6 +22,8 @@ import { AuthLayout } from '@/layouts/AuthLayout';
 import { AuthProvider } from '@/context/AuthContext';
 import { ProtectedRoute } from '@/routes/ProtectedRoute';
 
+import { env } from '@/config/env';
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -33,6 +35,10 @@ const queryClient = new QueryClient({
 });
 
 export const App: React.FC = () => {
+  React.useEffect(() => {
+    document.title = `${env.VITE_APP_NAME} - Understand terms before clicking 'I Agree'`;
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
