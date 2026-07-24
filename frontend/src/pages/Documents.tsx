@@ -558,14 +558,14 @@ export const Documents: React.FC = () => {
                               {(doc.processing_status === 'UPLOADED' || doc.processing_status === 'FAILED') && (
                                 <button
                                   onClick={() => {
-                                    if (doc.processing_status !== 'PROCESSING' && !isProcessing) {
+                                    if (!isProcessing) {
                                       extractMutation.mutate(doc.id);
                                     }
                                   }}
-                                  disabled={extractMutation.isPending || isProcessing || doc.processing_status === 'PROCESSING'}
+                                  disabled={extractMutation.isPending || isProcessing}
                                   className="text-xs text-green-400 hover:text-green-300 px-2 py-1 bg-green-950/20 hover:bg-green-950/40 border border-green-900/20 rounded transition disabled:opacity-50"
                                 >
-                                  {isProcessing || doc.processing_status === 'PROCESSING' ? 'Processing...' : 'Extract'}
+                                  {isProcessing ? 'Processing...' : 'Extract'}
                                 </button>
                               )}
 
