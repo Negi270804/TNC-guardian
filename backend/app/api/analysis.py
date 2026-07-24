@@ -77,10 +77,16 @@ async def analyze_pdf(
             detail="You do not have permission to access this document."
         )
 
-    if not doc.text_extracted or not doc.extracted_text:
+    if not doc.text_extracted or not doc.extracted_text or not doc.extracted_text.strip():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Text has not been extracted from this document yet. Please extract text first."
+        )
+
+    if doc.extracted_text.strip() == "No readable text detected in the uploaded image.":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No readable text was detected in the uploaded image. AI analysis cannot be performed."
         )
 
     return await run_analysis_pipeline(
@@ -159,10 +165,16 @@ async def analyze_document(
             detail="You do not have permission to access this document."
         )
 
-    if not doc.text_extracted or not doc.extracted_text:
+    if not doc.text_extracted or not doc.extracted_text or not doc.extracted_text.strip():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Text has not been extracted from this document yet. Please extract text first."
+        )
+
+    if doc.extracted_text.strip() == "No readable text detected in the uploaded image.":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No readable text was detected in the uploaded image. AI analysis cannot be performed."
         )
 
     return await run_analysis_pipeline(

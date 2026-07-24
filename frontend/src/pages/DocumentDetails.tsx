@@ -222,8 +222,8 @@ export const DocumentDetails: React.FC = () => {
                 <span>OCR Status:</span>
                 <span className="font-semibold uppercase">
                   {doc.processing_status === 'COMPLETED' && <span className="text-green-500">Extracted</span>}
-                  {doc.processing_status === 'PROCESSING' && <span className="text-yellow-500">Processing</span>}
-                  {doc.processing_status === 'FAILED' && <span className="text-red-500">Failed</span>}
+                  {doc.processing_status === 'PROCESSING' && <span className="text-yellow-500">Extracting text...</span>}
+                  {doc.processing_status === 'FAILED' && <span className="text-red-500">Text Extraction Failed</span>}
                   {doc.processing_status === 'UPLOADED' && <span className="text-slate-400">Not Extracted</span>}
                 </span>
               </div>

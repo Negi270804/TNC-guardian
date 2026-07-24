@@ -5,13 +5,16 @@ import { Document } from '@/types';
 import { formatDate, formatBytes } from '@/utils';
 import { Link, useNavigate } from 'react-router-dom';
 
-const ALLOWED_EXTENSIONS = ['.pdf', '.docx', '.txt', '.png', '.jpg', '.jpeg'];
+const ALLOWED_EXTENSIONS = ['.pdf', '.docx', '.txt', '.png', '.jpg', '.jpeg', '.webp', '.bmp'];
 const ALLOWED_MIME_TYPES = [
   'application/pdf',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   'text/plain',
   'image/png',
-  'image/jpeg'
+  'image/jpeg',
+  'image/webp',
+  'image/bmp',
+  'image/x-ms-bmp'
 ];
 const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20 MB
 
@@ -84,10 +87,20 @@ export const Documents: React.FC = () => {
   // Extract Text Mutation
   const extractMutation = useMutation<Document, Error, string>({
     mutationFn: async (docId: string) => {
-      const response = await apiClient.post<Document>(`/documents/${docId}/extract`);
+      // Set custom timeout of 120 seconds for text extraction to prevent premature client-side aborts
+      const response = await apiClient.post<Document>(`/documents/${docId}/extract`, {}, { timeout: 120000 });
       return response.data;
     },
+    onMutate: async () => {
+      // Cancel outgoing refetches to prevent race conditions
+      await queryClient.cancelQueries({ queryKey: ['documents'] });
+    },
     onSuccess: (updatedDoc) => {
+      // Update cache immediately to prevent out-of-order state updates
+      queryClient.setQueryData<Document[]>(['documents'], (old) => {
+        if (!old) return [updatedDoc];
+        return old.map((d) => (d.id === updatedDoc.id ? updatedDoc : d));
+      });
       queryClient.invalidateQueries({ queryKey: ['documents'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
       setSuccessToast(`Extracted text from "${updatedDoc.original_filename}" successfully!`);
@@ -218,7 +231,7 @@ export const Documents: React.FC = () => {
     const ext = '.' + file.name.split('.').pop()?.toLowerCase();
     
     if (!ALLOWED_EXTENSIONS.includes(ext)) {
-      setErrorToast(`Unsupported file extension '${ext}'. Supported formats: PDF, DOCX, TXT, PNG, JPG, JPEG.`);
+      setErrorToast(`Unsupported file extension '${ext}'. Supported formats: PDF, DOCX, TXT, PNG, JPG, JPEG, WEBP, BMP.`);
       setTimeout(() => setErrorToast(null), 5500);
       return;
     }
@@ -532,18 +545,26 @@ export const Documents: React.FC = () => {
                                     ? 'bg-red-950/60 text-red-400 border-red-800/40'
                                     : 'bg-slate-950 text-slate-400 border-slate-800'
                                 }`}>
-                                  {isProcessing ? 'PROCESSING' : doc.processing_status}
+                                  {isProcessing || doc.processing_status === 'PROCESSING'
+                                    ? 'Extracting text...'
+                                    : doc.processing_status === 'FAILED'
+                                    ? 'Text Extraction Failed'
+                                    : doc.processing_status}
                                 </span>
                               )}
                             </td>
                             <td className="p-3 text-right space-x-2">
                               {(doc.processing_status === 'UPLOADED' || doc.processing_status === 'FAILED') && (
                                 <button
-                                  onClick={() => extractMutation.mutate(doc.id)}
-                                  disabled={extractMutation.isPending}
+                                  onClick={() => {
+                                    if (doc.processing_status !== 'PROCESSING' && !isProcessing) {
+                                      extractMutation.mutate(doc.id);
+                                    }
+                                  }}
+                                  disabled={extractMutation.isPending || isProcessing || doc.processing_status === 'PROCESSING'}
                                   className="text-xs text-green-400 hover:text-green-300 px-2 py-1 bg-green-950/20 hover:bg-green-950/40 border border-green-900/20 rounded transition disabled:opacity-50"
                                 >
-                                  {isProcessing ? 'Processing...' : 'Extract'}
+                                  {isProcessing || doc.processing_status === 'PROCESSING' ? 'Processing...' : 'Extract'}
                                 </button>
                               )}
 

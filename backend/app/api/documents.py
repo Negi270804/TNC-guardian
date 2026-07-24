@@ -20,14 +20,17 @@ router = APIRouter()
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 UPLOADS_DIR = os.path.join(BASE_DIR, "uploads")
 
-ALLOWED_EXTENSIONS = {".pdf", ".docx", ".txt", ".png", ".jpg", ".jpeg"}
+ALLOWED_EXTENSIONS = {".pdf", ".docx", ".txt", ".png", ".jpg", ".jpeg", ".webp", ".bmp"}
 ALLOWED_MIME_TYPES = {
     "application/pdf",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     "text/plain",
     "image/png",
     "image/jpeg",
-    "image/pjpeg"
+    "image/pjpeg",
+    "image/webp",
+    "image/bmp",
+    "image/x-ms-bmp"
 }
 MAX_FILE_SIZE = 20 * 1024 * 1024  # 20 MB
 
@@ -45,14 +48,14 @@ async def upload_document(
     if ext not in ALLOWED_EXTENSIONS:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Unsupported file extension '{ext}'. Supported formats: PDF, DOCX, TXT, PNG, JPG, JPEG."
+            detail=f"Unsupported file extension '{ext}'. Supported formats: PDF, DOCX, TXT, PNG, JPG, JPEG, WEBP, BMP."
         )
 
     # 2. Validate MIME Type
     if file.content_type not in ALLOWED_MIME_TYPES:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Unsupported file content type '{file.content_type}'. Supported formats: PDF, DOCX, TXT, PNG, JPG, JPEG."
+            detail=f"Unsupported file content type '{file.content_type}'. Supported formats: PDF, DOCX, TXT, PNG, JPG, JPEG, WEBP, BMP."
         )
 
     # 3. Fetch subscription and validate File Size based on plan

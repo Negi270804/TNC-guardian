@@ -23,4 +23,3 @@ brotli>=1.1.0
 zstandard>=0.22.0
 trafilatura>=1.8.0
 playwright>=1.40.0
-
