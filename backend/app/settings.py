@@ -101,11 +101,13 @@ class Settings(BaseSettings):
     def sanitize_database_url(cls, v: str) -> str:
         if not isinstance(v, str):
             return v
-        # Ensure it uses postgresql+asyncpg:// or postgres+asyncpg://
+        # Ensure it uses postgresql+asyncpg://
         if v.startswith("postgresql://"):
             v = v.replace("postgresql://", "postgresql+asyncpg://", 1)
         elif v.startswith("postgres://"):
             v = v.replace("postgres://", "postgresql+asyncpg://", 1)
+        elif v.startswith("postgres+asyncpg://"):
+            v = v.replace("postgres+asyncpg://", "postgresql+asyncpg://", 1)
         
         # Remove sslmode query parameter if present since asyncpg doesn't support it
         if "sslmode=" in v:

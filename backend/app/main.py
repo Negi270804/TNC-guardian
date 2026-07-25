@@ -29,15 +29,20 @@ from app.api.results import router as results_router
 from app.api.history import router as history_router
 from app.api.subscription import router as subscription_router
 from app.database import test_db_connection
+from app.utils.startup_checks import run_startup_checks
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Run application startup diagnostics
+    run_startup_checks()
+    
     # Execute database connectivity diagnostics on startup
-    success = await test_db_connection()
-    if not success:
-        import sys
-        logger.critical("CRITICAL: Database connection diagnostic check failed on startup. Exiting...")
-        sys.exit(1)
+    try:
+        success = await test_db_connection()
+        if not success:
+            logger.error("WARNING: Database connection check failed on startup. Server is continuing to start up...")
+    except Exception as e:
+        logger.error(f"WARNING: Exception during database connection diagnostic check on startup: {str(e)}. Server is continuing to start up...")
     yield
 
 app = FastAPI(
@@ -147,7 +152,9 @@ async def root_health_check(db: AsyncSession = Depends(get_db)):
             "message": "TNC Guardian api service is boot ready."
         }
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Database connection check failure: {str(e)}"
-        )
+        logger.error(f"Health check warning: Database is unavailable. Error: {str(e)}")
+        return {
+            "status": "degraded",
+            "database": "disconnected",
+            "message": "Database connection diagnostic check failed."
+        }

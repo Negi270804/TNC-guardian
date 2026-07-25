@@ -16,7 +16,11 @@ async def health_check(db: AsyncSession = Depends(get_db)):
             "message": "TNC Guardian api service is boot ready."
         }
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Database connection check failure: {str(e)}"
-        )
+        import logging
+        logger = logging.getLogger("app.api.health")
+        logger.error(f"Health check warning: Database is unavailable. Error: {str(e)}")
+        return {
+            "status": "degraded",
+            "database": "disconnected",
+            "message": "Database connection diagnostic check failed."
+        }
