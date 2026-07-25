@@ -23,7 +23,7 @@ services:
   - type: static
     name: tnc-guardian-frontend
     env: static
-    buildCommand: cd frontend && npm install && npm run build
+    buildCommand: cd frontend && npm install --include=dev && npm run build
     publishPath: frontend/dist
     envVars:
       - key: VITE_API_URL
