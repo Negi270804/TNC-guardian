@@ -2,12 +2,15 @@ import sys
 from typing import Optional
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field, model_validator, ValidationError, field_validator
-from dotenv import find_dotenv
+from dotenv import find_dotenv, load_dotenv
+
+# Preload dotenv file without overriding existing OS environment variables
+# Precedence: OS Environment > dotenv file > defaults
+load_dotenv(find_dotenv() or ".env", override=False)
 
 class Settings(BaseSettings):
     # Environment file configs
     model_config = SettingsConfigDict(
-        env_file=find_dotenv() or ".env",
         env_file_encoding="utf-8",
         extra="ignore"
     )
@@ -121,6 +124,16 @@ class Settings(BaseSettings):
         if self.APP_ENV == "production":
             if not self.DATABASE_URL or "postgres_password" in self.DATABASE_URL or "your_postgres_password" in self.DATABASE_URL:
                 raise ValueError("DATABASE_URL is using default credentials or is missing in production mode.")
+            from urllib.parse import urlparse
+            is_db = False
+            try:
+                parsed = urlparse(self.DATABASE_URL)
+                if parsed.hostname == "db":
+                    is_db = True
+            except Exception:
+                pass
+            if is_db:
+                raise ValueError("DATABASE_URL is using the local Docker development hostname 'db' in production mode.")
             if not self.JWT_SECRET or "placeholder" in self.JWT_SECRET.lower() or "generate_a_secure_jwt" in self.JWT_SECRET.lower():
                 raise ValueError("JWT_SECRET is using a default or placeholder value in production mode.")
         return self

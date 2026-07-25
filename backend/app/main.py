@@ -16,6 +16,8 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
 )
 
+logger = logging.getLogger("app.main")
+
 from app.database import get_db
 
 from app.api.v1.health import router as health_router
