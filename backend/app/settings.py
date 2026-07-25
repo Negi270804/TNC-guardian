@@ -1,12 +1,27 @@
+import os
 import sys
 from typing import Optional
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field, model_validator, ValidationError, field_validator
 from dotenv import find_dotenv, load_dotenv
 
-# Preload dotenv file without overriding existing OS environment variables
-# Precedence: OS Environment > dotenv file > defaults
-load_dotenv(find_dotenv() or ".env", override=False)
+# 1. Detect Render automatically
+is_render = os.getenv("RENDER") == "true" or os.getenv("RENDER_SERVICE_ID") is not None
+
+# 2. Enforce APP_ENV=production on Render
+if is_render:
+    os.environ["APP_ENV"] = "production"
+
+# 3. Do not force-load .env in production / on Render
+if not is_render and os.getenv("APP_ENV") != "production":
+    load_dotenv(find_dotenv() or ".env", override=False)
+
+# 4. Enforce production defaults
+if os.getenv("APP_ENV") == "production":
+    if "DEMO_MODE" not in os.environ:
+        os.environ["DEMO_MODE"] = "false"
+    if "SMTP_HOST" not in os.environ:
+        os.environ["SMTP_HOST"] = ""
 
 class Settings(BaseSettings):
     # Environment file configs

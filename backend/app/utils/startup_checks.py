@@ -9,9 +9,13 @@ def run_startup_checks():
     logger.info("  TNC GUARDIAN STARTUP DIAGNOSTICS CHECK ")
     logger.info("=========================================")
 
-    # 1. Environment & Config Precedence Check
-    logger.info(f"App Environment (APP_ENV): {settings.APP_ENV}")
-    logger.info(f"Log Level (LOG_LEVEL): {settings.LOG_LEVEL}")
+    # 1. Environment & Platform Precedence Check
+    is_render = os.getenv("RENDER") == "true" or os.getenv("RENDER_SERVICE_ID") is not None
+    platform_name = "Render Container (Production)" if is_render else "Local Host / Development"
+    
+    logger.info(f"Environment Detected: {settings.APP_ENV}")
+    logger.info(f"Platform: {platform_name}")
+    logger.info(f"Log Level: {settings.LOG_LEVEL}")
     logger.info(f"Server Bind: {settings.BACKEND_HOST}:{settings.BACKEND_PORT}")
     
     # 2. Verify Upload Directory
@@ -47,24 +51,34 @@ def run_startup_checks():
     logger.info(f"Demo Mode state: {settings.DEMO_MODE}")
 
     # 5. Verify SMTP Configuration
-    smtp_status = f"Host: {settings.SMTP_HOST}, Port: {settings.SMTP_PORT}"
-    has_smtp_user = bool(settings.SMTP_USERNAME)
-    smtp_status += f", Auth: {'Yes (User present)' if has_smtp_user else 'No'}"
-    logger.info(f"SMTP Configuration: {smtp_status}")
+    is_smtp_empty = not settings.SMTP_HOST or settings.SMTP_HOST.strip() == ""
+    is_smtp_local = settings.SMTP_HOST in ["localhost", "127.0.0.1"]
+    
+    if settings.APP_ENV == "production":
+        if is_smtp_empty or is_smtp_local:
+            logger.warning("WARNING: SMTP Host is not configured or pointing to localhost in production. Email features (e.g. password resets) will fall back to development console logging.")
+        else:
+            logger.info(f"SMTP Configuration: Host={settings.SMTP_HOST}, Port={settings.SMTP_PORT}, Auth={'Yes' if settings.SMTP_USERNAME else 'No'}")
+    else:
+        logger.info(f"SMTP Configuration: Host={settings.SMTP_HOST}, Port={settings.SMTP_PORT}")
 
     # 6. Verify Critical Security Environment Variables (No Leakage)
     has_jwt_secret = settings.JWT_SECRET and "placeholder" not in settings.JWT_SECRET.lower() and "generate_a_secure_jwt" not in settings.JWT_SECRET.lower()
     logger.info(f"Security: JWT_SECRET configured correctly: {'Yes' if has_jwt_secret else 'No (INSECURE)'}")
 
-    # 7. Check database URL structure (no raw print of credentials)
+    # 7. Check database URL structure (no raw print of credentials or secrets)
     db_url = settings.DATABASE_URL
     try:
         from urllib.parse import urlparse
         parsed = urlparse(db_url)
-        masked_host = parsed.hostname or "unknown"
-        masked_db = parsed.path.lstrip('/') if parsed.path else "unknown"
-        logger.info(f"Database connection settings: Host={masked_host}, Database={masked_db}, Driver={parsed.scheme}")
+        ssl_enabled = "localhost" not in db_url and "127.0.0.1" not in db_url and "db" not in db_url
+        
+        logger.info("Database Diagnostics:")
+        logger.info(f"  - Database driver: {parsed.scheme}")
+        logger.info(f"  - Database host: {parsed.hostname or 'unknown'}")
+        logger.info(f"  - Database name: {parsed.path.lstrip('/') if parsed.path else 'unknown'}")
+        logger.info(f"  - SSL: {'Enabled' if ssl_enabled else 'Disabled'}")
     except Exception:
-        logger.warning("Database connection settings: Unable to safely parse DATABASE_URL configuration.")
+        logger.warning("Database Diagnostics: Unable to safely parse DATABASE_URL configuration.")
 
     logger.info("=========================================")

@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 from app.database import get_db
+from app.settings import settings
 
 router = APIRouter()
 
@@ -13,7 +14,8 @@ async def health_check(db: AsyncSession = Depends(get_db)):
         return {
             "status": "healthy",
             "database": "connected",
-            "message": "TNC Guardian api service is boot ready."
+            "environment": settings.APP_ENV,
+            "version": "1.0.0"
         }
     except Exception as e:
         import logging
@@ -22,5 +24,6 @@ async def health_check(db: AsyncSession = Depends(get_db)):
         return {
             "status": "degraded",
             "database": "disconnected",
-            "message": "Database connection diagnostic check failed."
+            "environment": settings.APP_ENV,
+            "version": "1.0.0"
         }

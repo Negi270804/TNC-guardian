@@ -149,12 +149,14 @@ async def root_health_check(db: AsyncSession = Depends(get_db)):
         return {
             "status": "healthy",
             "database": "connected",
-            "message": "TNC Guardian api service is boot ready."
+            "environment": settings.APP_ENV,
+            "version": "1.0.0"
         }
     except Exception as e:
         logger.error(f"Health check warning: Database is unavailable. Error: {str(e)}")
         return {
             "status": "degraded",
             "database": "disconnected",
-            "message": "Database connection diagnostic check failed."
+            "environment": settings.APP_ENV,
+            "version": "1.0.0"
         }
