@@ -25,3 +25,8 @@ class UserRepository:
         await self.db.commit()
         await self.db.refresh(user)
         return user
+
+    async def get_by_reset_token(self, token: str) -> Optional[User]:
+        query = select(User).where(User.reset_token == token)
+        result = await self.db.execute(query)
+        return result.scalars().first()

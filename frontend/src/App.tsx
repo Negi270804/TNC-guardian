@@ -14,6 +14,7 @@ import { History } from '@/pages/History';
 import { Settings } from '@/pages/Settings';
 import { NotFound } from '@/pages/NotFound';
 import { ForgotPassword } from '@/pages/ForgotPassword';
+import { ResetPassword } from '@/pages/ResetPassword';
 import { SubscriptionPage } from '@/pages/SubscriptionPage';
 import { PricingPage } from '@/pages/PricingPage';
 
@@ -50,6 +51,7 @@ export const App: React.FC = () => {
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
             </Route>
 
             <Route

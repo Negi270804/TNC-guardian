@@ -1,4 +1,5 @@
 import sys
+from typing import Optional
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field, model_validator, ValidationError
 from dotenv import find_dotenv
@@ -16,6 +17,7 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = Field(default="INFO", alias="LOG_LEVEL")
     BACKEND_HOST: str = Field(default="0.0.0.0", alias="BACKEND_HOST")
     BACKEND_PORT: int = Field(default=8000, alias="BACKEND_PORT")
+    FRONTEND_URL: str = Field(default="http://localhost", alias="FRONTEND_URL")
 
     # Database connection parameters (Required: no defaults in code)
     DATABASE_URL: str = Field(min_length=1, alias="DATABASE_URL")
@@ -77,6 +79,19 @@ class Settings(BaseSettings):
     # Rate Limiting Settings
     RATE_LIMIT_LIMIT: int = Field(default=15, alias="RATE_LIMIT_LIMIT")
     RATE_LIMIT_WINDOW_SECONDS: int = Field(default=60, alias="RATE_LIMIT_WINDOW_SECONDS")
+
+    # SMTP Configuration settings
+    SMTP_HOST: str = Field(default="localhost", alias="SMTP_HOST")
+    SMTP_PORT: int = Field(default=1025, alias="SMTP_PORT")
+    SMTP_USERNAME: str = Field(default="", alias="SMTP_USERNAME")
+    SMTP_PASSWORD: str = Field(default="", alias="SMTP_PASSWORD")
+    SMTP_SENDER: str = Field(default="noreply@tncguardian.com", alias="SMTP_SENDER")
+    SMTP_FROM_EMAIL: str = Field(default="noreply@tncguardian.com", alias="SMTP_FROM_EMAIL")
+    SMTP_USE_TLS: bool = Field(default=False, alias="SMTP_USE_TLS")
+
+    # Resend Email Configuration settings
+    RESEND_API_KEY: Optional[str] = Field(default=None, alias="RESEND_API_KEY")
+    FROM_EMAIL: str = Field(default="noreply@tncguardian.com", alias="FROM_EMAIL")
 
     @model_validator(mode="after")
     def validate_production_config(self) -> 'Settings':

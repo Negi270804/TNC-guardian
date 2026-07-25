@@ -23,4 +23,14 @@ export const authService = {
     const response = await apiClient.get<User>('/auth/me');
     return response.data;
   },
+
+  async forgotPassword(email: string): Promise<{ message: string }> {
+    const response = await apiClient.post<{ message: string }>('/auth/forgot-password', { email });
+    return response.data;
+  },
+
+  async resetPassword(payload: any): Promise<{ message: string }> {
+    const response = await apiClient.post<{ message: string }>('/auth/reset-password', payload);
+    return response.data;
+  },
 };

@@ -22,6 +22,10 @@ class User(Base):
     designation = Column(String(255), nullable=True)
     bio = Column(String(1000), nullable=True)
     last_login = Column(DateTime(timezone=True), nullable=True)
+    
+    # Password Reset
+    reset_token = Column(String(255), nullable=True, index=True)
+    reset_token_expires_at = Column(DateTime(timezone=True), nullable=True)
 
     # SaaS Relationships
     subscription = relationship("Subscription", back_populates="user", uselist=False, cascade="all, delete-orphan", lazy="selectin")
