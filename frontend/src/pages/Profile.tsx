@@ -35,7 +35,7 @@ export const Profile: React.FC = () => {
   });
 
   const mutation = useMutation<User, Error, ProfileFormInputs>({
-    mutationFn: async (data) => {
+    mutationFn: async (data: ProfileFormInputs) => {
       const response = await apiClient.put<User>('/users/me', {
         full_name: data.fullName,
         company: data.company || null,
@@ -45,7 +45,7 @@ export const Profile: React.FC = () => {
       });
       return response.data;
     },
-    onSuccess: (updatedUser) => {
+    onSuccess: (updatedUser: User) => {
       updateUser(updatedUser);
       queryClient.invalidateQueries({ queryKey: ['me'] });
       setSuccessToast('Profile details updated successfully!');

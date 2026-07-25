@@ -177,7 +177,7 @@ export const History: React.FC = () => {
     mutationFn: async (docId: string) => {
       await apiClient.delete(`/history/${docId}`);
     },
-    onMutate: async (docId) => {
+    onMutate: async (docId: string) => {
       await queryClient.cancelQueries({ queryKey: ['history', queryParams] });
       const previousHistory = queryClient.getQueryData(['history', queryParams]);
       
@@ -192,7 +192,7 @@ export const History: React.FC = () => {
 
       return { previousHistory };
     },
-    onError: (err: any, _, context: any) => {
+    onError: (err: any, _: string, context: any) => {
       if (context?.previousHistory) {
         queryClient.setQueryData(['history', queryParams], context.previousHistory);
       }
@@ -216,7 +216,7 @@ export const History: React.FC = () => {
       const response = await apiClient.post('/history/bulk-delete', { document_ids: ids });
       return response.data;
     },
-    onMutate: async (ids) => {
+    onMutate: async (ids: string[]) => {
       await queryClient.cancelQueries({ queryKey: ['history', queryParams] });
       const previousHistory = queryClient.getQueryData(['history', queryParams]);
       
@@ -231,7 +231,7 @@ export const History: React.FC = () => {
 
       return { previousHistory };
     },
-    onError: (err: any, _, context: any) => {
+    onError: (err: any, _: string[], context: any) => {
       if (context?.previousHistory) {
         queryClient.setQueryData(['history', queryParams], context.previousHistory);
       }

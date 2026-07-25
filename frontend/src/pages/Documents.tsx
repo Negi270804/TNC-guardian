@@ -96,11 +96,11 @@ export const Documents: React.FC = () => {
       // Cancel outgoing refetches to prevent race conditions
       await queryClient.cancelQueries({ queryKey: ['documents'] });
     },
-    onSuccess: (updatedDoc) => {
+    onSuccess: (updatedDoc: Document) => {
       // Update cache immediately to prevent out-of-order state updates
-      queryClient.setQueryData<Document[]>(['documents'], (old) => {
+      queryClient.setQueryData<Document[]>(['documents'], (old: Document[] | undefined) => {
         if (!old) return [updatedDoc];
-        return old.map((d) => (d.id === updatedDoc.id ? updatedDoc : d));
+        return old.map((d: Document) => (d.id === updatedDoc.id ? updatedDoc : d));
       });
       queryClient.invalidateQueries({ queryKey: ['documents'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
@@ -648,7 +648,7 @@ export const Documents: React.FC = () => {
                 <div className="space-y-2">
                   <h5 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Suggested Recovery Actions:</h5>
                   <ul className="list-none space-y-1.5 pl-0">
-                    {urlAnalysisError.suggestions.map((suggestion, idx) => (
+                    {urlAnalysisError.suggestions.map((suggestion: string, idx: number) => (
                       <li key={idx} className="flex items-start gap-2 text-xs text-slate-350">
                         <span className="text-green-500 font-bold">✓</span>
                         <span>{suggestion}</span>

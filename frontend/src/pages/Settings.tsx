@@ -35,7 +35,7 @@ export const Settings: React.FC = () => {
   });
 
   const mutation = useMutation<any, Error, PasswordFormInputs>({
-    mutationFn: async (data) => {
+    mutationFn: async (data: PasswordFormInputs) => {
       const response = await apiClient.post('/users/change-password', {
         current_password: data.currentPassword,
         new_password: data.newPassword,

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/services/api-client';
-import { Document, Analysis } from '@/types';
+import { Document, Analysis, AnalysisItem } from '@/types';
 import { formatDate } from '@/utils';
 import { env } from '@/config/env';
 
@@ -86,7 +86,7 @@ export const Results: React.FC = () => {
       const response = await apiClient.post<any>(`/analysis/${docId}`);
       return response.data;
     },
-    onSuccess: (newAnalysis) => {
+    onSuccess: (newAnalysis: any) => {
       queryClient.invalidateQueries({ queryKey: ['document', id] });
       queryClient.invalidateQueries({ queryKey: ['analysis', id] });
       queryClient.invalidateQueries({ queryKey: ['subscription-usage'] });
@@ -162,7 +162,7 @@ export const Results: React.FC = () => {
       report += `----------------------------------------------------\n`;
       report += `MISSING PROTECTIVE CLAUSES (${analysis.missing_clauses.length})\n`;
       report += `----------------------------------------------------\n`;
-      analysis.missing_clauses.forEach((item, index) => {
+      analysis.missing_clauses.forEach((item: { title: string; explanation: string }, index: number) => {
         report += `${index + 1}. ${item.title}\n`;
         report += `   Why it is missing/important: ${item.explanation}\n\n`;
       });
@@ -172,7 +172,7 @@ export const Results: React.FC = () => {
     report += `FLAGGED CLAUSES (${analysis.items.length})\n`;
     report += `----------------------------------------------------\n`;
 
-    analysis.items.forEach((item, index) => {
+    analysis.items.forEach((item: AnalysisItem, index: number) => {
       report += `${index + 1}. [${item.risk_level}] ${item.title}\n`;
       report += `   Category: ${item.category}\n`;
       report += `   AI Explanation: ${item.explanation}\n`;
@@ -196,7 +196,7 @@ export const Results: React.FC = () => {
   };
 
   const toggleExpand = (itemId: string) => {
-    setExpandedClauses((prev) => ({
+    setExpandedClauses((prev: Record<string, boolean>) => ({
       ...prev,
       [itemId]: !prev[itemId],
     }));
@@ -205,7 +205,7 @@ export const Results: React.FC = () => {
   const setAllExpanded = (expand: boolean) => {
     if (!analysis) return;
     const updated: Record<string, boolean> = {};
-    analysis.items.forEach((item) => {
+    analysis.items.forEach((item: AnalysisItem) => {
       updated[item.id] = expand;
     });
     setExpandedClauses(updated);
@@ -664,7 +664,7 @@ export const Results: React.FC = () => {
               </div>
             ) : (
               <div className="space-y-3">
-                {detectedRisks.map((item) => {
+                {detectedRisks.map((item: AnalysisItem) => {
                   const isExpanded = expandedClauses[item.id] ?? false;
                   return (
                     <div
@@ -740,7 +740,7 @@ export const Results: React.FC = () => {
                   The following provisions represent standard user protections or parameters deemed safe by the auditing engine:
                 </p>
                 <ul className="space-y-2.5 text-xs text-slate-300 list-none pl-0">
-                  {safePoints.map((item) => (
+                  {safePoints.map((item: AnalysisItem) => (
                     <li key={item.id} className="flex items-start gap-2.5">
                       <span className="text-green-500 font-extrabold mt-0.5">✓</span>
                       <div>

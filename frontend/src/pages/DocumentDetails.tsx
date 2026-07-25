@@ -40,7 +40,7 @@ export const DocumentDetails: React.FC = () => {
       const response = await apiClient.post<any>(`/analysis/${docId}`);
       return response.data;
     },
-    onSuccess: (newAnalysis) => {
+    onSuccess: (newAnalysis: any) => {
       queryClient.invalidateQueries({ queryKey: ['document', id] });
       queryClient.invalidateQueries({ queryKey: ['analysis', id] });
       queryClient.invalidateQueries({ queryKey: ['subscription-usage'] });
