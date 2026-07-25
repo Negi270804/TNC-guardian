@@ -1,7 +1,7 @@
 import sys
 from typing import Optional
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import Field, model_validator, ValidationError
+from pydantic import Field, model_validator, ValidationError, field_validator
 from dotenv import find_dotenv
 
 class Settings(BaseSettings):
@@ -92,6 +92,29 @@ class Settings(BaseSettings):
     # Resend Email Configuration settings
     RESEND_API_KEY: Optional[str] = Field(default=None, alias="RESEND_API_KEY")
     FROM_EMAIL: str = Field(default="noreply@tncguardian.com", alias="FROM_EMAIL")
+
+    @field_validator("DATABASE_URL", mode="before")
+    @classmethod
+    def sanitize_database_url(cls, v: str) -> str:
+        if not isinstance(v, str):
+            return v
+        # Ensure it uses postgresql+asyncpg:// or postgres+asyncpg://
+        if v.startswith("postgresql://"):
+            v = v.replace("postgresql://", "postgresql+asyncpg://", 1)
+        elif v.startswith("postgres://"):
+            v = v.replace("postgres://", "postgresql+asyncpg://", 1)
+        
+        # Remove sslmode query parameter if present since asyncpg doesn't support it
+        if "sslmode=" in v:
+            from urllib.parse import urlparse, urlunparse, parse_qsl, urlencode
+            try:
+                parsed = urlparse(v)
+                query_params = parse_qsl(parsed.query)
+                query_params = [(k, val) for k, val in query_params if k != 'sslmode']
+                v = urlunparse(parsed._replace(query=urlencode(query_params)))
+            except Exception:
+                pass
+        return v
 
     @model_validator(mode="after")
     def validate_production_config(self) -> 'Settings':
