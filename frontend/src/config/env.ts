@@ -1,12 +1,16 @@
 import { z } from 'zod';
 
+const isProd = import.meta.env.PROD;
+
 const envSchema = z.object({
-  VITE_API_URL: z.string().url().default('http://localhost:8000/api'),
+  VITE_API_URL: isProd
+    ? z.string().url()
+    : z.string().url().default('http://localhost:8000/api'),
   VITE_APP_NAME: z.string().default('TNC Guardian'),
-  VITE_ENV: z.string().default('development'),
+  VITE_ENV: z.string().default(isProd ? 'production' : 'development'),
   VITE_ENABLE_DEMO_MODE: z.preprocess(
-    (val) => val === undefined ? 'true' : String(val),
-    z.string().transform((val) => val.toLowerCase() === 'true').default('true')
+    (val) => val === undefined ? (isProd ? 'false' : 'true') : String(val),
+    z.string().transform((val) => val.toLowerCase() === 'true')
   ),
 });
 
