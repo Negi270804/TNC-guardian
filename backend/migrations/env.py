@@ -48,10 +48,12 @@ def do_run_migrations(connection) -> None:
 
 async def run_migrations_online() -> None:
     """Run migrations in 'online' mode."""
-    # Create engine directly from DATABASE_URL instead of loading config section options
+    # Create engine directly from DATABASE_URL with conditional SSL support
+    connect_args = {"ssl": True} if "localhost" not in DATABASE_URL and "127.0.0.1" not in DATABASE_URL and "db" not in DATABASE_URL else {}
     connectable = create_async_engine(
         DATABASE_URL,
         poolclass=pool.NullPool,
+        connect_args=connect_args,
     )
 
     async with connectable.connect() as connection:

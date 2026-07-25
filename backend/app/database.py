@@ -9,12 +9,17 @@ from app.config import DATABASE_URL
 
 logger = logging.getLogger("app.database")
 
-# Create async engine linked to asyncpg driver
+# Create async engine linked to asyncpg driver with production connection pooling
+ssl_args = {"ssl": True} if "localhost" not in DATABASE_URL and "127.0.0.1" not in DATABASE_URL and "db" not in DATABASE_URL else {}
 engine = create_async_engine(
     DATABASE_URL,
     echo=False,
     pool_size=20,
     max_overflow=10,
+    pool_recycle=1800,
+    pool_pre_ping=True,
+    pool_timeout=30,
+    connect_args=ssl_args,
 )
 
 # Create session maker session class
@@ -39,7 +44,8 @@ def mask_database_url(url: str) -> str:
     """Masks database passwords to prevent sensitive credentials leaks in logs."""
     try:
         parsed = make_url(url)
-        return f"{parsed.drivername}://{parsed.username}:*****@{parsed.host}:{parsed.port}/{parsed.database}"
+        port_str = f":{parsed.port}" if parsed.port else ""
+        return f"{parsed.drivername}://{parsed.username}:*****@{parsed.host}{port_str}/{parsed.database}"
     except Exception:
         return "Invalid DATABASE_URL connection string format."
 

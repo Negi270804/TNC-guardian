@@ -31,7 +31,11 @@ from app.database import test_db_connection
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Execute database connectivity diagnostics on startup
-    await test_db_connection()
+    success = await test_db_connection()
+    if not success:
+        import sys
+        logger.critical("CRITICAL: Database connection diagnostic check failed on startup. Exiting...")
+        sys.exit(1)
     yield
 
 app = FastAPI(
