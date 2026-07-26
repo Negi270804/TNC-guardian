@@ -61,6 +61,9 @@ class OCRService:
                         torch.set_num_threads(1)
                         torch.set_num_interop_threads(1)
                         
+                        # Disable gradient calculation globally to save memory
+                        torch.set_grad_enabled(False)
+                        
                         # Set default socket timeout to prevent download requests from hanging forever
                         socket.setdefaulttimeout(15.0)
                         
@@ -80,7 +83,15 @@ class OCRService:
                         # Define Reader thread target to enforce initialization timeouts
                         def init_reader():
                             try:
-                                cls._reader = easyocr.Reader(langs, gpu=use_gpu)
+                                cls._reader = easyocr.Reader(
+                                    langs, 
+                                    gpu=use_gpu,
+                                    download_enabled=False,
+                                    verbose=False,
+                                    quantize=True,
+                                    model_storage_directory=model_dir
+                                )
+                                gc.collect()
                             except Exception as ex:
                                 cls._init_error = ex
                         
@@ -100,7 +111,8 @@ class OCRService:
                         if cls._init_error:
                             logger.error(f"[OCR SERVICE] EasyOCR reader initialization thread failed: {str(cls._init_error)}")
                             raise cls._init_error
-                            
+                        
+                        gc.collect()
                         logger.info(f"[OCR SERVICE] Reader created successfully in {time.time() - t_init:.2f} seconds.")
                     except Exception as e:
                         logger.error(f"[OCR SERVICE] Failed to initialize EasyOCR library: {str(e)}", exc_info=True)
