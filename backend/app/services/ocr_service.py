@@ -6,11 +6,36 @@ import gc
 import threading
 import socket
 import asyncio
+import atexit
+import signal
 from typing import TypedDict, Optional
 import numpy as np
 from PIL import Image, ImageOps, ImageEnhance, ImageFilter
 
 logger = logging.getLogger("app.services.ocr_service")
+
+# Diagnostic exit handlers to trace process termination states
+def handle_process_exit():
+    if hasattr(sys, "last_value") or (sys.exception() is not None):
+        logger.error(f"[PROCESS CONTROL] Process is exiting due to an unhandled exception: {sys.exception() or 'sys.last_value is set'}")
+    else:
+        logger.info("[PROCESS CONTROL] Process exited normally (atexit hook triggered).")
+
+atexit.register(handle_process_exit)
+
+def handle_termination_signal(signum, frame):
+    logger.info(f"[PROCESS CONTROL] Process terminated externally by signal: {signum} (SIGTERM/SIGINT received).")
+    sys.exit(128 + signum)
+
+try:
+    signal.signal(signal.SIGTERM, handle_termination_signal)
+    signal.signal(signal.SIGINT, handle_termination_signal)
+except ValueError:
+    pass
+
+# NOTE: SIGKILL (Signal 9 / Out of Memory termination by Render/Kernel) cannot be caught or handled in Python.
+# If the process terminates immediately during easyocr.Reader() without triggering subsequent log statements,
+# it indicates the process was killed externally by a SIGKILL signal.
 
 class ExtractionResult(TypedDict):
     text: str
@@ -87,18 +112,23 @@ class OCRService:
                                 logger.info(f"[OCR SERVICE] [THREAD] Process RSS memory immediately BEFORE Reader() initialization: {f'{mem_before:.2f} MB' if mem_before is not None else 'N/A'}")
                                 logger.info("[OCR SERVICE] [THREAD] Calling easyocr.Reader() constructor now...")
                                 
-                                cls._reader = easyocr.Reader(
-                                    langs, 
-                                    gpu=use_gpu,
-                                    download_enabled=False,
-                                    verbose=False,
-                                    quantize=True,
-                                    model_storage_directory=model_dir
-                                )
+                                try:
+                                    cls._reader = easyocr.Reader(
+                                        langs, 
+                                        gpu=use_gpu,
+                                        download_enabled=False,
+                                        verbose=False,
+                                        quantize=True,
+                                        model_storage_directory=model_dir
+                                    )
+                                    logger.info("Reader initialized successfully")
+                                except Exception as inner_ex:
+                                    logger.exception("Reader initialization failed")
+                                    raise inner_ex
                                 
                                 logger.info("[OCR SERVICE] [THREAD] easyocr.Reader() constructor successfully returned.")
                                 mem_after = get_memory_usage_mb()
-                                logger.info(f"[OCR SERVICE] [THREAD] Process RSS memory immediately AFTER Reader() initialization: {f'{mem_after:.2f} MB' if mem_after is not None else 'N/A'}")
+                                logger.info(f"RSS after successful initialization: {f'{mem_after:.2f} MB' if mem_after is not None else 'N/A'}")
                                 gc.collect()
                             except Exception as ex:
                                 logger.exception("[OCR SERVICE] [THREAD] Exception occurred inside init_reader() thread!")
