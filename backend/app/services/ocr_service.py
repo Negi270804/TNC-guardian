@@ -2,6 +2,7 @@ import os
 import sys
 import time
 import logging
+import gc
 from typing import TypedDict, Optional
 import numpy as np
 from PIL import Image, ImageOps, ImageEnhance, ImageFilter
@@ -12,6 +13,19 @@ class ExtractionResult(TypedDict):
     text: str
     page_count: int
     word_count: int
+
+def get_memory_usage_mb() -> Optional[float]:
+    try:
+        import psutil
+        process = psutil.Process(os.getpid())
+        return process.memory_info().rss / (1024 * 1024)
+    except ImportError:
+        try:
+            import resource
+            # ru_maxrss is in KB on Linux
+            return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024.0
+        except Exception:
+            return None
 
 class OCRService:
     _reader = None
@@ -36,6 +50,15 @@ class OCRService:
     @classmethod
     async def extract_text(cls, file_path: str, file_type: str) -> ExtractionResult:
         """Extracts text from files according to type parameters, falling back to OCR when needed."""
+        # 5. Verify base uploads directory exists before OCR
+        base_uploads = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "uploads"))
+        if not os.path.exists(base_uploads):
+            try:
+                os.makedirs(base_uploads, exist_ok=True)
+                logger.info(f"[OCR SERVICE] Base uploads directory verified and created at: {base_uploads}")
+            except Exception as e:
+                logger.error(f"[OCR SERVICE] Failed to create base uploads directory: {str(e)}")
+
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"Source file not found at path: {file_path}")
 
@@ -79,6 +102,7 @@ class OCRService:
 
         # 3. PDF Documents
         elif file_ext == "pdf":
+            start_time = time.time()
             try:
                 import pdfplumber
                 text = ""
@@ -86,23 +110,43 @@ class OCRService:
                 
                 with pdfplumber.open(file_path) as pdf:
                     page_count = len(pdf.pages)
+                    logger.info(f"[OCR SERVICE] Started PDF extraction. Total pages: {page_count}")
                     for i, page in enumerate(pdf.pages):
                         page_text = page.extract_text()
                         if page_text and page_text.strip():
                             text += page_text + "\n"
                         else:
                             # PDF Page has no selectable text, fall back to OCR on the page image
+                            logger.info(f"[OCR SERVICE] PDF page {i+1} has no selectable text. Executing image fallback OCR...")
                             try:
                                 pil_img = page.to_image(resolution=150).original.convert('RGB')
+                                width, height = pil_img.size
+                                # Downscale large page images to save memory and avoid restarts on Render
+                                max_dim = 1500
+                                if width > max_dim or height > max_dim:
+                                    ratio = max_dim / max(width, height)
+                                    pil_img = pil_img.resize((int(width * ratio), int(height * ratio)), Image.Resampling.LANCZOS)
+                                    logger.info(f"[OCR SERVICE] PDF page {i+1} image downscaled to {pil_img.size[0]}x{pil_img.size[1]} for memory safety.")
+                                
                                 img_arr = np.array(pil_img)
+                                pil_img.close()
+                                
                                 reader = cls.get_reader()
                                 ocr_results = reader.readtext(img_arr, detail=0)
                                 ocr_text = " ".join(ocr_results)
                                 if ocr_text.strip():
                                     text += ocr_text + "\n"
+                                
+                                del img_arr
+                                gc.collect()
                             except Exception as ocr_err:
-                                logger.warning(f"[OCR WARNING] Failed to OCR PDF Page {i+1}: {str(ocr_err)}")
+                                logger.exception(f"[OCR WARNING] Failed to OCR PDF Page {i+1}: {str(ocr_err)}")
                                 text += f"[Page {i+1} OCR Extraction Failure]\n"
+                
+                elapsed = time.time() - start_time
+                mem = get_memory_usage_mb()
+                mem_str = f"{mem:.2f} MB" if mem is not None else "N/A"
+                logger.info(f"[OCR SERVICE] PDF processing finished in {elapsed:.2f}s. Extracted characters: {len(text)}. Memory: {mem_str}")
                 
                 return {
                     "text": text,
@@ -110,6 +154,7 @@ class OCRService:
                     "word_count": len(text.split())
                 }
             except Exception as e:
+                logger.exception("Failed to parse PDF file layout")
                 raise RuntimeError(f"Failed to parse PDF file layout: {str(e)}")
 
         # 4. Image Documents (PNG, JPG, JPEG, WEBP, BMP)
@@ -118,8 +163,8 @@ class OCRService:
             try:
                 # Validate file exists and get size
                 file_size = os.path.getsize(file_path)
-                logger.info(f"Image received: {file_path}")
-                logger.info(f"Image size: {file_size} bytes")
+                logger.info(f"[OCR SERVICE] Image received for OCR: {file_path}")
+                logger.info(f"[OCR SERVICE] Image file size: {file_size} bytes")
 
                 # Validate file size
                 if file_size <= 0:
@@ -139,47 +184,59 @@ class OCRService:
                 except Exception as img_err:
                     raise ValueError(f"Invalid or corrupted image file: {str(img_err)}")
 
-                logger.info(f"Image validated. Format: {img_format}, Dimensions: {width}x{height}")
+                logger.info(f"[OCR SERVICE] Image loaded & validated. Format: {img_format}, Dimensions: {width}x{height}")
                 
                 # Check supported format
                 if img_format not in ["PNG", "JPEG", "JPG", "MPO", "WEBP", "BMP"]:
                     raise ValueError(f"Unsupported image format in file: {img_format}")
 
                 with Image.open(file_path) as pil_img:
-                    # Upscale image if it is small or has small dimensions to improve OCR accuracy
-                    width, height = pil_img.size
-                    if width < 1200 or height < 1200:
+                    # Auto orientation if required (exif_transpose)
+                    img = ImageOps.exif_transpose(pil_img)
+                    width, height = img.size
+
+                    # Downscale extremely large images to fit within max_dim (1500) to optimize for Render Free RAM (512MB)
+                    max_dim = 1500
+                    if width > max_dim or height > max_dim:
+                        ratio = max_dim / max(width, height)
+                        new_w = int(width * ratio)
+                        new_h = int(height * ratio)
+                        img = img.resize((new_w, new_h), Image.Resampling.LANCZOS)
+                        width, height = img.size
+                        logger.info(f"[OCR SERVICE] Downscaled large image to {width}x{height} to save memory.")
+                    
+                    # Upscale image only if it is small to preserve OCR accuracy
+                    elif width < 1000 or height < 1000:
                         scale = 2
                         if width < 500 or height < 500:
                             scale = 3
-                        pil_img = pil_img.resize((width * scale, height * scale), Image.Resampling.LANCZOS)
+                        img = img.resize((width * scale, height * scale), Image.Resampling.LANCZOS)
+                        width, height = img.size
+                        logger.info(f"[OCR SERVICE] Upscaled small image to {width}x{height} for accuracy.")
 
-                    # Auto orientation if required (exif_transpose)
-                    pil_img = ImageOps.exif_transpose(pil_img)
-
-                    # Handle transparency (RGBA, LA, or P with transparency)
-                    if pil_img.mode in ("RGBA", "LA") or (pil_img.mode == "P" and "transparency" in pil_img.info):
-                        # Composite on a solid white background
-                        bg = Image.new("RGBA", pil_img.size, (255, 255, 255, 255))
-                        composite = Image.alpha_composite(bg, pil_img.convert("RGBA"))
-                        processed_rgb = composite.convert("RGB")
+                    # Handle transparency (RGBA, LA, or P with transparency) safely
+                    if img.mode in ("RGBA", "LA") or (img.mode == "P" and "transparency" in img.info):
+                        bg = Image.new("RGBA", img.size, (255, 255, 255, 255))
+                        composite = Image.alpha_composite(bg, img.convert("RGBA"))
+                        img = composite.convert("RGB")
+                        bg.close()
+                        composite.close()
                     else:
-                        processed_rgb = pil_img.convert("RGB")
+                        img = img.convert("RGB")
 
                     # Convert to grayscale
-                    gray_img = processed_rgb.convert("L")
+                    img = img.convert("L")
 
-                    # Increase contrast using autocontrast
-                    gray_img = ImageOps.autocontrast(gray_img)
-                    # Enhance contrast further
-                    enhancer = ImageEnhance.Contrast(gray_img)
-                    gray_img = enhancer.enhance(2.0)
+                    # Increase contrast using autocontrast and enhancer
+                    img = ImageOps.autocontrast(img)
+                    enhancer = ImageEnhance.Contrast(img)
+                    img = enhancer.enhance(2.0)
 
                     # Noise reduction (Median Filter size 3)
-                    gray_img = gray_img.filter(ImageFilter.MedianFilter(size=3))
+                    img = img.filter(ImageFilter.MedianFilter(size=3))
 
                     # Otsu Threshold calculation for soft thresholding band
-                    img_arr = np.array(gray_img)
+                    img_arr = np.array(img)
                     try:
                         pixel_counts = np.bincount(img_arr.ravel(), minlength=256)
                         total_pixels = img_arr.size
@@ -201,6 +258,7 @@ class OCRService:
                     high = min(255, thresh + 90)
                     span = high - low if high > low else 1
                     binary_arr = np.clip((img_arr - low) * 255.0 / span, 0, 255).astype(np.uint8)
+                    del img_arr
 
                     # Dynamic Inversion (ensure black text on white background)
                     mean_val = np.mean(binary_arr)
@@ -208,15 +266,25 @@ class OCRService:
                         binary_arr = 255 - binary_arr
 
                     preprocessed_img = Image.fromarray(binary_arr)
+                    del binary_arr
 
                     # Sharpen edges using Unsharp Mask
                     preprocessed_img = preprocessed_img.filter(ImageFilter.UnsharpMask(radius=2, percent=150, threshold=3))
-
+                    
+                    preprocessed_arr = np.array(preprocessed_img)
+                    
+                    img.close()
+                    preprocessed_img.close()
+                    
+                    logger.info(f"[OCR SERVICE] Image preprocessing complete. Reader requested.")
+                    
                     # OCR Execution
-                    logger.info(f"OCR started: format={file_ext}")
+                    logger.info(f"[OCR SERVICE] OCR started using EasyOCR Reader: dimensions={width}x{height}, format={file_ext}")
                     reader = cls.get_reader()
                     
-                    ocr_results = reader.readtext(np.array(preprocessed_img), detail=1)
+                    ocr_results = reader.readtext(preprocessed_arr, detail=1)
+                    del preprocessed_arr
+                    gc.collect()
 
                 # Preserve Line Breaks
                 blocks = []
@@ -282,9 +350,12 @@ class OCRService:
                     text = "No readable text detected in the uploaded image."
 
                 elapsed_time = time.time() - start_time
-                logger.info(f"OCR completed: {file_path}")
-                logger.info(f"Characters extracted: {len(text)}")
-                logger.info(f"Processing time: {elapsed_time:.2f} seconds")
+                mem = get_memory_usage_mb()
+                mem_str = f"{mem:.2f} MB" if mem is not None else "N/A"
+                logger.info(f"[OCR SERVICE] OCR finished: {file_path}")
+                logger.info(f"[OCR SERVICE] Extracted text length: {len(text)} characters")
+                logger.info(f"[OCR SERVICE] Processing time: {elapsed_time:.2f} seconds")
+                logger.info(f"[OCR SERVICE] Memory usage: {mem_str}")
 
                 return {
                     "text": text,
@@ -293,7 +364,7 @@ class OCRService:
                 }
             except Exception as e:
                 elapsed_time = time.time() - start_time
-                logger.error(f"OCR execution failed for image {file_path} after {elapsed_time:.2f}s: {str(e)}", exc_info=True)
+                logger.exception(f"OCR execution failed for image {file_path} after {elapsed_time:.2f}s: {str(e)}")
                 raise RuntimeError(f"Failed to OCR image file: {str(e)}")
 
         else:

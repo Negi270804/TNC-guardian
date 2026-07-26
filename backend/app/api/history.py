@@ -245,9 +245,16 @@ async def delete_history_record(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    query = select(Document).where(Document.id == document_id)
-    res = await db.execute(query)
-    doc = res.scalars().first()
+    try:
+        query = select(Document).where(Document.id == document_id)
+        res = await db.execute(query)
+        doc = res.scalars().first()
+    except Exception as e:
+        logger.exception("Failed to query document for history deletion")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Database query failed: {type(e).__name__}: {str(e)}"
+        )
 
     if not doc:
         raise HTTPException(
@@ -262,20 +269,31 @@ async def delete_history_record(
             detail="You do not have permission to delete this history record."
         )
 
-    # 1. Clean up physical files from disk
-    if doc.storage_path and os.path.exists(doc.storage_path):
-        try:
-            os.remove(doc.storage_path)
-            parent_dir = os.path.dirname(doc.storage_path)
-            if os.path.exists(parent_dir) and not os.listdir(parent_dir):
-                os.rmdir(parent_dir)
-        except Exception as e:
-            # Log disk clean up error, but do not block db removal
-            logger.error(f"[CLEANUP ERROR] Failed to delete document file: {str(e)}")
+    # 1. Clean up physical files from disk recursively (even if file is already missing)
+    if doc.storage_path:
+        doc_dir = os.path.dirname(doc.storage_path)
+        if os.path.exists(doc_dir):
+            try:
+                import shutil
+                shutil.rmtree(doc_dir, ignore_errors=True)
+                # Cleanup user directory if empty
+                user_dir = os.path.dirname(doc_dir)
+                if os.path.exists(user_dir) and not os.listdir(user_dir):
+                    os.rmdir(user_dir)
+            except Exception as e:
+                # Log disk clean up error, but do not block db removal
+                logger.error(f"[CLEANUP ERROR] Failed to delete document file: {str(e)}")
 
-    # 2. Database deletion (cascades automatically to Analyses and AnalysisItems due to Cascade constraints)
-    await db.delete(doc)
-    await db.commit()
+    try:
+        # 2. Database deletion (cascades automatically to Analyses and AnalysisItems due to Cascade constraints)
+        await db.delete(doc)
+        await db.commit()
+    except Exception as e:
+        logger.exception("Failed to delete history record from database")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Database deletion commit failed: {type(e).__name__}: {str(e)}"
+        )
 
     return {"message": "History record and associated files deleted successfully."}
 
@@ -288,33 +306,55 @@ async def bulk_delete_history(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    query = select(Document).where(
-        Document.id.in_(payload.document_ids),
-        Document.user_id == current_user.id
-    )
-    res = await db.execute(query)
-    docs = res.scalars().all()
+    try:
+        query = select(Document).where(
+            Document.id.in_(payload.document_ids),
+            Document.user_id == current_user.id
+        )
+        res = await db.execute(query)
+        docs = res.scalars().all()
+    except Exception as e:
+        logger.exception("Failed to query documents for bulk history deletion")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Database query failed: {type(e).__name__}: {str(e)}"
+        )
     
     if not docs:
         return {"message": "No records found to delete."}
         
     deleted_count = 0
+    import shutil
     for doc in docs:
-        # Clean up physical files from disk
-        if doc.storage_path and os.path.exists(doc.storage_path):
-            try:
-                os.remove(doc.storage_path)
-                parent_dir = os.path.dirname(doc.storage_path)
-                if os.path.exists(parent_dir) and not os.listdir(parent_dir):
-                    os.rmdir(parent_dir)
-            except Exception as e:
-                logger.error(f"[CLEANUP ERROR] Failed to delete file: {str(e)}")
+        # Clean up physical files from disk recursively
+        if doc.storage_path:
+            doc_dir = os.path.dirname(doc.storage_path)
+            if os.path.exists(doc_dir):
+                try:
+                    shutil.rmtree(doc_dir, ignore_errors=True)
+                    # Cleanup user directory if empty
+                    user_dir = os.path.dirname(doc_dir)
+                    if os.path.exists(user_dir) and not os.listdir(user_dir):
+                        os.rmdir(user_dir)
+                except Exception as e:
+                    logger.error(f"[CLEANUP ERROR] Failed to delete file: {str(e)}")
         
-        # Database deletion (cascades automatically to Analyses and AnalysisItems)
-        await db.delete(doc)
-        deleted_count += 1
+        try:
+            # Database deletion (cascades automatically to Analyses and AnalysisItems)
+            await db.delete(doc)
+            deleted_count += 1
+        except Exception as e:
+            logger.error(f"Failed to delete document {doc.id} in bulk delete loop: {str(e)}")
         
-    await db.commit()
+    try:
+        await db.commit()
+    except Exception as e:
+        logger.exception("Failed to commit bulk deletion to database")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Database commit failed: {type(e).__name__}: {str(e)}"
+        )
+        
     return {"message": f"Successfully deleted {deleted_count} records."}
 
 @router.post("/{document_id}/reanalyze", response_model=AnalysisResponse, status_code=status.HTTP_201_CREATED)

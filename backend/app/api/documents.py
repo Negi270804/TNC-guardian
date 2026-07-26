@@ -182,9 +182,16 @@ async def delete_document(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    query = select(Document).where(Document.id == document_id)
-    res = await db.execute(query)
-    doc = res.scalars().first()
+    try:
+        query = select(Document).where(Document.id == document_id)
+        res = await db.execute(query)
+        doc = res.scalars().first()
+    except Exception as e:
+        logger.exception("Failed to query document for deletion")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Database query failed: {type(e).__name__}: {str(e)}"
+        )
 
     if not doc:
         raise HTTPException(
@@ -199,19 +206,30 @@ async def delete_document(
             detail="You do not have permission to delete this document."
         )
 
-    # Remove the physical file and container folder from disk
-    if os.path.exists(doc.storage_path):
-        try:
-            os.remove(doc.storage_path)
-            parent_dir = os.path.dirname(doc.storage_path)
-            if os.path.exists(parent_dir) and not os.listdir(parent_dir):
-                os.rmdir(parent_dir)
-        except Exception as e:
-            logger.error(f"[CLEANUP ERROR] Failed to clean document directories: {str(e)}")
+    # Remove the physical file and container folder recursively (even if file is already missing)
+    if doc.storage_path:
+        doc_dir = os.path.dirname(doc.storage_path)
+        if os.path.exists(doc_dir):
+            try:
+                shutil.rmtree(doc_dir, ignore_errors=True)
+                # Cleanup user directory if empty
+                user_dir = os.path.dirname(doc_dir)
+                if os.path.exists(user_dir) and not os.listdir(user_dir):
+                    os.rmdir(user_dir)
+            except Exception as e:
+                logger.error(f"[CLEANUP ERROR] Failed to clean document directories: {str(e)}")
 
-    # Remove record from database
-    await db.delete(doc)
-    await db.commit()
+    try:
+        # Remove record from database
+        await db.delete(doc)
+        await db.commit()
+    except Exception as e:
+        logger.exception("Failed to delete document from database")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Database deletion commit failed: {type(e).__name__}: {str(e)}"
+        )
+
     return {"message": "Document deleted successfully."}
 
 @router.post("/{document_id}/extract", response_model=DocumentResponse)
