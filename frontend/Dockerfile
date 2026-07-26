@@ -4,7 +4,7 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 # Expose Vite build arguments (with default values for compilation checks)
-ARG VITE_API_URL=http://localhost:8000/api
+ARG VITE_API_URL=https://tnc-guardian.onrender.com
 ARG VITE_APP_NAME="TNC Guardian"
 ARG VITE_ENV=production
 ARG VITE_ENABLE_DEMO_MODE=false

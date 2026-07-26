@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/services/api-client';
 import { SubscriptionStatus } from '@/components/subscription';
+import { API_ROUTES } from '@/config/api-routes';
 
 interface CurrentSubscription {
   plan: string;
@@ -19,7 +20,7 @@ export const SubscriptionPage: React.FC = () => {
   const { data: subscription, isLoading: isSubLoading } = useQuery<CurrentSubscription>({
     queryKey: ['current-subscription'],
     queryFn: async () => {
-      const res = await apiClient.get('/subscription/current');
+      const res = await apiClient.get(API_ROUTES.SUBSCRIPTION.CURRENT);
       return res.data;
     },
   });
@@ -27,7 +28,7 @@ export const SubscriptionPage: React.FC = () => {
   // Cancel subscription mutation (Downgrades to FREE) - kept for future release
   const cancelMutation = useMutation<any, Error, void>({
     mutationFn: async () => {
-      const res = await apiClient.post('/subscription/cancel');
+      const res = await apiClient.post(API_ROUTES.SUBSCRIPTION.CANCEL);
       return res.data;
     },
     onSuccess: () => {

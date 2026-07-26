@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/services/api-client';
 import { PlanBadge } from '@/components/subscription';
+import { API_ROUTES } from '@/config/api-routes';
 
 export const Dashboard: React.FC = () => {
   const { user } = useAuth();
@@ -12,7 +13,7 @@ export const Dashboard: React.FC = () => {
   const { data: currentSub } = useQuery<any>({
     queryKey: ['current-subscription'],
     queryFn: async () => {
-      const res = await apiClient.get('/subscription/current');
+      const res = await apiClient.get(API_ROUTES.SUBSCRIPTION.CURRENT);
       return res.data;
     },
   });
@@ -20,7 +21,7 @@ export const Dashboard: React.FC = () => {
   const { data: usage } = useQuery<any>({
     queryKey: ['subscription-usage'],
     queryFn: async () => {
-      const res = await apiClient.get('/subscription/usage');
+      const res = await apiClient.get(API_ROUTES.SUBSCRIPTION.USAGE);
       return res.data;
     },
   });
@@ -28,7 +29,7 @@ export const Dashboard: React.FC = () => {
   const { data: stats, isLoading: isStatsLoading } = useQuery<any>({
     queryKey: ['dashboard-stats'],
     queryFn: async () => {
-      const res = await apiClient.get('/dashboard/stats');
+      const res = await apiClient.get(API_ROUTES.DASHBOARD.STATS);
       return res.data;
     },
   });

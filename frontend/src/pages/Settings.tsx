@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation } from '@tanstack/react-query';
 import { apiClient } from '@/services/api-client';
+import { API_ROUTES } from '@/config/api-routes';
 
 const passwordSchema = z.object({
   currentPassword: z.string().min(1, 'Current password is required'),
@@ -36,7 +37,7 @@ export const Settings: React.FC = () => {
 
   const mutation = useMutation<any, Error, PasswordFormInputs>({
     mutationFn: async (data: PasswordFormInputs) => {
-      const response = await apiClient.post('/users/change-password', {
+      const response = await apiClient.post(API_ROUTES.USERS.CHANGE_PASSWORD, {
         current_password: data.currentPassword,
         new_password: data.newPassword,
         confirm_password: data.confirmPassword,

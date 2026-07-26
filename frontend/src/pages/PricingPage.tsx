@@ -2,6 +2,7 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/services/api-client';
 import { FeatureComparisonTable } from '@/components/subscription';
+import { API_ROUTES } from '@/config/api-routes';
 
 interface CurrentSubscription {
   plan: string;
@@ -16,7 +17,7 @@ export const PricingPage: React.FC = () => {
   const { data: currentSub, isLoading: isSubLoading } = useQuery<CurrentSubscription>({
     queryKey: ['current-subscription'],
     queryFn: async () => {
-      const res = await apiClient.get('/subscription/current');
+      const res = await apiClient.get(API_ROUTES.SUBSCRIPTION.CURRENT);
       return res.data;
     },
   });

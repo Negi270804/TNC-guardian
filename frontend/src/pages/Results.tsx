@@ -5,6 +5,7 @@ import { apiClient } from '@/services/api-client';
 import { Document, Analysis, AnalysisItem } from '@/types';
 import { formatDate } from '@/utils';
 import { env } from '@/config/env';
+import { API_ROUTES } from '@/config/api-routes';
 
 // Helper component for drawing the circular progress SVG ring
 const CircularProgress: React.FC<{ score: number }> = ({ score }) => {
@@ -63,7 +64,7 @@ export const Results: React.FC = () => {
   const { data: doc, isLoading: isDocLoading, error: docError } = useQuery<Document>({
     queryKey: ['document', id],
     queryFn: async () => {
-      const response = await apiClient.get<Document>(`/documents/${id}`);
+      const response = await apiClient.get<Document>(API_ROUTES.DOCUMENTS.BY_ID(id!));
       return response.data;
     },
     enabled: !!id,
@@ -73,7 +74,7 @@ export const Results: React.FC = () => {
   const { data: analysis, isLoading: isAnalysisLoading, error: analysisError } = useQuery<Analysis>({
     queryKey: ['analysis', id],
     queryFn: async () => {
-      const response = await apiClient.get<Analysis>(`/results/${id}`);
+      const response = await apiClient.get<Analysis>(API_ROUTES.RESULTS.BY_ID(id!));
       return response.data;
     },
     enabled: !!id,
@@ -83,7 +84,7 @@ export const Results: React.FC = () => {
   // Re-analyze Mutation
   const analyzeMutation = useMutation<any, Error, string>({
     mutationFn: async (docId: string) => {
-      const response = await apiClient.post<any>(`/analysis/${docId}`);
+      const response = await apiClient.post<any>(API_ROUTES.ANALYSIS.BY_ID(docId));
       return response.data;
     },
     onSuccess: (newAnalysis: any) => {

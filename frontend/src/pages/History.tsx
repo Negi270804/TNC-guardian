@@ -5,6 +5,7 @@ import { apiClient } from '@/services/api-client';
 import { Document } from '@/types';
 import { formatDate, formatBytes } from '@/utils';
 import { env } from '@/config/env';
+import { API_ROUTES } from '@/config/api-routes';
 
 // Reusable Circular Progress ring component for Details modal
 const CircularRiskProgress: React.FC<{ score: number }> = ({ score }) => {
@@ -127,7 +128,7 @@ export const History: React.FC = () => {
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['history', queryParams],
     queryFn: async () => {
-      const response = await apiClient.get('/history', { params: queryParams });
+      const response = await apiClient.get(API_ROUTES.HISTORY.BASE, { params: queryParams });
       return response.data;
     },
   });
@@ -140,7 +141,7 @@ export const History: React.FC = () => {
   const { data: detailDoc, isLoading: isDetailLoading } = useQuery({
     queryKey: ['history-detail', activeDetailId],
     queryFn: async () => {
-      const response = await apiClient.get(`/history/${activeDetailId}`);
+      const response = await apiClient.get(API_ROUTES.HISTORY.BY_ID(activeDetailId!));
       return response.data;
     },
     enabled: !!activeDetailId && detailModalOpen,
@@ -149,7 +150,7 @@ export const History: React.FC = () => {
   // Re-analyze Mutation
   const reanalyzeMutation = useMutation({
     mutationFn: async (docId: string) => {
-      const response = await apiClient.post(`/history/${docId}/reanalyze`);
+      const response = await apiClient.post(API_ROUTES.HISTORY.REANALYZE(docId));
       return response.data;
     },
     onSuccess: (newAnalysis) => {
@@ -175,7 +176,7 @@ export const History: React.FC = () => {
   // Delete Mutation
   const deleteMutation = useMutation({
     mutationFn: async (docId: string) => {
-      await apiClient.delete(`/history/${docId}`);
+      await apiClient.delete(API_ROUTES.HISTORY.BY_ID(docId));
     },
     onMutate: async (docId: string) => {
       await queryClient.cancelQueries({ queryKey: ['history', queryParams] });
@@ -213,7 +214,7 @@ export const History: React.FC = () => {
   // Bulk Delete Mutation
   const bulkDeleteMutation = useMutation({
     mutationFn: async (ids: string[]) => {
-      const response = await apiClient.post('/history/bulk-delete', { document_ids: ids });
+      const response = await apiClient.post(API_ROUTES.HISTORY.BULK_DELETE, { document_ids: ids });
       return response.data;
     },
     onMutate: async (ids: string[]) => {
@@ -348,7 +349,7 @@ ${clausesText}
   const handleDownload = async (docId: string) => {
     setIsDownloadingId(docId);
     try {
-      const response = await apiClient.get(`/history/${docId}`);
+      const response = await apiClient.get(API_ROUTES.HISTORY.BY_ID(docId));
       downloadReport(response.data);
     } catch (err) {
       setErrorToast('Failed to fetch full report details.');

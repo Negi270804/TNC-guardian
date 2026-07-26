@@ -5,7 +5,7 @@ const isProd = import.meta.env.PROD;
 const envSchema = z.object({
   VITE_API_URL: isProd
     ? z.string().url()
-    : z.string().url().default('http://localhost:8000/api'),
+    : z.string().url().default('https://tnc-guardian.onrender.com'),
   VITE_APP_NAME: z.string().default('TNC Guardian'),
   VITE_ENV: z.string().default(isProd ? 'production' : 'development'),
   VITE_ENABLE_DEMO_MODE: z.preprocess(

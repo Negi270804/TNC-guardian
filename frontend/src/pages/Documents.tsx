@@ -5,6 +5,7 @@ import { Document } from '@/types';
 import { formatDate, formatBytes } from '@/utils';
 import { Link, useNavigate } from 'react-router-dom';
 import { env } from '@/config/env';
+import { API_ROUTES } from '@/config/api-routes';
 
 const ALLOWED_EXTENSIONS = ['.pdf', '.docx', '.txt', '.png', '.jpg', '.jpeg', '.webp', '.bmp'];
 const ALLOWED_MIME_TYPES = [
@@ -46,7 +47,7 @@ export const Documents: React.FC = () => {
   const { data: documents = [], isLoading } = useQuery<Document[]>({
     queryKey: ['documents'],
     queryFn: async () => {
-      const response = await apiClient.get<Document[]>('/documents');
+      const response = await apiClient.get<Document[]>(API_ROUTES.DOCUMENTS.BASE);
       return response.data;
     },
   });
@@ -58,7 +59,7 @@ export const Documents: React.FC = () => {
       formData.append('file', file);
       
       setUploadProgress(1);
-      const response = await apiClient.post<Document>('/documents/upload', formData, {
+      const response = await apiClient.post<Document>(API_ROUTES.DOCUMENTS.UPLOAD, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -89,7 +90,7 @@ export const Documents: React.FC = () => {
   const extractMutation = useMutation<Document, Error, string>({
     mutationFn: async (docId: string) => {
       // Set custom timeout of 120 seconds for text extraction to prevent premature client-side aborts
-      const response = await apiClient.post<Document>(`/documents/${docId}/extract`, {}, { timeout: 120000 });
+      const response = await apiClient.post<Document>(API_ROUTES.DOCUMENTS.EXTRACT(docId), {}, { timeout: 120000 });
       return response.data;
     },
     onMutate: async () => {
@@ -118,7 +119,7 @@ export const Documents: React.FC = () => {
   // Analyze PDF Mutation (Existing Flow)
   const analyzeMutation = useMutation<any, Error, string>({
     mutationFn: async (docId: string) => {
-      const response = await apiClient.post<any>(`/analysis/${docId}`);
+      const response = await apiClient.post<any>(API_ROUTES.ANALYSIS.BY_ID(docId));
       return response.data;
     },
     onSuccess: (newAnalysis) => {
@@ -140,7 +141,7 @@ export const Documents: React.FC = () => {
   // Analyze URL Mutation
   const analyzeUrlMutation = useMutation<any, Error, string>({
     mutationFn: async (targetUrl: string) => {
-      const response = await apiClient.post<any>('/analysis/url', { url: targetUrl });
+      const response = await apiClient.post<any>(API_ROUTES.ANALYSIS.URL, { url: targetUrl });
       return response.data;
     },
     onSuccess: (newAnalysis) => {
@@ -190,7 +191,7 @@ export const Documents: React.FC = () => {
   // Analyze Text Mutation
   const analyzeTextMutation = useMutation<any, Error, string>({
     mutationFn: async (pastedText: string) => {
-      const response = await apiClient.post<any>('/analysis/text', { text: pastedText });
+      const response = await apiClient.post<any>(API_ROUTES.ANALYSIS.TEXT, { text: pastedText });
       return response.data;
     },
     onSuccess: (newAnalysis) => {
@@ -213,7 +214,7 @@ export const Documents: React.FC = () => {
   // Delete Mutation
   const deleteMutation = useMutation<void, Error, string>({
     mutationFn: async (docId: string) => {
-      await apiClient.delete(`/documents/${docId}`);
+      await apiClient.delete(API_ROUTES.DOCUMENTS.BY_ID(docId));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['documents'] });

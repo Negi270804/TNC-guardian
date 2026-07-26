@@ -6,6 +6,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/context/AuthContext';
 import { apiClient } from '@/services/api-client';
 import { User } from '@/types';
+import { API_ROUTES } from '@/config/api-routes';
 
 const profileSchema = z.object({
   fullName: z.string().min(2, 'Full name must be at least 2 characters'),
@@ -36,7 +37,7 @@ export const Profile: React.FC = () => {
 
   const mutation = useMutation<User, Error, ProfileFormInputs>({
     mutationFn: async (data: ProfileFormInputs) => {
-      const response = await apiClient.put<User>('/users/me', {
+      const response = await apiClient.put<User>(API_ROUTES.USERS.ME, {
         full_name: data.fullName,
         company: data.company || null,
         designation: data.designation || null,

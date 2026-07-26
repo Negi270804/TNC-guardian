@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/services/api-client';
 import { Document, Analysis } from '@/types';
 import { formatDate, formatBytes } from '@/utils';
+import { API_ROUTES } from '@/config/api-routes';
 
 export const DocumentDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -17,7 +18,7 @@ export const DocumentDetails: React.FC = () => {
   const { data: doc, isLoading, error } = useQuery<Document>({
     queryKey: ['document', id],
     queryFn: async () => {
-      const response = await apiClient.get<Document>(`/documents/${id}`);
+      const response = await apiClient.get<Document>(API_ROUTES.DOCUMENTS.BY_ID(id!));
       return response.data;
     },
     enabled: !!id,
@@ -27,7 +28,7 @@ export const DocumentDetails: React.FC = () => {
   const { data: analysis, isLoading: isAnalysisLoading } = useQuery<Analysis>({
     queryKey: ['analysis', id],
     queryFn: async () => {
-      const response = await apiClient.get<Analysis>(`/analysis/${id}`);
+      const response = await apiClient.get<Analysis>(API_ROUTES.ANALYSIS.BY_ID(id!));
       return response.data;
     },
     enabled: !!id && doc?.processing_status === 'COMPLETED' && !!doc?.analysis,
@@ -37,7 +38,7 @@ export const DocumentDetails: React.FC = () => {
   // Analyze Mutation
   const analyzeMutation = useMutation<any, Error, string>({
     mutationFn: async (docId: string) => {
-      const response = await apiClient.post<any>(`/analysis/${docId}`);
+      const response = await apiClient.post<any>(API_ROUTES.ANALYSIS.BY_ID(docId));
       return response.data;
     },
     onSuccess: (newAnalysis: any) => {
