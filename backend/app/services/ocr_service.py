@@ -83,6 +83,10 @@ class OCRService:
                         # Define Reader thread target to enforce initialization timeouts
                         def init_reader():
                             try:
+                                mem_before = get_memory_usage_mb()
+                                logger.info(f"[OCR SERVICE] [THREAD] Process RSS memory immediately BEFORE Reader() initialization: {f'{mem_before:.2f} MB' if mem_before is not None else 'N/A'}")
+                                logger.info("[OCR SERVICE] [THREAD] Calling easyocr.Reader() constructor now...")
+                                
                                 cls._reader = easyocr.Reader(
                                     langs, 
                                     gpu=use_gpu,
@@ -91,8 +95,13 @@ class OCRService:
                                     quantize=True,
                                     model_storage_directory=model_dir
                                 )
+                                
+                                logger.info("[OCR SERVICE] [THREAD] easyocr.Reader() constructor successfully returned.")
+                                mem_after = get_memory_usage_mb()
+                                logger.info(f"[OCR SERVICE] [THREAD] Process RSS memory immediately AFTER Reader() initialization: {f'{mem_after:.2f} MB' if mem_after is not None else 'N/A'}")
                                 gc.collect()
                             except Exception as ex:
+                                logger.exception("[OCR SERVICE] [THREAD] Exception occurred inside init_reader() thread!")
                                 cls._init_error = ex
                         
                         cls._init_error = None
@@ -102,11 +111,14 @@ class OCRService:
                         logger.info(f"[OCR SERVICE] Spawning thread to create Reader() with languages {langs} (GPU Enabled: {use_gpu})...")
                         t_init = time.time()
                         init_thread.start()
-                        init_thread.join(timeout=120.0)
+                        init_thread.join(timeout=60.0)
                         
                         if init_thread.is_alive():
-                            logger.error("[OCR SERVICE] EasyOCR reader initialization timed out (cold start limit exceeded)!")
-                            raise TimeoutError("EasyOCR Reader initialization timed out (exceeded 120s safety limit).")
+                            logger.error("[OCR SERVICE] Reader initialization timed out (blocked for more than 60 seconds)!")
+                            raise TimeoutError("EasyOCR Reader initialization timed out (exceeded 60s safety limit).")
+                        
+                        if not init_thread.is_alive() and cls._reader is None:
+                            logger.error("[OCR SERVICE] Reader thread exited unexpectedly (terminated or did not initialize reader).")
                         
                         if cls._init_error:
                             logger.error(f"[OCR SERVICE] EasyOCR reader initialization thread failed: {str(cls._init_error)}")
