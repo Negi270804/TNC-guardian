@@ -5,6 +5,7 @@ import logging
 import gc
 import threading
 import socket
+import asyncio
 from typing import TypedDict, Optional
 import numpy as np
 from PIL import Image, ImageOps, ImageEnhance, ImageFilter
@@ -41,7 +42,11 @@ class OCRService:
         logger.info("[OCR SERVICE] Entering get_reader()")
 
         if cls._reader is None:
-            logger.info("[OCR SERVICE] Acquiring singleton initialization lock...")
+            if cls._lock.locked():
+                logger.info("[OCR SERVICE] EasyOCR reader cold start in progress in another thread. Waiting for lock/initialization to complete...")
+            else:
+                logger.info("[OCR SERVICE] EasyOCR reader not initialized. Acquiring singleton initialization lock...")
+                
             with cls._lock:
                 # Double-check pattern
                 if cls._reader is None:
@@ -50,7 +55,7 @@ class OCRService:
                         import torch
                         from app import config
                         
-                        logger.info("[OCR SERVICE] Lock acquired. Initializing EasyOCR Reader...")
+                        logger.info("[OCR SERVICE] Lock acquired. Initializing EasyOCR Reader (cold start in progress)...")
                         
                         # Prevent PyTorch multi-threading deadlocks on resource-constrained containers
                         torch.set_num_threads(1)
@@ -86,13 +91,14 @@ class OCRService:
                         logger.info(f"[OCR SERVICE] Spawning thread to create Reader() with languages {langs} (GPU Enabled: {use_gpu})...")
                         t_init = time.time()
                         init_thread.start()
-                        init_thread.join(timeout=45.0)
+                        init_thread.join(timeout=120.0)
                         
                         if init_thread.is_alive():
-                            logger.error("[OCR SERVICE] Reader initialization timed out after 45 seconds!")
-                            raise TimeoutError("EasyOCR Reader initialization timed out (exceeded 45s safety limit).")
+                            logger.error("[OCR SERVICE] EasyOCR reader initialization timed out (cold start limit exceeded)!")
+                            raise TimeoutError("EasyOCR Reader initialization timed out (exceeded 120s safety limit).")
                         
                         if cls._init_error:
+                            logger.error(f"[OCR SERVICE] EasyOCR reader initialization thread failed: {str(cls._init_error)}")
                             raise cls._init_error
                             
                         logger.info(f"[OCR SERVICE] Reader created successfully in {time.time() - t_init:.2f} seconds.")
@@ -100,7 +106,7 @@ class OCRService:
                         logger.error(f"[OCR SERVICE] Failed to initialize EasyOCR library: {str(e)}", exc_info=True)
                         raise RuntimeError(f"OCR Reader engine failed to start: {str(e)}")
                 else:
-                    logger.info("[OCR SERVICE] Reader was already initialized by another thread while waiting for lock.")
+                    logger.info("[OCR SERVICE] Lock acquired. Reader was successfully initialized by the other thread.")
         
         logger.info(f"[OCR SERVICE] Returning Reader. Total get_reader time: {time.time() - t0:.2f} seconds.")
         return cls._reader
@@ -189,9 +195,8 @@ class OCRService:
                                 img_arr = np.array(pil_img)
                                 pil_img.close()
                                 
-                                reader = cls.get_reader()
+                                reader = await asyncio.to_thread(cls.get_reader)
                                 try:
-                                    import asyncio
                                     # Execute OCR in a thread pool with 30.0s timeout limit to prevent hangs
                                     ocr_results = await asyncio.wait_for(
                                         asyncio.to_thread(reader.readtext, img_arr, detail=0),
@@ -347,10 +352,9 @@ class OCRService:
                     
                     # OCR Execution
                     logger.info(f"[OCR SERVICE] OCR started using EasyOCR Reader: dimensions={width}x{height}, format={file_ext}")
-                    reader = cls.get_reader()
+                    reader = await asyncio.to_thread(cls.get_reader)
                      
                     try:
-                        import asyncio
                         # Execute OCR in a thread pool with 60.0s timeout limit to prevent hangs
                         ocr_results = await asyncio.wait_for(
                             asyncio.to_thread(reader.readtext, preprocessed_arr, detail=1),

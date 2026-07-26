@@ -44,6 +44,17 @@ async def lifespan(app: FastAPI):
             logger.error("WARNING: Database connection check failed on startup. Server is continuing to start up...")
     except Exception as e:
         logger.error(f"WARNING: Exception or timeout during database connection diagnostic check on startup: {str(e)}. Server is continuing to start up...")
+    
+    # Warm up EasyOCR Reader
+    try:
+        import asyncio
+        from app.services.ocr_service import OCRService
+        logger.info("[STARTUP] Pre-initializing EasyOCR reader to warm up model cache...")
+        await asyncio.to_thread(OCRService.get_reader)
+        logger.info("[STARTUP] EasyOCR reader successfully pre-initialized.")
+    except Exception as e:
+        logger.error(f"[STARTUP] EasyOCR pre-initialization failed during lifespan warm-up: {str(e)}")
+
     yield
 
 app = FastAPI(
