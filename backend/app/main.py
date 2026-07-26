@@ -112,10 +112,14 @@ async def generic_exception_handler(request: Request, exc: Exception):
     logger = logging.getLogger("app.main")
     logger.exception(f"Unhandled exception caught by global handler: {str(exc)}")
     
+    import traceback
+    tb = "".join(traceback.format_exception(type(exc), exc, exc.__traceback__))
+    
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={
-            "detail": "An internal server error occurred. Please try again later."
+            "detail": f"Internal Server Error: {type(exc).__name__}: {str(exc)}",
+            "traceback": tb
         }
     )
 
