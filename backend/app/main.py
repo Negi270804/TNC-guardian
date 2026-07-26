@@ -36,13 +36,14 @@ async def lifespan(app: FastAPI):
     # Run application startup diagnostics
     run_startup_checks()
     
-    # Execute database connectivity diagnostics on startup
+    # Execute database connectivity diagnostics on startup with a short timeout
     try:
-        success = await test_db_connection()
+        import asyncio
+        success = await asyncio.wait_for(test_db_connection(), timeout=5.0)
         if not success:
             logger.error("WARNING: Database connection check failed on startup. Server is continuing to start up...")
     except Exception as e:
-        logger.error(f"WARNING: Exception during database connection diagnostic check on startup: {str(e)}. Server is continuing to start up...")
+        logger.error(f"WARNING: Exception or timeout during database connection diagnostic check on startup: {str(e)}. Server is continuing to start up...")
     yield
 
 app = FastAPI(

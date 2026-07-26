@@ -26,14 +26,8 @@ def run_startup_checks():
     except Exception as e:
         logger.error(f"Failed to create upload directory at {upload_dir}: {str(e)}")
 
-    # 3. Verify OCR Dependencies
-    try:
-        import torch
-        import easyocr
-        use_gpu = torch.cuda.is_available() if settings.OCR_USE_GPU else False
-        logger.info(f"OCR Dependencies: easyocr & torch loaded successfully (GPU Available: {torch.cuda.is_available()}, GPU Enabled: {use_gpu})")
-    except Exception as e:
-        logger.warning(f"OCR Dependencies check failed: {str(e)}")
+    # 3. Verify OCR Dependencies (Deferred to runtime lazy-loading to optimize application startup port binding)
+    logger.info("OCR Dependencies: Verification deferred to runtime lazy-loading to optimize application startup port binding.")
 
     # 4. Verify AI Provider Configuration
     ai_status = []

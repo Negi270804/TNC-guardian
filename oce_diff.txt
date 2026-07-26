@@ -1,0 +1,98 @@
+diff --git a/backend/app/services/ocr_service.py b/backend/app/services/ocr_service.py
+index 1933582..92b87af 100644
+--- a/backend/app/services/ocr_service.py
++++ b/backend/app/services/ocr_service.py
+@@ -108,45 +108,76 @@ class OCRService:
+                 text = ""
+                 page_count = 0
+                 
++                # Render metadata and page count first, then close immediately
+                 with pdfplumber.open(file_path) as pdf:
+                     page_count = len(pdf.pages)
+-                    logger.info(f"[OCR SERVICE] Started PDF extraction. Total pages: {page_count}")
+-                    for i, page in enumerate(pdf.pages):
+-                        page_text = page.extract_text()
+-                        if page_text and page_text.strip():
+-                            text += page_text + "\n"
++                
++                logger.info(f"[OCR SERVICE] Started PDF extraction. Total pages: {page_count}")
++                
++                for i in range(page_count):
++                    # 10. Graceful abort if memory usage is too high (Render Limit is 512MB, check at 420MB)
++                    mem_mb = get_memory_usage_mb()
++                    if mem_mb and mem_mb > 420.0:
++                        logger.error(f"[OCR SERVICE] Graceful abort on page {i+1}: Memory is too high ({mem_mb:.2f} MB > 420.0 MB).")
++                        raise RuntimeError(
++                            f"PDF OCR processing aborted on page {i+1}/{page_count} due to high server memory usage ({mem_mb:.1f}MB). "
++                            "Please optimize or downscale the PDF file."
++                        )
++                    
++                    logger.info(f"[OCR SERVICE] Processing page {i+1}/{page_count}...")
++                    page_text = ""
++                    
++                    # 1. Open PDF for only this page and close immediately
++                    with pdfplumber.open(file_path) as pdf:
++                        page = pdf.pages[i]
++                        # 4. If the PDF already contains selectable text: Skip OCR completely
++                        extracted = page.extract_text()
++                        if extracted and extracted.strip():
++                            page_text = extracted
++                            logger.info(f"[OCR SERVICE] Page {i+1}/{page_count}: Selectable text found. Skipping OCR.")
+                         else:
+-                            # PDF Page has no selectable text, fall back to OCR on the page image
+-                            logger.info(f"[OCR SERVICE] PDF page {i+1} has no selectable text. Executing image fallback OCR...")
++                            # Page is scanned, execute image fallback OCR
++                            logger.info(f"[OCR SERVICE] Page {i+1}/{page_count}: No selectable text. Performing image fallback OCR...")
+                             try:
+                                 pil_img = page.to_image(resolution=150).original.convert('RGB')
+                                 width, height = pil_img.size
+-                                # Downscale large page images to save memory and avoid restarts on Render
++                                
++                                # 5. Downscale large images (maximum width 1500px) before OCR to conserve memory
+                                 max_dim = 1500
+                                 if width > max_dim or height > max_dim:
+                                     ratio = max_dim / max(width, height)
+                                     pil_img = pil_img.resize((int(width * ratio), int(height * ratio)), Image.Resampling.LANCZOS)
+-                                    logger.info(f"[OCR SERVICE] PDF page {i+1} image downscaled to {pil_img.size[0]}x{pil_img.size[1]} for memory safety.")
++                                    logger.info(f"[OCR SERVICE] Page {i+1}/{page_count}: Image downscaled to {pil_img.size[0]}x{pil_img.size[1]}.")
+                                 
+                                 img_arr = np.array(pil_img)
++                                # 2. release image
+                                 pil_img.close()
+                                 
++                                # 3. Reuse a singleton EasyOCR Reader
+                                 reader = cls.get_reader()
+                                 ocr_results = reader.readtext(img_arr, detail=0)
+-                                ocr_text = " ".join(ocr_results)
+-                                if ocr_text.strip():
+-                                    text += ocr_text + "\n"
++                                page_text = " ".join(ocr_results)
+                                 
+                                 del img_arr
+-                                gc.collect()
+                             except Exception as ocr_err:
+                                 logger.exception(f"[OCR WARNING] Failed to OCR PDF Page {i+1}: {str(ocr_err)}")
+-                                text += f"[Page {i+1} OCR Extraction Failure]\n"
++                                page_text = f"[Page {i+1} OCR Extraction Failure]\n"
++                    
++                    # 2. Append text
++                    text += page_text + "\n"
++                    
++                    # 6 & 7. Page progress and memory usage logs after every page
++                    current_mem = get_memory_usage_mb()
++                    mem_str = f"{current_mem:.2f} MB" if current_mem is not None else "N/A"
++                    logger.info(f"Page {i+1}/{page_count} complete | Memory usage: {mem_str}")
++                    
++                    # 2. Force gc.collect() after each page
++                    gc.collect()
+                 
+                 elapsed = time.time() - start_time
+-                mem = get_memory_usage_mb()
+-                mem_str = f"{mem:.2f} MB" if mem is not None else "N/A"
+-                logger.info(f"[OCR SERVICE] PDF processing finished in {elapsed:.2f}s. Extracted characters: {len(text)}. Memory: {mem_str}")
++                final_mem = get_memory_usage_mb()
++                final_mem_str = f"{final_mem:.2f} MB" if final_mem is not None else "N/A"
++                logger.info(f"[OCR SERVICE] PDF processing finished in {elapsed:.2f}s. Extracted characters: {len(text)}. Memory: {final_mem_str}")
+                 
+                 return {
+                     "text": text,

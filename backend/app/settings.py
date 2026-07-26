@@ -2,7 +2,7 @@ import os
 import sys
 from typing import Optional
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import Field, model_validator, ValidationError, field_validator
+from pydantic import Field, model_validator, ValidationError, field_validator, AliasChoices
 from dotenv import find_dotenv, load_dotenv
 
 # 1. Detect Render automatically
@@ -33,8 +33,8 @@ class Settings(BaseSettings):
     # Environment descriptor
     APP_ENV: str = Field(default="development", alias="APP_ENV")
     LOG_LEVEL: str = Field(default="INFO", alias="LOG_LEVEL")
-    BACKEND_HOST: str = Field(default="0.0.0.0", alias="BACKEND_HOST")
-    BACKEND_PORT: int = Field(default=8000, alias="BACKEND_PORT")
+    BACKEND_HOST: str = Field(default="0.0.0.0", validation_alias=AliasChoices("HOST", "BACKEND_HOST"))
+    BACKEND_PORT: int = Field(default=8000, validation_alias=AliasChoices("PORT", "BACKEND_PORT"))
     FRONTEND_URL: str = Field(default="http://localhost", alias="FRONTEND_URL")
 
     # Database connection parameters (Required: no defaults in code)
