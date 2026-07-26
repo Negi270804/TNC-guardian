@@ -38,6 +38,11 @@ class OCRService:
                 import easyocr
                 import torch
                 from app import config
+                
+                # Prevent PyTorch multi-threading deadlocks on resource-constrained containers
+                torch.set_num_threads(1)
+                torch.set_num_interop_threads(1)
+                
                 use_gpu = torch.cuda.is_available() if config.OCR_USE_GPU else False
                 langs = [lang.strip() for lang in config.OCR_LANGUAGES.split(",") if lang.strip()]
                 logger.info(f"[OCR SERVICE] Initializing EasyOCR Reader with languages {langs} (GPU Enabled: {use_gpu})...")
@@ -132,7 +137,16 @@ class OCRService:
                                 pil_img.close()
                                 
                                 reader = cls.get_reader()
-                                ocr_results = reader.readtext(img_arr, detail=0)
+                                try:
+                                    import asyncio
+                                    # Execute OCR in a thread pool with 30.0s timeout limit to prevent hangs
+                                    ocr_results = await asyncio.wait_for(
+                                        asyncio.to_thread(reader.readtext, img_arr, detail=0),
+                                        timeout=30.0
+                                    )
+                                except asyncio.TimeoutError:
+                                    logger.warning(f"[OCR WARNING] PDF Page {i+1} OCR execution timed out after 30 seconds.")
+                                    ocr_results = []
                                 ocr_text = " ".join(ocr_results)
                                 if ocr_text.strip():
                                     text += ocr_text + "\n"
@@ -281,8 +295,18 @@ class OCRService:
                     # OCR Execution
                     logger.info(f"[OCR SERVICE] OCR started using EasyOCR Reader: dimensions={width}x{height}, format={file_ext}")
                     reader = cls.get_reader()
-                    
-                    ocr_results = reader.readtext(preprocessed_arr, detail=1)
+                     
+                    try:
+                        import asyncio
+                        # Execute OCR in a thread pool with 60.0s timeout limit to prevent hangs
+                        ocr_results = await asyncio.wait_for(
+                            asyncio.to_thread(reader.readtext, preprocessed_arr, detail=1),
+                            timeout=60.0
+                        )
+                    except asyncio.TimeoutError:
+                        logger.error(f"[OCR SERVICE] OCR execution timed out after 60 seconds for image: {file_path}")
+                        raise RuntimeError("OCR processing timed out. The image might be too complex or server resources are constrained.")
+                     
                     del preprocessed_arr
                     gc.collect()
 
