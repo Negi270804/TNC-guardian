@@ -32,6 +32,9 @@ EXPOSE 8000
 # Switch context to non-root user
 USER appuser
 
+# Pre-download EasyOCR models into the appuser home directory to prevent runtime downloads
+RUN python -c "import easyocr; easyocr.Reader(['en'])"
+
 # Health Check instruction using Python's built-in urllib
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
     CMD python -c "import urllib.request, os; urllib.request.urlopen('http://localhost:' + os.getenv('PORT', '8000') + '/health')" || exit 1
