@@ -3,7 +3,11 @@ FROM python:3.12-slim
 
 # Prevent writing compiled bytecodes to disk and enable unbuffered logging
 ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
+    PYTHONUNBUFFERED=1 \
+    EASYOCR_MODULE_PATH=/app/.EasyOCR \
+    OMP_NUM_THREADS=1 \
+    MKL_NUM_THREADS=1 \
+    OPENBLAS_NUM_THREADS=1
 
 WORKDIR /app
 

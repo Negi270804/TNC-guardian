@@ -3,6 +3,8 @@ import sys
 import time
 import logging
 import gc
+import threading
+import socket
 from typing import TypedDict, Optional
 import numpy as np
 from PIL import Image, ImageOps, ImageEnhance, ImageFilter
@@ -29,27 +31,78 @@ def get_memory_usage_mb() -> Optional[float]:
 
 class OCRService:
     _reader = None
+    _lock = threading.Lock()
+    _init_error = None
 
     @classmethod
     def get_reader(cls):
-        """Lazy-loaded, cached EasyOCR reader instance to conserve RAM/VRAM resource pools."""
+        """Lazy-loaded, cached EasyOCR reader instance with lock and timeout protection."""
+        t0 = time.time()
+        logger.info("[OCR SERVICE] Entering get_reader()")
+
         if cls._reader is None:
-            try:
-                import easyocr
-                import torch
-                from app import config
-                
-                # Prevent PyTorch multi-threading deadlocks on resource-constrained containers
-                torch.set_num_threads(1)
-                torch.set_num_interop_threads(1)
-                
-                use_gpu = torch.cuda.is_available() if config.OCR_USE_GPU else False
-                langs = [lang.strip() for lang in config.OCR_LANGUAGES.split(",") if lang.strip()]
-                logger.info(f"[OCR SERVICE] Initializing EasyOCR Reader with languages {langs} (GPU Enabled: {use_gpu})...")
-                cls._reader = easyocr.Reader(langs, gpu=use_gpu)
-            except Exception as e:
-                logger.error(f"[OCR SERVICE] Failed to initialize EasyOCR library: {str(e)}", exc_info=True)
-                raise RuntimeError(f"OCR Reader engine failed to start: {str(e)}")
+            logger.info("[OCR SERVICE] Acquiring singleton initialization lock...")
+            with cls._lock:
+                # Double-check pattern
+                if cls._reader is None:
+                    try:
+                        import easyocr
+                        import torch
+                        from app import config
+                        
+                        logger.info("[OCR SERVICE] Lock acquired. Initializing EasyOCR Reader...")
+                        
+                        # Prevent PyTorch multi-threading deadlocks on resource-constrained containers
+                        torch.set_num_threads(1)
+                        torch.set_num_interop_threads(1)
+                        
+                        # Set default socket timeout to prevent download requests from hanging forever
+                        socket.setdefaulttimeout(15.0)
+                        
+                        # Log model caching directory and details
+                        model_dir = os.path.join(easyocr.easyocr.MODULE_PATH, "model")
+                        logger.info(f"[OCR SERVICE] EasyOCR cache directory: {easyocr.easyocr.MODULE_PATH}")
+                        logger.info(f"[OCR SERVICE] EasyOCR search path: {model_dir}")
+                        if os.path.exists(model_dir):
+                            cached_files = os.listdir(model_dir)
+                            logger.info(f"[OCR SERVICE] Existing cached model files: {cached_files}")
+                        else:
+                            logger.warning(f"[OCR SERVICE] Cached model files folder does not exist at path: {model_dir}")
+                        
+                        use_gpu = torch.cuda.is_available() if config.OCR_USE_GPU else False
+                        langs = [lang.strip() for lang in config.OCR_LANGUAGES.split(",") if lang.strip()]
+                        
+                        # Define Reader thread target to enforce initialization timeouts
+                        def init_reader():
+                            try:
+                                cls._reader = easyocr.Reader(langs, gpu=use_gpu)
+                            except Exception as ex:
+                                cls._init_error = ex
+                        
+                        cls._init_error = None
+                        init_thread = threading.Thread(target=init_reader)
+                        init_thread.daemon = True
+                        
+                        logger.info(f"[OCR SERVICE] Spawning thread to create Reader() with languages {langs} (GPU Enabled: {use_gpu})...")
+                        t_init = time.time()
+                        init_thread.start()
+                        init_thread.join(timeout=45.0)
+                        
+                        if init_thread.is_alive():
+                            logger.error("[OCR SERVICE] Reader initialization timed out after 45 seconds!")
+                            raise TimeoutError("EasyOCR Reader initialization timed out (exceeded 45s safety limit).")
+                        
+                        if cls._init_error:
+                            raise cls._init_error
+                            
+                        logger.info(f"[OCR SERVICE] Reader created successfully in {time.time() - t_init:.2f} seconds.")
+                    except Exception as e:
+                        logger.error(f"[OCR SERVICE] Failed to initialize EasyOCR library: {str(e)}", exc_info=True)
+                        raise RuntimeError(f"OCR Reader engine failed to start: {str(e)}")
+                else:
+                    logger.info("[OCR SERVICE] Reader was already initialized by another thread while waiting for lock.")
+        
+        logger.info(f"[OCR SERVICE] Returning Reader. Total get_reader time: {time.time() - t0:.2f} seconds.")
         return cls._reader
 
     @classmethod
