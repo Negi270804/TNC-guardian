@@ -2,11 +2,11 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { lazyWithRetry } from '@/utils/lazy-retry';
+import { Login } from '@/pages/Login';
+import { Register } from '@/pages/Register';
 
 // Lazy load page components to enable code splitting and optimize build size with self-healing retries
 const Landing = lazyWithRetry(() => import('@/pages/Landing').then(m => ({ default: m.Landing })));
-const Login = lazyWithRetry(() => import('@/pages/Login').then(m => ({ default: m.Login })));
-const Register = lazyWithRetry(() => import('@/pages/Register').then(m => ({ default: m.Register })));
 const Dashboard = lazyWithRetry(() => import('@/pages/Dashboard').then(m => ({ default: m.Dashboard })));
 const Documents = lazyWithRetry(() => import('@/pages/Documents').then(m => ({ default: m.Documents })));
 const DocumentDetails = lazyWithRetry(() => import('@/pages/DocumentDetails').then(m => ({ default: m.DocumentDetails })));
