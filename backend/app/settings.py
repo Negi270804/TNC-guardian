@@ -59,6 +59,8 @@ class Settings(BaseSettings):
         alias="GEMINI_API_KEY"
     )
     OPENAI_MODEL: str = Field(default="gpt-4o-mini", alias="OPENAI_MODEL")
+    OPENAI_TIMEOUT: float = Field(default=60.0, alias="OPENAI_TIMEOUT")
+    OPENAI_MAX_PROMPT_WORDS: int = Field(default=40000, alias="OPENAI_MAX_PROMPT_WORDS")
 
     URL_INGESTION_TIMEOUT: float = Field(default=12.0, alias="URL_INGESTION_TIMEOUT")
     URL_INGESTION_RETRIES: int = Field(default=3, alias="URL_INGESTION_RETRIES")

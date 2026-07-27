@@ -10,16 +10,18 @@ class AIFactory:
     @staticmethod
     def get_service() -> BaseAIService:
         """Determines the active AI service implementation based on key availability."""
+        from app import config
+        api_key = getattr(config, "OPENAI_API_KEY", "")
         has_key = (
-            OPENAI_API_KEY is not None and 
-            OPENAI_API_KEY != "" and
-            "placeholder" not in OPENAI_API_KEY.lower() and
-            "your_openai" not in OPENAI_API_KEY.lower()
+            api_key is not None and 
+            api_key != "" and
+            "placeholder" not in api_key.lower() and
+            "your_openai" not in api_key.lower()
         )
 
         if has_key:
             logger.info("[AI FACTORY] Active Service Provider: OpenAIService (GPT-4o-mini)")
-            return OpenAIService()
+            return OpenAIService(api_key)
         else:
             logger.info("[AI FACTORY] Active Service Provider: MockAIService (Offline Mock Fallback)")
             return MockAIService()
