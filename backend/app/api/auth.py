@@ -109,7 +109,12 @@ async def forgot_password(payload: ForgotPasswordRequest, db: AsyncSession = Dep
     await db.commit()
     
     # Trigger SMTP email sending asynchronously
-    await EmailService.send_reset_email(user.email, token)
+    logger.info(f"Before call: Triggering EmailService.send_reset_email for {user.email}")
+    try:
+        await EmailService.send_reset_email(user.email, token)
+        logger.info(f"After call: Returned from EmailService.send_reset_email for {user.email}")
+    except Exception as e:
+        logger.exception(f"Error occurred in EmailService.send_reset_email for {user.email}")
     
     return generic_response
 
