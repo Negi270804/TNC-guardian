@@ -63,6 +63,11 @@ class OCRService:
     @classmethod
     def get_reader(cls):
         """Lazy-loaded, cached EasyOCR reader instance with lock and timeout protection."""
+        from app import config
+        if not getattr(config, "ENABLE_IMAGE_OCR", True):
+            logger.warning("[OCR SERVICE] get_reader called but ENABLE_IMAGE_OCR is disabled. Bypassing reader initialization.")
+            return None
+
         t0 = time.time()
         logger.info("[OCR SERVICE] Entering get_reader()")
 
@@ -168,7 +173,7 @@ class OCRService:
         return cls._reader
 
     @classmethod
-    async def extract_text(cls, file_path: str, file_type: str) -> ExtractionResult:
+    async def extract_text(cls, file_path: str, file_type: str) -> dict:
         """Extracts text from files according to type parameters, falling back to OCR when needed."""
         # 5. Verify base uploads directory exists before OCR
         base_uploads = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "uploads"))
@@ -183,6 +188,16 @@ class OCRService:
             raise FileNotFoundError(f"Source file not found at path: {file_path}")
 
         file_ext = file_type.lower().strip('.')
+        
+        # Check if Image OCR is disabled and user requested image file extraction
+        from app import config
+        if not getattr(config, "ENABLE_IMAGE_OCR", True) and file_ext in ["png", "jpg", "jpeg", "webp", "bmp"]:
+            logger.info(f"[OCR SERVICE] Declining Image OCR request for {file_path} because ENABLE_IMAGE_OCR is disabled.")
+            return {
+                "success": False,
+                "feature": "image_ocr",
+                "message": "Image OCR is currently unavailable on this deployment."
+            }
         
         # 1. TXT Documents
         if file_ext == "txt":
@@ -238,6 +253,14 @@ class OCRService:
                         else:
                             # PDF Page has no selectable text, fall back to OCR on the page image
                             logger.info(f"[OCR SERVICE] PDF page {i+1} has no selectable text. Executing image fallback OCR...")
+                            from app import config
+                            if not getattr(config, "ENABLE_IMAGE_OCR", True):
+                                logger.info(f"[OCR SERVICE] Declining scanned PDF OCR request because ENABLE_IMAGE_OCR is disabled.")
+                                return {
+                                    "success": False,
+                                    "feature": "image_ocr",
+                                    "message": "Image OCR is currently unavailable on this deployment."
+                                }
                             img_arr = None
                             try:
                                 pil_img = page.to_image(resolution=150).original.convert('RGB')

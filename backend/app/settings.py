@@ -93,6 +93,7 @@ class Settings(BaseSettings):
     # OCR Settings
     OCR_USE_GPU: bool = Field(default=True, alias="OCR_USE_GPU")
     OCR_LANGUAGES: str = Field(default="en", alias="OCR_LANGUAGES")
+    ENABLE_IMAGE_OCR: bool = Field(default=True, alias="ENABLE_IMAGE_OCR")
 
     # Rate Limiting Settings
     RATE_LIMIT_LIMIT: int = Field(default=15, alias="RATE_LIMIT_LIMIT")

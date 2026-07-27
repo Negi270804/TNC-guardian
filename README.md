@@ -8,6 +8,21 @@ The system automates the ingestion of legal documents through URL scraping, PDF 
 
 ---
 
+## Features Scope
+
+### Supported Features
+*   **URL Analysis**: Scrapes terms and conditions directly from any public webpage.
+*   **Text PDF**: Direct selectable text PDF parsing.
+*   **DOCX**: Word document parsing.
+*   **TXT**: Plain-text document parsing.
+*   **AI Analysis**: High-fidelity risk analysis using LLM integrations.
+*   **Reports**: Standardized, clean risk assessments and summaries.
+
+### Optional Features
+*   **Image OCR (Beta)**: Available on supported deployments by setting the `ENABLE_IMAGE_OCR=true` environment variable.
+
+---
+
 ## 1. Directory Structure
 
 This project follows a scalable, decoupled client-server repository layout:

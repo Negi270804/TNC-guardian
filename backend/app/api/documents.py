@@ -269,6 +269,17 @@ async def extract_document_text(
         # Run text extraction service
         extraction_result = await OCRService.extract_text(doc.storage_path, doc.file_type)
         
+        # Check if OCR was declined/disabled
+        if isinstance(extraction_result, dict) and not extraction_result.get("success", True):
+            doc.processing_status = "FAILED"
+            doc.processing_completed_at = datetime.now(timezone.utc)
+            db.add(doc)
+            await db.commit()
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=extraction_result
+            )
+
         # Save completed details
         doc.extracted_text = extraction_result["text"]
         doc.page_count = extraction_result["page_count"]

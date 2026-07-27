@@ -31,6 +31,7 @@ export const Documents: React.FC = () => {
   const [successToast, setSuccessToast] = useState<string | null>(null);
   const [errorToast, setErrorToast] = useState<string | null>(null);
   const [selectedDoc, setSelectedDoc] = useState<Document | null>(null);
+  const [ocrDisabledInfo, setOcrDisabledInfo] = useState<any>(null);
 
   // Tab controls and new inputs
   const [activeTab, setActiveTab] = useState<'pdf' | 'url' | 'text'>('pdf');
@@ -110,9 +111,14 @@ export const Documents: React.FC = () => {
     },
     onError: (err: any) => {
       queryClient.invalidateQueries({ queryKey: ['documents'] });
-      const msg = err.response?.data?.detail || 'Text extraction engine failed.';
-      setErrorToast(msg);
-      setTimeout(() => setErrorToast(null), 4000);
+      const detail = err.response?.data?.detail;
+      if (detail && typeof detail === 'object' && detail.feature === 'image_ocr') {
+        setOcrDisabledInfo(detail);
+      } else {
+        const msg = typeof detail === 'string' ? detail : 'Text extraction engine failed.';
+        setErrorToast(msg);
+        setTimeout(() => setErrorToast(null), 4000);
+      }
     },
   });
 
@@ -459,6 +465,44 @@ export const Documents: React.FC = () => {
                 <p className="text-[10px] text-slate-600">
                   PDF, DOCX, TXT, PNG, JPG, JPEG (Max: 20MB)
                 </p>
+              </div>
+
+              {/* Supported/Optional Formats Info */}
+              <div className="pt-3 border-t border-slate-800/60 space-y-3 text-left">
+                <div className="space-y-1">
+                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Supported</span>
+                  <ul className="list-none space-y-1 pl-0 text-xs text-slate-350">
+                    <li className="flex items-center gap-1.5">
+                      <span>✅</span>
+                      <span>Text PDF</span>
+                    </li>
+                    <li className="flex items-center gap-1.5">
+                      <span>✅</span>
+                      <span>DOCX</span>
+                    </li>
+                    <li className="flex items-center gap-1.5">
+                      <span>✅</span>
+                      <span>TXT</span>
+                    </li>
+                    <li className="flex items-center gap-1.5">
+                      <span>✅</span>
+                      <span>URL Analysis</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="space-y-1">
+                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Optional</span>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-1.5 text-xs text-slate-350">
+                      <span>🧪</span>
+                      <span>Image OCR (PNG/JPG/JPEG)</span>
+                    </div>
+                    <span className="text-[10px] text-slate-500 block leading-tight">
+                      Available only on supported deployments.
+                    </span>
+                  </div>
+                </div>
               </div>
 
               {uploadProgress !== null && (
@@ -853,6 +897,55 @@ export const Documents: React.FC = () => {
                 className="px-4 py-2 bg-red-950/30 text-red-400 hover:text-red-300 rounded border border-red-900/30 text-xs font-semibold transition"
               >
                 Delete Record
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* OCR Disabled Info Modal */}
+      {ocrDisabledInfo && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-xl p-6 space-y-6 shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="flex items-start gap-4">
+              <span className="text-3xl p-2 bg-amber-500/10 text-amber-500 rounded-lg">🧪</span>
+              <div className="space-y-1">
+                <h3 className="text-lg font-bold text-slate-100 font-display">Image OCR (Beta)</h3>
+                <p className="text-xs text-slate-455 leading-relaxed">
+                  Image OCR requires higher-memory hosting and is not available on this deployment.
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-slate-950 border border-slate-850 p-4 rounded-lg space-y-3">
+              <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Recommended alternatives:</h4>
+              <ul className="list-none space-y-2 text-xs text-slate-350">
+                <li className="flex items-center gap-2">
+                  <span className="text-green-500 font-bold">✓</span>
+                  <span>Upload Text PDF</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-green-500 font-bold">✓</span>
+                  <span>Upload DOCX</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-green-500 font-bold">✓</span>
+                  <span>Upload TXT</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-green-500 font-bold">✓</span>
+                  <span>Analyze URL</span>
+                </li>
+              </ul>
+            </div>
+
+            <div className="flex justify-end pt-2">
+              <button
+                type="button"
+                onClick={() => setOcrDisabledInfo(null)}
+                className="px-5 py-2 bg-slate-800 hover:bg-slate-750 border border-slate-700 text-xs font-semibold text-slate-200 hover:text-white rounded-lg transition"
+              >
+                Close
               </button>
             </div>
           </div>
