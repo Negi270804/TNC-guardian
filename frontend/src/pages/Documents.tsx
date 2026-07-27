@@ -4,8 +4,8 @@ import { apiClient } from '@/services/api-client';
 import { Document } from '@/types';
 import { formatDate, formatBytes } from '@/utils';
 import { Link, useNavigate } from 'react-router-dom';
-import { env } from '@/config/env';
 import { API_ROUTES } from '@/config/api-routes';
+
 
 const ALLOWED_EXTENSIONS = ['.pdf', '.docx', '.txt', '.png', '.jpg', '.jpeg', '.webp', '.bmp'];
 const ALLOWED_MIME_TYPES = [
@@ -90,16 +90,13 @@ export const Documents: React.FC = () => {
   // Extract Text Mutation
   const extractMutation = useMutation<Document, Error, string>({
     mutationFn: async (docId: string) => {
-      // Set custom timeout of 120 seconds for text extraction to prevent premature client-side aborts
       const response = await apiClient.post<Document>(API_ROUTES.DOCUMENTS.EXTRACT(docId), {}, { timeout: 120000 });
       return response.data;
     },
     onMutate: async () => {
-      // Cancel outgoing refetches to prevent race conditions
       await queryClient.cancelQueries({ queryKey: ['documents'] });
     },
     onSuccess: (updatedDoc: Document) => {
-      // Update cache immediately to prevent out-of-order state updates
       queryClient.setQueryData<Document[]>(['documents'], (old: Document[] | undefined) => {
         if (!old) return [updatedDoc];
         return old.map((d: Document) => (d.id === updatedDoc.id ? updatedDoc : d));
@@ -122,7 +119,7 @@ export const Documents: React.FC = () => {
     },
   });
 
-  // Analyze PDF Mutation (Existing Flow)
+  // Analyze PDF Mutation
   const analyzeMutation = useMutation<any, Error, string>({
     mutationFn: async (docId: string) => {
       const response = await apiClient.post<any>(API_ROUTES.ANALYSIS.BY_ID(docId));
@@ -324,10 +321,11 @@ export const Documents: React.FC = () => {
   const isAnyAnalysisPending = analyzeMutation.isPending || analyzeUrlMutation.isPending || analyzeTextMutation.isPending;
 
   return (
-    <div className="space-y-8 relative fade-in">
+    <div className="space-y-8 relative fade-in text-slate-700">
+      
       {/* AI Analysis Loading Screen Overlay */}
       {isAnyAnalysisPending && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex flex-col items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-md flex flex-col items-center justify-center p-6 z-50">
           <style>{`
             @keyframes progress-indeterminate {
               0% { transform: translateX(-100%); }
@@ -335,36 +333,42 @@ export const Documents: React.FC = () => {
               100% { transform: translateX(100%); }
             }
             .animate-progress-indeterminate {
-              animation: progress-indeterminate 2s infinite ease-in-out;
+              animation: progress-indeterminate 2.2s infinite ease-in-out;
               width: 50%;
             }
           `}</style>
-          <div className="w-full max-w-md bg-white border border-slate-200/85 rounded-2xl p-8 space-y-6 text-center shadow-2xl">
+          
+          <div className="w-full max-w-md bg-white border border-slate-200/80 rounded-2xl p-8 space-y-6 text-center shadow-2xl relative overflow-hidden animate-fadeIn">
+            {/* Top glowing laser line */}
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-brand-500 to-transparent" />
+            
             <div className="relative w-24 h-24 mx-auto flex items-center justify-center">
-              <div className="absolute inset-0 rounded-full border-4 border-t-brand-500 border-r-brand-500/20 border-b-brand-500/20 border-l-brand-500/20 animate-spin" />
-              <div className="absolute inset-2 rounded-full border-4 border-b-brand-400 border-t-brand-400/20 border-r-brand-400/20 border-l-brand-400/20 animate-spin" style={{ animationDirection: 'reverse' }} />
-              <span className="text-3xl">⚖️</span>
+              {/* Outer Spin Ring */}
+              <div className="absolute inset-0 rounded-full border-4 border-t-brand-500 border-r-brand-500/10 border-b-brand-500/10 border-l-brand-500/10 animate-spin" />
+              {/* Inner Reverse Spin Ring */}
+              <div className="absolute inset-2 rounded-full border-4 border-b-brand-400 border-t-brand-400/10 border-r-brand-400/10 border-l-brand-400/10 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '2s' }} />
+              <span className="text-3xl select-none">🛡️</span>
             </div>
             
             <div className="space-y-2">
               <h3 className="text-lg font-bold text-slate-900 font-display">
-                {urlLoadingStep === 'extracting' ? 'Extracting Webpage...' : 'AI Legal Audit in Progress'}
+                {urlLoadingStep === 'extracting' ? 'Extracting Webpage Link...' : 'AI Legal Audit In Progress'}
               </h3>
-              <p className="text-xs text-slate-500 max-w-xs mx-auto leading-relaxed">
+              <p className="text-xs text-slate-450 leading-relaxed max-w-xs mx-auto font-medium">
                 {urlLoadingStep === 'extracting'
-                  ? 'Fetching webpage content, parsing HTML elements, and cleaning cookie consent templates...'
-                  : 'Analyzing clauses, identifying liability limits, checking hidden fees and auto-renewal constraints...'}
+                  ? 'Crawling URL components, parsing public HTML text, and cleaning cookie disclosures...'
+                  : 'Auditing provisions, highlighting hidden auto-renew charges, and scoring liability limits...'}
               </p>
             </div>
 
-            <div className="w-full bg-[#F8FAFC] border border-slate-200/60 rounded-xl p-4.5 space-y-2.5">
-              <div className="flex justify-between text-[11px] font-semibold text-slate-500">
-                <span>Auditing Engine Status</span>
-                <span className="text-brand-600 font-extrabold animate-pulse">
-                  {urlLoadingStep === 'extracting' ? 'EXTRACTING' : 'ANALYZING'}
+            <div className="w-full bg-slate-50 border border-slate-100 rounded-xl p-4.5 space-y-3 text-left">
+              <div className="flex justify-between items-center text-[10px] font-bold text-slate-500">
+                <span>AUDITING ENGINE</span>
+                <span className="text-brand-600 font-extrabold animate-pulse uppercase tracking-wider">
+                  {urlLoadingStep === 'extracting' ? 'CRAWLING' : 'COMPILING'}
                 </span>
               </div>
-              <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden relative border border-slate-200/10">
+              <div className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden relative">
                 <div className="bg-brand-500 h-full rounded-full animate-progress-indeterminate absolute" />
               </div>
             </div>
@@ -372,72 +376,73 @@ export const Documents: React.FC = () => {
         </div>
       )}
 
-      {/* Toast notifications */}
+      {/* Floating Success Toast */}
       {successToast && (
-        <div className="fixed top-4 right-4 z-50 p-4 rounded-xl bg-white border border-green-200 text-sm font-semibold text-green-700 shadow-xl flex items-center gap-2">
-          <span>✅</span>
-          {successToast}
-        </div>
-      )}
-      {errorToast && (
-        <div className="fixed top-4 right-4 z-50 p-4 rounded-xl bg-white border border-red-200 text-sm font-semibold text-red-700 shadow-xl flex items-center gap-2">
-          <span>❌</span>
-          {errorToast}
+        <div className="fixed top-6 right-6 z-50 flex items-center gap-3 px-4.5 py-3.5 rounded-xl bg-emerald-950/90 text-emerald-400 border border-emerald-500/25 shadow-2xl animate-fadeIn">
+          <span className="text-base select-none">✓</span>
+          <span className="text-xs font-bold">{successToast}</span>
         </div>
       )}
 
+      {/* Floating Error Toast */}
+      {errorToast && (
+        <div className="fixed top-6 right-6 z-50 flex items-center gap-3 px-4.5 py-3.5 rounded-xl bg-red-950/90 text-red-400 border border-red-500/25 shadow-2xl animate-fadeIn">
+          <span className="text-base select-none">⚠️</span>
+          <span className="text-xs font-bold">{errorToast}</span>
+        </div>
+      )}
+
+      {/* Title Header */}
       <div>
         <h2 className="text-2xl font-bold text-slate-900 font-display">AI Legal Auditor</h2>
-        <p className="text-sm text-slate-500 mt-1 font-medium">Select your source type and run immediate legalese analysis.</p>
+        <p className="text-sm text-slate-450 mt-1 font-semibold">Select your source format and run instant legalese diagnostics.</p>
       </div>
 
-      {/* Tab Menu Header */}
-      <div className="grid grid-cols-3 border-b border-slate-200">
+      {/* Tab Menu Header Selector */}
+      <div className="flex border-b border-slate-200">
         <button
           onClick={() => setActiveTab('pdf')}
-          className={`px-3 py-3 text-xs sm:text-sm font-bold border-b-2 transition flex items-center justify-center gap-1.5 ${
+          className={`flex-1 py-3.5 text-xs sm:text-sm font-bold border-b-2 transition flex items-center justify-center gap-2 select-none ${
             activeTab === 'pdf'
-              ? 'border-brand-500 text-brand-600 bg-brand-50/50'
-              : 'border-transparent text-slate-500 hover:text-slate-950 hover:bg-slate-50'
+              ? 'border-brand-500 text-brand-600 bg-brand-50/15'
+              : 'border-transparent text-slate-450 hover:text-slate-900 hover:bg-slate-50/50'
           }`}
         >
-          <span>📄</span>
-          <span className="hidden sm:inline">PDF / Document</span>
-          <span className="sm:hidden">PDF</span>
+          <span className="text-sm">📄</span>
+          <span>PDF / Document</span>
         </button>
         <button
           onClick={() => setActiveTab('url')}
-          className={`px-3 py-3 text-xs sm:text-sm font-bold border-b-2 transition flex items-center justify-center gap-1.5 ${
+          className={`flex-1 py-3.5 text-xs sm:text-sm font-bold border-b-2 transition flex items-center justify-center gap-2 select-none ${
             activeTab === 'url'
-              ? 'border-brand-500 text-brand-600 bg-brand-50/50'
-              : 'border-transparent text-slate-500 hover:text-slate-950 hover:bg-slate-50'
+              ? 'border-brand-500 text-brand-600 bg-brand-50/15'
+              : 'border-transparent text-slate-450 hover:text-slate-900 hover:bg-slate-50/50'
           }`}
         >
-          <span>🌐</span>
-          <span className="hidden sm:inline">URL Link</span>
-          <span className="sm:hidden">URL</span>
+          <span className="text-sm">🌐</span>
+          <span>Website URL</span>
         </button>
         <button
           onClick={() => setActiveTab('text')}
-          className={`px-3 py-3 text-xs sm:text-sm font-bold border-b-2 transition flex items-center justify-center gap-1.5 ${
+          className={`flex-1 py-3.5 text-xs sm:text-sm font-bold border-b-2 transition flex items-center justify-center gap-2 select-none ${
             activeTab === 'text'
-              ? 'border-brand-500 text-brand-600 bg-brand-50/50'
-              : 'border-transparent text-slate-500 hover:text-slate-950 hover:bg-slate-50'
+              ? 'border-brand-500 text-brand-600 bg-brand-50/15'
+              : 'border-transparent text-slate-450 hover:text-slate-900 hover:bg-slate-50/50'
           }`}
         >
-          <span>📝</span>
-          <span className="hidden sm:inline">Direct Text</span>
-          <span className="sm:hidden">Text</span>
+          <span className="text-sm">📝</span>
+          <span>Direct Text</span>
         </button>
       </div>
 
       {/* Tab Content Panes */}
       {activeTab === 'pdf' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Upload Panel */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+          
+          {/* Left panel: Upload Area & Tips */}
           <div className="lg:col-span-1 space-y-6">
-            <div className="bg-white border border-slate-200/60 rounded-2xl p-6 shadow-soft space-y-4">
-              <h3 className="text-lg font-bold text-slate-900 font-display">Upload Document</h3>
+            <div className="bg-white border border-slate-200/60 rounded-2xl p-6 shadow-soft space-y-5">
+              <h3 className="text-base font-bold text-slate-900 uppercase tracking-wider font-display border-b border-slate-100 pb-3">Upload Document</h3>
               
               <div
                 onDragEnter={handleDrag}
@@ -445,10 +450,10 @@ export const Documents: React.FC = () => {
                 onDragLeave={handleDrag}
                 onDrop={handleDrop}
                 onClick={triggerBrowse}
-                className={`p-8 border-2 border-dashed rounded-xl text-center cursor-pointer transition flex flex-col items-center justify-center space-y-3 min-h-[220px] ${
+                className={`p-6 border-2 border-dashed rounded-xl text-center cursor-pointer transition-all duration-300 flex flex-col items-center justify-center space-y-3 min-h-[220px] select-none hover:-translate-y-0.5 ${
                   dragActive
-                    ? 'border-brand-500 bg-brand-50/50'
-                    : 'border-slate-200 bg-[#F8FAFC] hover:border-slate-350 hover:bg-slate-50/80'
+                    ? 'border-brand-500 bg-brand-50/30'
+                    : 'border-slate-200 bg-slate-50/40 hover:border-brand-500/50 hover:bg-brand-50/10'
                 }`}
               >
                 <input
@@ -459,149 +464,148 @@ export const Documents: React.FC = () => {
                   onChange={handleFileChange}
                   disabled={uploadMutation.isPending}
                 />
-                <span className="text-4xl text-slate-400">📁</span>
-                <div>
-                  <p className="text-sm font-bold text-slate-700">Drag & drop files here</p>
-                  <p className="text-xs text-slate-400 mt-1 font-semibold">or click to browse local files</p>
+                
+                {/* Visual upload icon */}
+                <div className="w-12 h-12 rounded-xl bg-brand-500/10 flex items-center justify-center text-brand-500 text-xl border border-brand-500/20">
+                  📁
                 </div>
-                <p className="text-[10px] text-slate-500 font-medium">
-                  PDF, DOCX, TXT, PNG, JPG, JPEG (Max: 20MB)
+                
+                <div className="space-y-1">
+                  <p className="text-sm font-bold text-slate-800">Drag & drop agreement here</p>
+                  <p className="text-xs text-slate-400 font-semibold">or click to browse local files</p>
+                </div>
+                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
+                  PDF, DOCX, TXT (Max: 20MB)
                 </p>
               </div>
 
-              {/* Supported/Optional Formats Info */}
-              <div className="pt-4 border-t border-slate-100 space-y-3.5 text-left">
-                <div className="space-y-1.5">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Supported</span>
-                  <ul className="list-none space-y-1.5 pl-0 text-xs text-slate-650 font-medium">
-                    <li className="flex items-center gap-1.5">
-                      <span className="text-brand-500">✓</span>
-                      <span>Text PDF</span>
-                    </li>
-                    <li className="flex items-center gap-1.5">
-                      <span className="text-brand-500">✓</span>
-                      <span>DOCX</span>
-                    </li>
-                    <li className="flex items-center gap-1.5">
-                      <span className="text-brand-500">✓</span>
-                      <span>TXT</span>
-                    </li>
-                    <li className="flex items-center gap-1.5">
-                      <span className="text-brand-500">✓</span>
-                      <span>URL Analysis</span>
-                    </li>
-                  </ul>
-                </div>
-
-                <div className="space-y-1.5">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Optional</span>
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-1.5 text-xs text-slate-650 font-medium">
-                      <span>🧪</span>
-                      <span>Image OCR (PNG/JPG/JPEG)</span>
-                    </div>
-                    <span className="text-[10px] text-slate-450 block leading-tight font-normal">
-                      Available only on supported deployments.
-                    </span>
-                  </div>
-                </div>
-              </div>
-
+              {/* Upload Progress Indicator */}
               {uploadProgress !== null && (
-                <div className="space-y-2 p-3.5 bg-[#F8FAFC] border border-slate-200/60 rounded-xl">
-                  <div className="flex justify-between items-center text-xs font-semibold">
-                    <span className="text-slate-500 font-semibold">Uploading file...</span>
-                    <span className="text-brand-600 font-bold">{uploadProgress}%</span>
+                <div className="space-y-2 p-3.5 bg-slate-50 border border-slate-100 rounded-xl">
+                  <div className="flex justify-between items-center text-[10px] font-bold">
+                    <span className="text-slate-450 uppercase tracking-wider">Uploading file</span>
+                    <span className="text-brand-650">{uploadProgress}%</span>
                   </div>
                   <div className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
                     <div
-                      className="bg-brand-500 h-full rounded-full transition-all duration-300"
+                      className="bg-brand-500 h-full rounded-full transition-all duration-200"
                       style={{ width: `${uploadProgress}%` }}
                     />
                   </div>
                 </div>
               )}
+
+              {/* Supported/Optional Ingest Formats */}
+              <div className="pt-2 border-t border-slate-100 space-y-4">
+                <div className="space-y-1.5">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Audit Guidelines</span>
+                  <ul className="list-none space-y-2 pl-0 text-xs text-slate-500 font-semibold">
+                    <li className="flex items-center gap-2">
+                      <span className="text-brand-500 text-sm">✓</span>
+                      <span>Text extraction runs automatically on uploads.</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="text-brand-500 text-sm">✓</span>
+                      <span>Scrubbing algorithms dynamically hide private PII.</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="text-brand-500 text-sm">✓</span>
+                      <span>Scans complete in under 3 seconds.</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="space-y-1.5 p-3.5 bg-slate-50 border border-slate-100 rounded-xl">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Image OCR Support</span>
+                  <p className="text-[10px] text-slate-450 leading-relaxed font-semibold">
+                    Image file uploads (PNG/JPG) require high-memory OCR clusters. If unavailable, use direct text pasting instead.
+                  </p>
+                </div>
+              </div>
+
             </div>
           </div>
 
-          {/* Uploads List Table */}
+          {/* Right panel: Uploaded Documents Table */}
           <div className="lg:col-span-2">
             <section className="bg-white border border-slate-200/60 rounded-2xl p-6 shadow-soft space-y-4">
-              <h3 className="text-lg font-bold text-slate-900 font-display">Recent Uploads</h3>
+              <h3 className="text-base font-bold text-slate-900 uppercase tracking-wider font-display">Recent Uploads</h3>
 
               {isLoading ? (
                 <div className="space-y-3 py-6">
-                  <div className="h-12 bg-slate-100 rounded-xl animate-pulse" />
-                  <div className="h-12 bg-slate-100 rounded-xl animate-pulse" />
-                  <div className="h-12 bg-slate-100 rounded-xl animate-pulse" />
+                  <div className="h-12 bg-slate-50 rounded-xl animate-pulse" />
+                  <div className="h-12 bg-slate-50 rounded-xl animate-pulse" />
+                  <div className="h-12 bg-slate-50 rounded-xl animate-pulse" />
                 </div>
               ) : documents.length === 0 ? (
-                <div className="p-16 border border-slate-100 bg-[#F8FAFC] rounded-xl text-center space-y-3">
+                <div className="p-16 border border-slate-100 bg-slate-50/50 rounded-xl text-center space-y-3.5 select-none">
                   <span className="text-4xl block">📂</span>
-                  <h4 className="font-semibold text-slate-700 text-sm">No files uploaded yet</h4>
-                  <p className="text-xs text-slate-500 max-w-xs mx-auto leading-relaxed">
-                    Drag and drop a legal document in the upload area to save its metadata configurations.
+                  <h4 className="font-bold text-slate-700 text-sm">No files uploaded yet</h4>
+                  <p className="text-xs text-slate-450 max-w-xs mx-auto leading-relaxed font-semibold">
+                    Upload a compliance document using the drag-and-drop widget to save its configurations.
                   </p>
                 </div>
               ) : (
-                <div className="overflow-x-auto rounded-xl border border-slate-200/60 bg-white">
-                  <table className="w-full text-left border-collapse text-sm">
+                <div className="overflow-x-auto rounded-xl border border-slate-200/65 bg-white shadow-sm">
+                  <table className="w-full text-left border-collapse text-xs sm:text-sm">
                     <thead>
-                      <tr className="bg-[#F8FAFC] border-b border-slate-200 text-slate-500 font-semibold text-xs uppercase tracking-wider">
+                      <tr className="bg-slate-50 border-b border-slate-200 text-slate-450 font-bold uppercase tracking-widest text-[9px] select-none">
                         <th className="p-4">File Name</th>
                         <th className="p-4 hidden md:table-cell">Type</th>
                         <th className="p-4 hidden sm:table-cell">Size</th>
-                        <th className="p-4 hidden lg:table-cell">Upload Date</th>
+                        <th className="p-4 hidden lg:table-cell">Date</th>
                         <th className="p-4">Status</th>
                         <th className="p-4 text-right">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
+                    <tbody className="divide-y divide-slate-100 font-semibold text-slate-500">
                       {documents.map((doc) => {
                         const isProcessing = extractMutation.isPending && extractMutation.variables === doc.id;
                         
                         return (
-                          <tr key={doc.id} className="hover:bg-slate-50/50 text-slate-600 transition duration-150">
-                            <td className="p-4 font-semibold text-slate-800 max-w-[120px] sm:max-w-[180px] truncate" title={doc.original_filename}>
+                          <tr key={doc.id} className="hover:bg-slate-50/30 transition duration-150">
+                            <td className="p-4 font-bold text-slate-800 max-w-[120px] sm:max-w-[180px] truncate" title={doc.original_filename}>
                               {doc.original_filename}
                             </td>
-                            <td className="p-4 text-xs uppercase font-semibold text-slate-400 hidden md:table-cell">{doc.file_type}</td>
-                            <td className="p-4 text-xs font-semibold text-slate-500 hidden sm:table-cell">{formatBytes(doc.file_size)}</td>
-                            <td className="p-4 text-xs font-semibold text-slate-500 hidden lg:table-cell">{formatDate(doc.created_at)}</td>
+                            <td className="p-4 text-[10px] font-bold text-slate-400 hidden md:table-cell uppercase">{doc.file_type}</td>
+                            <td className="p-4 text-xs text-slate-450 hidden sm:table-cell">{formatBytes(doc.file_size)}</td>
+                            <td className="p-4 text-xs text-slate-450 hidden lg:table-cell">{formatDate(doc.created_at)}</td>
                             <td className="p-4">
                               {doc.processing_status === 'COMPLETED' ? (
                                 doc.analysis ? (
                                   <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border ${
                                     doc.analysis.overall_risk_score <= 30
-                                      ? 'bg-green-50 text-success border-green-200'
+                                      ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20'
                                       : doc.analysis.overall_risk_score <= 60
-                                      ? 'bg-amber-50 text-warning border-amber-200'
-                                      : 'bg-red-50 text-danger border-red-200'
+                                      ? 'bg-amber-500/10 text-amber-600 border-amber-500/20'
+                                      : 'bg-red-500/10 text-red-650 border-red-500/20'
                                   }`}>
-                                    Risk: {doc.analysis.overall_risk_score}/100
+                                    Score: {doc.analysis.overall_risk_score}/100
                                   </span>
                                 ) : (
-                                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border bg-brand-50 text-brand-600 border-brand-100 animate-pulse">
-                                    Ready to Analyze
+                                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border bg-brand-500/10 text-brand-600 border-brand-500/20 animate-pulse">
+                                    Ready
                                   </span>
                                 )
                               ) : (
                                 <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border ${
                                   doc.processing_status === 'PROCESSING' || isProcessing
-                                    ? 'bg-amber-50 text-warning border-amber-200 animate-pulse'
+                                    ? 'bg-amber-500/15 text-amber-600 border-amber-500/20 animate-pulse'
                                     : doc.processing_status === 'FAILED'
-                                    ? 'bg-red-50 text-danger border-red-200'
-                                    : 'bg-slate-50 text-slate-550 border-slate-200'
+                                    ? 'bg-red-500/15 text-red-600 border-red-500/20'
+                                    : 'bg-slate-100 text-slate-500 border-slate-200'
                                 }`}>
                                   {isProcessing || doc.processing_status === 'PROCESSING'
-                                    ? 'Extracting text...'
+                                    ? 'Extracting...'
                                     : doc.processing_status === 'FAILED'
-                                    ? 'Text Extraction Failed'
+                                    ? 'Failed'
                                     : doc.processing_status}
                                 </span>
                               )}
                             </td>
-                            <td className="p-4 text-right space-x-2 whitespace-nowrap">
+                            
+                            {/* Action Buttons */}
+                            <td className="p-4 text-right space-x-1.5 whitespace-nowrap">
                               {(doc.processing_status === 'UPLOADED' || doc.processing_status === 'FAILED') && (
                                 <button
                                   onClick={() => {
@@ -610,9 +614,9 @@ export const Documents: React.FC = () => {
                                     }
                                   }}
                                   disabled={extractMutation.isPending || isProcessing}
-                                  className="btn-outline py-1 px-2.5 text-[10px] font-bold border-brand-100 bg-brand-50 text-brand-600 hover:bg-brand-100 hover:text-brand-700"
+                                  className="px-2 py-1 border border-brand-500/20 bg-brand-500/10 hover:bg-brand-500 hover:text-white text-brand-600 text-[10px] font-bold rounded"
                                 >
-                                  {isProcessing ? 'Processing...' : 'Extract'}
+                                  {isProcessing ? 'Extracting...' : 'Extract'}
                                 </button>
                               )}
 
@@ -620,10 +624,10 @@ export const Documents: React.FC = () => {
                                 <button
                                   onClick={() => analyzeMutation.mutate(doc.id)}
                                   disabled={analyzeMutation.isPending}
-                                  className={`btn-outline py-1 px-2.5 text-[10px] font-bold border transition ${
+                                  className={`px-2 py-1 rounded text-[10px] font-bold border transition ${
                                     doc.analysis
-                                      ? 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
-                                      : 'border-brand-200 bg-brand-50 text-brand-600 hover:bg-brand-100 animate-pulse'
+                                      ? 'bg-white border-slate-250 hover:bg-slate-50 text-slate-550'
+                                      : 'border-brand-500/20 bg-brand-500/10 text-brand-600 hover:bg-brand-500 hover:text-white animate-pulse'
                                   }`}
                                 >
                                   {doc.analysis ? 'Re-analyze' : 'Analyze'}
@@ -633,7 +637,7 @@ export const Documents: React.FC = () => {
                               {doc.analysis && (
                                 <Link
                                   to={`/results/${doc.id}`}
-                                  className="btn-outline inline-block py-1 px-2.5 text-[10px] font-bold border-brand-100 bg-brand-50 text-brand-600 hover:bg-brand-100 hover:text-brand-700"
+                                  className="px-2 py-1 border border-brand-500/20 bg-brand-500/10 hover:bg-brand-500 hover:text-white text-brand-600 text-[10px] font-bold rounded inline-block"
                                 >
                                   Results
                                 </Link>
@@ -641,7 +645,7 @@ export const Documents: React.FC = () => {
 
                               <button
                                 onClick={() => setSelectedDoc(doc)}
-                                className="btn-secondary py-1 px-2.5 text-[10px] font-bold"
+                                className="px-2 py-1 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 text-[10px] font-bold rounded"
                               >
                                 Details
                               </button>
@@ -649,7 +653,7 @@ export const Documents: React.FC = () => {
                               <button
                                 onClick={() => deleteMutation.mutate(doc.id)}
                                 disabled={deleteMutation.isPending || isProcessing || analyzeMutation.isPending}
-                                className="btn-danger bg-red-50 text-danger border border-red-100 hover:bg-red-100 hover:text-red-700 py-1 px-2.5 text-[10px] font-bold"
+                                className="px-2 py-1 bg-red-500/10 border border-red-500/20 hover:bg-red-500 hover:text-white text-red-600 text-[10px] font-bold rounded"
                               >
                                 Delete
                               </button>
@@ -669,35 +673,35 @@ export const Documents: React.FC = () => {
       {activeTab === 'url' && (
         <div className="bg-white border border-slate-200/60 rounded-2xl p-6 shadow-soft space-y-6 max-w-2xl">
           <div>
-            <h3 className="text-lg font-bold text-slate-900 font-display">Analyze Terms & Conditions from URL</h3>
-            <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-              Provide the direct address of the T&C page. {env.VITE_APP_NAME} will scrape the page, remove cookie banners/newsletters, bypass boilerplate scripts, and feed clean legal blocks to the AI analyzer.
+            <h3 className="text-lg font-bold text-slate-900 font-display">Analyze Link URL</h3>
+            <p className="text-xs text-slate-450 mt-1 leading-relaxed font-semibold">
+              Provide the direct URL of the Terms & Conditions or Privacy Policy page. Our crawling engine extracts the clean text, bypasses cookies/newsletter prompts, and executes the audit.
             </p>
           </div>
 
           {urlAnalysisError ? (
-            <div className="p-6 rounded-xl bg-red-50 border border-red-200 space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
-              <div className="flex items-center gap-3">
-                <span className="text-3xl">❌</span>
+            <div className="p-6 rounded-xl bg-red-500/5 border border-red-500/10 space-y-5 animate-fadeIn">
+              <div className="flex items-center gap-3.5">
+                <span className="text-3xl">⚠️</span>
                 <div>
-                  <h4 className="text-base font-bold text-red-700 font-display">URL Analysis Failed</h4>
-                  <p className="text-[10px] text-slate-500 mt-0.5">
-                    Failure Type: <span className="font-mono bg-white px-1.5 py-0.5 rounded text-red-650 font-semibold border border-red-200">{urlAnalysisError.errorType}</span>
+                  <h4 className="text-base font-bold text-red-650 font-display">Ingestion Failure</h4>
+                  <p className="text-[10px] text-slate-400 mt-0.5 font-bold uppercase tracking-wider font-mono">
+                    Type: {urlAnalysisError.errorType}
                   </p>
                 </div>
               </div>
 
-              <div className="bg-white border border-red-100 p-4 rounded-xl text-xs leading-relaxed text-red-700 font-medium">
-                <strong className="text-red-800">Reason:</strong> {urlAnalysisError.reason}
+              <div className="bg-white border border-red-100 p-4 rounded-xl text-xs leading-relaxed text-red-700 font-medium shadow-sm">
+                <strong>Detail:</strong> {urlAnalysisError.reason}
               </div>
 
               {urlAnalysisError.suggestions && urlAnalysisError.suggestions.length > 0 && (
                 <div className="space-y-2">
-                  <h5 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Suggested Recovery Actions:</h5>
+                  <h5 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Recommended Recovery Actions:</h5>
                   <ul className="list-none space-y-1.5 pl-0">
                     {urlAnalysisError.suggestions.map((suggestion: string, idx: number) => (
-                      <li key={idx} className="flex items-start gap-2 text-xs text-slate-650 font-medium">
-                        <span className="text-brand-500 font-bold">✓</span>
+                      <li key={idx} className="flex items-start gap-2 text-xs text-slate-550 font-semibold">
+                        <span className="text-brand-500 font-extrabold">✓</span>
                         <span>{suggestion}</span>
                       </li>
                     ))}
@@ -705,17 +709,17 @@ export const Documents: React.FC = () => {
                 </div>
               )}
 
-              {/* Quick Action buttons */}
-              <div className="pt-4 border-t border-red-100 flex flex-wrap gap-2">
+              {/* Quick Recovery actions list */}
+              <div className="pt-4 border-t border-red-150 flex flex-wrap gap-2">
                 <button
                   type="button"
                   onClick={() => {
                     setUrlAnalysisError(null);
                     setActiveTab('pdf');
                   }}
-                  className="btn-outline py-1.5 px-3.5 text-xs shadow-sm"
+                  className="px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-bold rounded-lg shadow-sm"
                 >
-                  📄 Upload PDF
+                  📄 File Upload
                 </button>
                 <button
                   type="button"
@@ -723,7 +727,7 @@ export const Documents: React.FC = () => {
                     setUrlAnalysisError(null);
                     setActiveTab('text');
                   }}
-                  className="btn-outline py-1.5 px-3.5 text-xs shadow-sm"
+                  className="px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-bold rounded-lg shadow-sm"
                 >
                   📝 Paste Text
                 </button>
@@ -731,49 +735,39 @@ export const Documents: React.FC = () => {
                   type="button"
                   onClick={() => {
                     setUrlAnalysisError(null);
-                    setActiveTab('pdf');
-                  }}
-                  className="btn-outline py-1.5 px-3.5 text-xs shadow-sm"
-                >
-                  🖼 Upload Image (OCR)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setUrlAnalysisError(null);
                     setUrl('');
                   }}
-                  className="btn-primary py-1.5 px-3.5 text-xs shadow-sm"
+                  className="px-3.5 py-2 bg-brand-500 hover:bg-brand-600 text-white text-xs font-bold rounded-lg shadow-md"
                 >
-                  🔗 Try Another URL
+                  Try Another URL
                 </button>
               </div>
             </div>
           ) : (
             <form onSubmit={handleUrlSubmit} className="space-y-4">
               <div className="space-y-2">
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">
-                  Terms & Conditions URL
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest">
+                  Legal Agreement Link URL
                 </label>
                 <input
                   type="text"
-                  placeholder="https://openai.com/policies/terms-of-use/"
+                  placeholder="https://company.com/terms-of-service"
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
-                  className="form-input text-sm"
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 text-slate-900 placeholder-slate-400 rounded-xl text-sm transition-all duration-200 outline-none font-semibold"
                   disabled={analyzeUrlMutation.isPending}
                 />
-                <span className="text-[11px] text-slate-400 block mt-1 font-medium">
-                  Example URL: <span className="italic font-normal">https://openai.com/policies/terms-of-use/</span>
+                <span className="text-[11px] text-slate-450 block mt-1 font-semibold">
+                  Example: <span className="italic font-normal">https://openai.com/policies/terms-of-use/</span>
                 </span>
               </div>
 
               <button
                 type="submit"
                 disabled={analyzeUrlMutation.isPending || !url.trim()}
-                className="btn-primary text-sm font-semibold flex items-center gap-2"
+                className="px-5 py-3 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-xl text-sm shadow-md shadow-brand-500/20 active:scale-95 transition-all select-none disabled:opacity-50"
               >
-                {analyzeUrlMutation.isPending ? 'Extracting Webpage...' : 'Analyze URL'}
+                {analyzeUrlMutation.isPending ? 'Crawling Webpage...' : 'Analyze URL'}
               </button>
             </form>
           )}
@@ -783,30 +777,30 @@ export const Documents: React.FC = () => {
       {activeTab === 'text' && (
         <div className="bg-white border border-slate-200/60 rounded-2xl p-6 shadow-soft space-y-6 max-w-3xl">
           <div>
-            <h3 className="text-lg font-bold text-slate-900 font-display">Analyze Direct Text Input</h3>
-            <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-              Copy and paste terms agreement document chunks directly below to process AI diagnostics.
+            <h3 className="text-lg font-bold text-slate-900 font-display">Analyze Plain Text</h3>
+            <p className="text-xs text-slate-450 mt-1 leading-relaxed font-semibold">
+              Directly copy and paste the legal contract sections into the workspace editor below to run AI compliance checkups.
             </p>
           </div>
 
           <div className="space-y-4">
             <div className="space-y-2 relative">
-              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">
-                Terms & Conditions Text
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest">
+                Terms Agreement Copy
               </label>
               <textarea
-                placeholder="Paste Terms & Conditions here..."
+                placeholder="Paste Terms and Conditions or Privacy policy clauses here..."
                 value={textInput}
                 onChange={(e) => setTextInput(e.target.value)}
                 rows={12}
                 maxLength={150000}
-                className="form-input text-sm resize-y font-sans leading-relaxed"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 text-slate-900 placeholder-slate-450 rounded-xl text-sm transition-all duration-200 outline-none font-medium leading-relaxed resize-y min-h-[220px]"
                 disabled={analyzeTextMutation.isPending}
               />
-              <div className="flex justify-between items-center text-[11px] text-slate-400 mt-1 font-semibold">
+              <div className="flex justify-between items-center text-[10px] text-slate-400 mt-1 font-bold">
                 <span>Minimum 100 characters required.</span>
-                <span className={textInput.length < 100 || textInput.length > 150000 ? 'text-warning font-bold' : 'text-slate-400'}>
-                  {textInput.length.toLocaleString()} / 150,000 characters
+                <span className={textInput.length < 100 || textInput.length > 150000 ? 'text-amber-500 font-bold' : 'text-slate-400 font-mono'}>
+                  {textInput.length.toLocaleString()} / 150,000 chars
                 </span>
               </div>
             </div>
@@ -814,72 +808,75 @@ export const Documents: React.FC = () => {
             <button
               onClick={handleTextSubmit}
               disabled={analyzeTextMutation.isPending || textInput.length < 100 || textInput.length > 150000}
-              className="btn-primary"
+              className="px-5 py-3 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-xl text-sm shadow-md shadow-brand-500/20 active:scale-95 transition-all select-none disabled:opacity-50"
             >
-              {analyzeTextMutation.isPending ? 'Analyzing...' : 'Analyze Text'}
+              {analyzeTextMutation.isPending ? 'Analyzing Text...' : 'Analyze Text'}
             </button>
           </div>
         </div>
       )}
 
-      {/* Details View Dialog Modal */}
+      {/* Details View Dialog Modal Container */}
       {selectedDoc && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="w-full max-w-lg bg-white border border-slate-200 rounded-2xl p-6 space-y-6 shadow-xl text-slate-800 animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn">
+          <div className="w-full max-w-lg bg-white border border-slate-200 rounded-2xl p-6 space-y-6 shadow-2xl animate-in zoom-in-95 duration-200 text-slate-800 relative">
+            {/* Holographic glowing line */}
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
+            
             <div className="flex justify-between items-start">
               <div>
                 <h3 className="text-lg font-bold text-slate-900 font-display">Document Metadata</h3>
-                <p className="text-xs text-slate-400 mt-1 font-semibold">UUID reference and backend storage configurations.</p>
+                <p className="text-xs text-slate-400 mt-1 font-semibold">Backend reference structures and properties.</p>
               </div>
               <button
                 onClick={() => setSelectedDoc(null)}
-                className="text-slate-400 hover:text-slate-900 font-semibold text-lg"
+                className="text-slate-450 hover:text-slate-900 text-xl font-bold select-none p-1.5 focus:outline-none"
               >
                 ✕
               </button>
             </div>
 
-            <div className="space-y-3 text-sm text-slate-650 bg-[#F8FAFC] p-4.5 rounded-xl border border-slate-200/60 font-semibold">
-              <div className="flex justify-between border-b border-slate-200/60 pb-2">
+            <div className="space-y-3 text-xs sm:text-sm text-slate-600 bg-slate-50 border border-slate-100 p-4.5 rounded-xl font-semibold">
+              <div className="flex justify-between border-b border-slate-200/50 pb-2">
                 <span className="text-slate-400">Document ID:</span>
                 <span className="font-mono text-xs text-slate-700">{selectedDoc.id}</span>
               </div>
-              <div className="flex justify-between border-b border-slate-200/60 pb-2">
+              <div className="flex justify-between border-b border-slate-200/50 pb-2">
                 <span className="text-slate-400">Original Name:</span>
-                <span className="max-w-[240px] truncate text-slate-700">{selectedDoc.original_filename}</span>
+                <span className="max-w-[220px] truncate text-slate-700">{selectedDoc.original_filename}</span>
               </div>
-              <div className="flex justify-between border-b border-slate-200/60 pb-2">
+              <div className="flex justify-between border-b border-slate-200/50 pb-2">
                 <span className="text-slate-400">Source Type:</span>
-                <span className="uppercase text-xs font-extrabold text-brand-600">{selectedDoc.source_type || 'PDF'}</span>
+                <span className="uppercase text-xs font-bold text-brand-600">{selectedDoc.source_type || 'PDF'}</span>
               </div>
               {selectedDoc.source_url && (
-                <div className="flex justify-between border-b border-slate-200/60 pb-2">
+                <div className="flex justify-between border-b border-slate-200/50 pb-2">
                   <span className="text-slate-400">Source URL:</span>
-                  <span className="text-xs max-w-[240px] truncate underline text-slate-500" title={selectedDoc.source_url}>
+                  <span className="text-xs max-w-[220px] truncate underline text-slate-500" title={selectedDoc.source_url}>
                     {selectedDoc.source_url}
                   </span>
                 </div>
               )}
-              <div className="flex justify-between border-b border-slate-200/60 pb-2">
+              <div className="flex justify-between border-b border-slate-200/50 pb-2">
                 <span className="text-slate-400">Stored Name:</span>
-                <span className="font-mono text-xs max-w-[240px] truncate text-slate-700">{selectedDoc.stored_filename || 'N/A'}</span>
+                <span className="font-mono text-xs max-w-[220px] truncate text-slate-700">{selectedDoc.stored_filename || 'N/A'}</span>
               </div>
-              <div className="flex justify-between border-b border-slate-200/60 pb-2">
+              <div className="flex justify-between border-b border-slate-200/50 pb-2">
                 <span className="text-slate-400">File Type:</span>
-                <span className="uppercase text-xs text-slate-700">{selectedDoc.file_type}</span>
+                <span className="uppercase text-xs text-slate-750">{selectedDoc.file_type}</span>
               </div>
-              <div className="flex justify-between border-b border-slate-200/60 pb-2">
+              <div className="flex justify-between border-b border-slate-200/50 pb-2">
                 <span className="text-slate-400">File Size:</span>
-                <span className="text-slate-750">{formatBytes(selectedDoc.file_size)}</span>
+                <span className="text-slate-700">{formatBytes(selectedDoc.file_size)}</span>
               </div>
-              <div className="flex justify-between border-b border-slate-200/60 pb-2">
+              <div className="flex justify-between border-b border-slate-200/50 pb-2">
                 <span className="text-slate-400">Upload Date:</span>
-                <span className="text-slate-755">{formatDate(selectedDoc.created_at)}</span>
+                <span className="text-slate-700">{formatDate(selectedDoc.created_at)}</span>
               </div>
               {selectedDoc.storage_path && (
                 <div className="flex justify-between">
                   <span className="text-slate-400">Disk Storage Path:</span>
-                  <span className="font-mono text-[10px] text-slate-500 max-w-[240px] truncate" title={selectedDoc.storage_path}>
+                  <span className="font-mono text-[10px] text-slate-500 max-w-[220px] truncate" title={selectedDoc.storage_path}>
                     {selectedDoc.storage_path}
                   </span>
                 </div>
@@ -889,70 +886,73 @@ export const Documents: React.FC = () => {
             <div className="flex justify-end gap-3 pt-2">
               <button
                 onClick={() => setSelectedDoc(null)}
-                className="btn-outline py-2 px-4 text-xs font-semibold"
+                className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-lg"
               >
-                Close
+                Close Details
               </button>
               <button
                 onClick={() => deleteMutation.mutate(selectedDoc.id)}
                 disabled={deleteMutation.isPending}
-                className="btn-danger py-2 px-4 text-xs font-semibold"
+                className="px-4 py-2 bg-red-500/10 border border-red-500/20 hover:bg-red-500 hover:text-white text-red-600 text-xs font-bold rounded-lg"
               >
-                Delete Record
+                Delete File
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* OCR Disabled Info Modal */}
+      {/* OCR Disabled Info Modal Container */}
       {ocrDisabledInfo && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
-          <div className="w-full max-w-md bg-white border border-slate-200 rounded-2xl p-6 space-y-6 shadow-2xl animate-in zoom-in-95 duration-200 text-slate-800">
+        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn">
+          <div className="w-full max-w-md bg-white border border-slate-200 rounded-2xl p-6 space-y-6 shadow-2xl animate-in zoom-in-95 duration-200 text-slate-800 relative">
             <div className="flex items-start gap-4">
-              <span className="text-3xl p-2.5 bg-amber-50 text-amber-600 rounded-xl border border-amber-100">🧪</span>
+              <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 flex items-center justify-center text-xl shrink-0">
+                🧪
+              </div>
               <div className="space-y-1">
-                <h3 className="text-lg font-bold text-slate-900 font-display">Image OCR (Beta)</h3>
-                <p className="text-xs text-slate-500 leading-relaxed font-semibold">
-                  Image OCR requires higher-memory hosting and is not available on this deployment.
+                <h3 className="text-lg font-bold text-slate-900 font-display">Image OCR Locked</h3>
+                <p className="text-xs text-slate-450 leading-relaxed font-semibold">
+                  Image compliance OCR requires larger GPU resources and is not enabled on this sandbox setup.
                 </p>
               </div>
             </div>
 
-            <div className="bg-[#F8FAFC] border border-slate-100 p-4.5 rounded-xl space-y-3 font-semibold">
-              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Recommended alternatives:</h4>
-              <ul className="list-none space-y-2 text-xs text-slate-600 pl-0">
+            <div className="bg-slate-50 border border-slate-100 p-4.5 rounded-xl space-y-2.5 font-semibold">
+              <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Recommended alternatives:</h4>
+              <ul className="list-none space-y-2 text-xs text-slate-650 pl-0">
                 <li className="flex items-center gap-2">
-                  <span className="text-success font-bold">✓</span>
-                  <span>Upload Text PDF</span>
+                  <span className="text-emerald-500 font-extrabold">✓</span>
+                  <span>Upload Text PDFs or agreements.</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="text-success font-bold">✓</span>
-                  <span>Upload DOCX</span>
+                  <span className="text-emerald-500 font-extrabold">✓</span>
+                  <span>Upload Word DOCX files.</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="text-success font-bold">✓</span>
-                  <span>Upload TXT</span>
+                  <span className="text-emerald-500 font-extrabold">✓</span>
+                  <span>Analyze URL links directly.</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="text-success font-bold">✓</span>
-                  <span>Analyze URL</span>
+                  <span className="text-emerald-500 font-extrabold">✓</span>
+                  <span>Copy and paste plain text documents.</span>
                 </li>
               </ul>
             </div>
 
-            <div className="flex justify-end pt-2">
+            <div className="flex justify-end pt-1">
               <button
                 type="button"
                 onClick={() => setOcrDisabledInfo(null)}
-                className="btn-secondary py-2 px-5 text-xs font-semibold"
+                className="px-5 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold rounded-lg"
               >
-                Close
+                Close Info
               </button>
             </div>
           </div>
         </div>
       )}
+
     </div>
   );
 };
