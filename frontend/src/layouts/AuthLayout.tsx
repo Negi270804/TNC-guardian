@@ -83,7 +83,7 @@ export const AuthLayout: React.FC = () => {
       </div>
 
       {/* Forms Column (Right side) */}
-      <div className="flex items-center justify-center p-6 sm:p-12 relative min-h-screen">
+      <div className="flex items-center justify-center p-4 sm:p-12 relative min-h-screen">
         
         {/* Visual glow details */}
         <div className="absolute top-1/4 right-1/4 w-[250px] h-[250px] bg-brand-500/5 rounded-full blur-[80px] -z-10 pointer-events-none" />
@@ -106,7 +106,7 @@ export const AuthLayout: React.FC = () => {
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, ease: 'easeOut' }}
-          className="w-full max-w-md bg-slate-900/35 backdrop-blur-xl border border-slate-800/80 shadow-2xl p-6 sm:p-8 rounded-2xl relative overflow-hidden"
+          className="w-full max-w-md bg-slate-900/35 backdrop-blur-xl border border-slate-800/80 shadow-2xl p-5 sm:p-8 rounded-2xl relative overflow-hidden"
         >
           {/* Edge glow border */}
           <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-slate-700/60 to-transparent" />

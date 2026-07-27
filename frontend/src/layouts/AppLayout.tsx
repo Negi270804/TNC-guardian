@@ -110,19 +110,19 @@ export const AppLayout: React.FC = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
-            <h1 className="text-sm sm:text-lg font-semibold font-display text-slate-900 dark:text-white truncate max-w-[150px] sm:max-w-none">
+            <h1 className="text-xs sm:text-sm md:text-base font-semibold font-display text-slate-900 dark:text-white truncate max-w-[90px] xs:max-w-[140px] sm:max-w-none">
               {env.VITE_APP_NAME} Workspace
             </h1>
           </div>
           
-          <div className="flex items-center gap-2.5 sm:gap-4">
+          <div className="flex items-center gap-1.5 sm:gap-3.5">
             
             {/* Smooth Theme Switcher Button */}
             <motion.button
               onClick={toggleTheme}
               whileHover={{ rotate: 15 }}
               whileTap={{ scale: 0.95 }}
-              className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition shadow-sm select-none"
+              className="p-2 sm:p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition shadow-sm select-none"
               aria-label="Toggle Light/Dark Theme"
               title="Toggle Light/Dark Theme"
             >
@@ -139,7 +139,7 @@ export const AppLayout: React.FC = () => {
             </div>
             
             {/* User Avatar */}
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-250 dark:border-slate-700/80 flex items-center justify-center font-bold text-slate-655 dark:text-slate-350 overflow-hidden text-xs sm:text-sm select-none">
+            <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-250 dark:border-slate-700/80 flex items-center justify-center font-bold text-slate-655 dark:text-slate-350 overflow-hidden text-xs sm:text-sm select-none shrink-0">
               {user?.avatar_url ? (
                 <img src={user.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
               ) : (
@@ -150,7 +150,7 @@ export const AppLayout: React.FC = () => {
             <motion.button
               onClick={handleLogout}
               whileTap={{ scale: 0.96 }}
-              className="text-xs px-2.5 py-1.5 sm:px-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-red-500 border border-slate-200 dark:border-slate-800 rounded-lg font-medium transition select-none"
+              className="text-[10px] sm:text-xs px-2 py-1.5 sm:px-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-red-500 border border-slate-200 dark:border-slate-800 rounded-lg font-bold transition select-none shrink-0"
             >
               Logout
             </motion.button>
