@@ -92,6 +92,15 @@ Key environment configurations:
 *   `AWS_ACCESS_KEY` & `AWS_SECRET_KEY`: IAM credentials for AWS S3 upload services.
 *   `S3_BUCKET`: Target S3 bucket name.
 
+### Centralized AI & System Configurations
+*   `OPENAI_MODEL` (default: `gpt-4o-mini`): Specifies the version of OpenAI GPT model to use.
+*   `OPENAI_TIMEOUT` (default: `60`): Specifies request timeout limit in seconds.
+*   `OPENAI_MAX_RETRIES` (default: `3`): Specifies retries count for transient failure backoff policy.
+*   `MAX_PROMPT_WORDS` (default: `40000`): Specifies maximum prompt context size limit.
+*   `ENABLE_IMAGE_OCR` (default: `false`): Disables/enables Image OCR capability.
+*   `ENABLE_OPENAI` (default: `true`): Disables/enables live OpenAI request dispatcher.
+*   `ENABLE_MOCK_FALLBACK` (default: `true`): Enables offline mock AI response fallback when keys are missing.
+
 ---
 
 ## 3. Installation & Local Development

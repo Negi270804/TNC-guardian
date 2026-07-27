@@ -16,8 +16,38 @@ ANTHROPIC_API_KEY = settings.ANTHROPIC_API_KEY
 OPENAI_API_KEY = settings.OPENAI_API_KEY
 GEMINI_API_KEY = settings.GEMINI_API_KEY
 OPENAI_MODEL = settings.OPENAI_MODEL
+"""Target OpenAI model identifier used for core text analysis."""
+
 OPENAI_TIMEOUT = settings.OPENAI_TIMEOUT
+"""Timeout duration limit in seconds for OpenAI HTTP requests."""
+
+OPENAI_MAX_RETRIES = settings.OPENAI_MAX_RETRIES
+"""Maximum retry count for transient OpenAI connection or rate-limit failures."""
+
+OPENAI_RETRY_DELAY = settings.OPENAI_RETRY_DELAY
+"""Base backoff multiplier delay value in seconds."""
+
+MAX_PROMPT_WORDS = settings.MAX_PROMPT_WORDS
+"""Word truncation threshold for the input text passed to LLM prompt context."""
+
 OPENAI_MAX_PROMPT_WORDS = settings.OPENAI_MAX_PROMPT_WORDS
+"""Backward-compatible prompt length word limit designation."""
+
+ENABLE_OPENAI = settings.ENABLE_OPENAI
+"""Flag indicating if outbound OpenAI API execution is enabled."""
+
+ENABLE_MOCK_FALLBACK = settings.ENABLE_MOCK_FALLBACK
+"""Flag indicating if factory should resolve Mock service on missing keys."""
+
+# Reusable exponential backoff retry delays list
+OPENAI_RETRY_DELAYS = [0.0, OPENAI_RETRY_DELAY, 5.0]
+
+# Centralized AI logger label constants to avoid duplicated strings
+AI_LABEL_PROVIDER = "AI Provider"
+AI_LABEL_RETRY = "Retry"
+AI_LABEL_TIMEOUT = "Timeout"
+AI_LABEL_PROMPT = "Prompt Length"
+AI_LABEL_EXEC = "Execution Time"
 
 URL_INGESTION_TIMEOUT = settings.URL_INGESTION_TIMEOUT
 URL_INGESTION_RETRIES = settings.URL_INGESTION_RETRIES

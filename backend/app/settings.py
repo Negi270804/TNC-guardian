@@ -59,8 +59,28 @@ class Settings(BaseSettings):
         alias="GEMINI_API_KEY"
     )
     OPENAI_MODEL: str = Field(default="gpt-4o-mini", alias="OPENAI_MODEL")
+    """OpenAI GPT model version designation used for analyzing document terms."""
+
     OPENAI_TIMEOUT: float = Field(default=60.0, alias="OPENAI_TIMEOUT")
+    """Maximum request timeout limit in seconds allowed for OpenAI API requests."""
+
     OPENAI_MAX_PROMPT_WORDS: int = Field(default=40000, alias="OPENAI_MAX_PROMPT_WORDS")
+    """Backward-compatible prompt length word limit designation."""
+
+    OPENAI_MAX_RETRIES: int = Field(default=3, alias="OPENAI_MAX_RETRIES")
+    """Maximum number of attempts allowed for transient OpenAI API failures."""
+
+    OPENAI_RETRY_DELAY: float = Field(default=2.0, alias="OPENAI_RETRY_DELAY")
+    """Base retry delay interval in seconds for backoff calculation."""
+
+    MAX_PROMPT_WORDS: int = Field(default=40000, alias="MAX_PROMPT_WORDS")
+    """Max document context size in words forwarded to the prompt templates."""
+
+    ENABLE_OPENAI: bool = Field(default=True, alias="ENABLE_OPENAI")
+    """Controls whether active requests route to live OpenAI services."""
+
+    ENABLE_MOCK_FALLBACK: bool = Field(default=True, alias="ENABLE_MOCK_FALLBACK")
+    """Controls whether missing keys trigger fallback to local mock services."""
 
     URL_INGESTION_TIMEOUT: float = Field(default=12.0, alias="URL_INGESTION_TIMEOUT")
     URL_INGESTION_RETRIES: int = Field(default=3, alias="URL_INGESTION_RETRIES")
