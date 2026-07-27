@@ -40,11 +40,11 @@ https://tnc-guardian.onrender.com
 
 | Landing | Dashboard |
 |----------|-----------|
-| ![](docs/screenshots/landing.png) | ![](docs/screenshots/dashboard.png) |
+| ![](docs/screenshots/landing_page.png) | ![](docs/screenshots/dashboard.png) |
 
 | Upload | AI Analysis |
 |----------|-----------|
-| ![](docs/screenshots/upload.png) | ![](docs/screenshots/results.png) |
+| ![](docs/screenshots/uploads.png) | ![](docs/screenshots/analysis.png) |
 
 | History |
 |----------|
