@@ -123,7 +123,7 @@ class OCRService:
                                     cls._reader = easyocr.Reader(
                                         langs, 
                                         gpu=False,
-                                        download_enabled=False,
+                                        download_enabled=True,
                                         verbose=False,
                                         quantize=True,
                                         model_storage_directory=model_dir
