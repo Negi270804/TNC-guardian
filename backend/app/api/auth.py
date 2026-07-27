@@ -108,13 +108,17 @@ async def forgot_password(payload: ForgotPasswordRequest, db: AsyncSession = Dep
     
     await db.commit()
     
-    # Trigger SMTP email sending asynchronously
+    # Trigger Resend email sending asynchronously
     logger.info(f"Before call: Triggering EmailService.send_reset_email for {user.email}")
     try:
         await EmailService.send_reset_email(user.email, token)
         logger.info(f"After call: Returned from EmailService.send_reset_email for {user.email}")
     except Exception as e:
         logger.exception(f"Error occurred in EmailService.send_reset_email for {user.email}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unable to send password reset email."
+        )
     
     return generic_response
 

@@ -1,6 +1,3 @@
-import smtplib
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
 import logging
 import asyncio
 from app import config
@@ -8,9 +5,27 @@ from app import config
 logger = logging.getLogger("app.services.email_service")
 
 class EmailService:
+    """
+    EmailService handles delivery of system notification and alert emails.
+    Uses Resend API exclusively.
+    """
+
     @staticmethod
-    def send_reset_email_sync(to_email: str, token: str):
-        # Format the password reset configuration link dynamically using FRONTEND_URL
+    def send_reset_email_sync(to_email: str, token: str) -> None:
+        """
+        Synchronous worker function that builds the reset link, verifies Resend settings,
+        and sends the HTTP POST request to the Resend API endpoint.
+        
+        Args:
+            to_email (str): Recipient email address.
+            token (str): Secure random verification token.
+            
+        Raises:
+            RuntimeError: If Resend API Key/Sender Email are invalid or the request fails.
+        """
+        logger.info("[EMAIL SERVICE] Entering EmailService.send_reset_email_sync")
+        
+        # Build password reset link dynamically using configured frontend domain
         reset_link = f"{config.FRONTEND_URL}/reset-password?token={token}"
         
         subject = "Reset Your Password - TNC Guardian"
@@ -34,103 +49,65 @@ class EmailService:
         </html>
         """
 
-        # Detailed production-safe logging before sending email
-        logger.info("[EMAIL SERVICE] Entering EmailService.send_reset_email_sync")
+        # Verify API configuration presence and throw RuntimeError if missing/invalid
+        api_key = config.RESEND_API_KEY
+        from_email = config.FROM_EMAIL
+
+        # Key validations
+        if not api_key or api_key == "" or "placeholder" in str(api_key).lower() or "api-key" in str(api_key).lower():
+            err_msg = "[EMAIL SERVICE] RESEND_API_KEY is missing, empty, or set to placeholder value."
+            logger.error(err_msg)
+            raise RuntimeError(err_msg)
+
+        if not from_email or from_email == "" or "placeholder" in str(from_email).lower():
+            err_msg = "[EMAIL SERVICE] FROM_EMAIL configuration is missing, empty, or set to placeholder value."
+            logger.error(err_msg)
+            raise RuntimeError(err_msg)
+
+        # Log parameters
         logger.info(f"[EMAIL SERVICE] Recipient: {to_email}")
-        logger.info(f"[EMAIL SERVICE] RESEND_API_KEY Loaded: {bool(config.RESEND_API_KEY)}")
-        logger.info(f"[EMAIL SERVICE] FROM_EMAIL exists: {bool(config.FROM_EMAIL)}")
+        logger.info(f"[EMAIL SERVICE] RESEND_API_KEY Loaded: True")
+        logger.info(f"[EMAIL SERVICE] FROM_EMAIL: {from_email}")
         logger.info(f"[EMAIL SERVICE] APP_ENV: {config.APP_ENV}")
         logger.info(f"[EMAIL SERVICE] DEMO_MODE: {config.DEMO_MODE}")
 
-        # 5. Verify that FROM_EMAIL is being used correctly.
-        from_email = config.FROM_EMAIL or "onboarding@resend.dev"
-        logger.info(f"[EMAIL SERVICE] Using FROM_EMAIL: {from_email}")
+        # Send via Resend API
+        try:
+            import httpx
+            headers = {
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json"
+            }
+            payload = {
+                "from": from_email,
+                "to": [to_email],
+                "subject": subject,
+                "text": text_content,
+                "html": html_content
+            }
+            logger.info("[EMAIL SERVICE] API request started")
+            
+            resp = httpx.post("https://api.resend.com/emails", json=payload, headers=headers, timeout=10)
+            
+            logger.info(f"[EMAIL SERVICE] HTTP status: {resp.status_code}")
+            logger.info(f"[EMAIL SERVICE] Response body: {resp.text}")
 
-        # 1. Try sending via Resend API if API key is configured
-        has_resend_key = (
-            config.RESEND_API_KEY is not None and
-            config.RESEND_API_KEY != "" and
-            "placeholder" not in str(config.RESEND_API_KEY).lower() and
-            "api-key" not in str(config.RESEND_API_KEY).lower()
-        )
-
-        if has_resend_key:
-            try:
-                import httpx
-                headers = {
-                    "Authorization": f"Bearer {config.RESEND_API_KEY}",
-                    "Content-Type": "application/json"
-                }
-                payload = {
-                    "from": from_email,
-                    "to": [to_email],
-                    "subject": subject,
-                    "text": text_content,
-                    "html": html_content
-                }
-                logger.info("[EMAIL SERVICE] Attempting Resend API request")
-                
-                resp = httpx.post("https://api.resend.com/emails", json=payload, headers=headers, timeout=10)
-                
-                logger.info(f"[EMAIL SERVICE] HTTP Status Code: {resp.status_code}")
-                logger.info(f"[EMAIL SERVICE] Response Body: {resp.text}")
-
-                if resp.status_code in [200, 201]:
-                    logger.info("Password reset email sent successfully.")
-                    return
-                else:
-                    logger.error(f"[EMAIL SERVICE] Resend API error response received. Status: {resp.status_code}, Body: {resp.text}")
-            except Exception as e:
-                # Log full traceback using logger.exception()
-                logger.exception("[EMAIL SERVICE] Exception occurred during Resend API request")
-        else:
-            logger.info("[EMAIL SERVICE] Resend API key is not configured or is a placeholder. Skipping Resend API.")
-
-        # 2. Try sending via SMTP if SMTP_HOST is configured and is not local dev mock
-        is_smtp_configured = (
-            config.SMTP_HOST
-            and config.SMTP_HOST not in ["localhost", "127.0.0.1"]
-            and "your-smtp" not in str(config.SMTP_HOST).lower()
-        )
-
-        if is_smtp_configured:
-            try:
-                msg = MIMEMultipart("alternative")
-                msg["Subject"] = subject
-                msg["From"] = config.SMTP_FROM_EMAIL or config.SMTP_SENDER or "noreply@tncguardian.com"
-                msg["To"] = to_email
-                msg.attach(MIMEText(text_content, "plain"))
-                msg.attach(MIMEText(html_content, "html"))
-
-                logger.info(f"[EMAIL SERVICE] Attempting SMTP delivery to host: {config.SMTP_HOST}")
-                with smtplib.SMTP(config.SMTP_HOST, config.SMTP_PORT, timeout=10) as server:
-                    if config.SMTP_USE_TLS:
-                        server.starttls()
-                    if config.SMTP_USERNAME and config.SMTP_PASSWORD:
-                        server.login(config.SMTP_USERNAME, config.SMTP_PASSWORD)
-                    server.sendmail(
-                        config.SMTP_FROM_EMAIL or config.SMTP_SENDER or "noreply@tncguardian.com",
-                        to_email,
-                        msg.as_string()
-                    )
-                logger.info(f"Password reset email sent successfully via SMTP to {to_email}")
+            if resp.status_code in [200, 201]:
+                logger.info("[EMAIL SERVICE] Success: Password reset email sent successfully.")
                 return
-            except Exception as e:
-                logger.exception(f"[EMAIL SERVICE] SMTP delivery failed to send email to {to_email}")
-        else:
-            logger.info("[EMAIL SERVICE] SMTP is not configured or set to local/placeholder. Skipping SMTP.")
-
-        # 3. Fallback to Development Mode Console Logging
-        logger.warning(
-            f"\n\n==================================================\n"
-            f"DEVELOPMENT MODE PASSWORD RESET LINK FOR {to_email}:\n"
-            f"{reset_link}\n"
-            f"==================================================\n"
-        )
+            else:
+                err_msg = f"[EMAIL SERVICE] Resend API error response received. Status: {resp.status_code}, Body: {resp.text}"
+                logger.error(err_msg)
+                raise RuntimeError(err_msg)
+        except Exception as e:
+            logger.exception("[EMAIL SERVICE] Exception occurred during Resend API request")
+            raise RuntimeError(f"Failed to send email via Resend: {str(e)}") from e
 
     @classmethod
-    async def send_reset_email(cls, to_email: str, token: str):
+    async def send_reset_email(cls, to_email: str, token: str) -> None:
+        """
+        Asynchronous wrapper offloading the blocking HTTP requests to a worker thread.
+        """
         logger.info(f"Before call: send_reset_email for recipient {to_email}")
-        # Offload the blocking SMTP call to a background thread to prevent event loop blocking
         await asyncio.to_thread(cls.send_reset_email_sync, to_email, token)
         logger.info(f"After call: send_reset_email finished background task for {to_email}")
