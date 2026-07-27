@@ -26,11 +26,11 @@ AI-Powered SaaS Platform that analyzes Terms & Conditions, Privacy Policies, and
 
 ### Frontend
 
-https://YOUR-FRONTEND-LINK
+https://tnc-guardian-frontend.onrender.com
 
 ### Backend API
 
-https://YOUR-BACKEND-LINK
+https://tnc-guardian.onrender.com
 
 ---
 
@@ -379,8 +379,8 @@ This project is licensed under the MIT License.
 
 **Nikhil Negi**
 
-- LinkedIn: https://linkedin.com/in/YOUR-LINKEDIN
-- GitHub: https://github.com/YOUR-GITHUB
+- LinkedIn: https://www.linkedin.com/in/nikhil-negi-0bb166328/
+- GitHub: https://github.com/Negi270804/
 
 ---
 
