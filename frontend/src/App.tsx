@@ -86,6 +86,7 @@ export const App: React.FC = () => {
               </Route>
 
               <Route path="/404" element={<NotFound />} />
+              <Route path="/500" element={<NotFound />} />
               <Route path="*" element={<Navigate to="/404" replace />} />
             </Routes>
           </React.Suspense>

@@ -248,3 +248,17 @@
   background-color: rgba(248, 250, 252, 0.6) !important;
 }
 
+/* 3. Accessibility Focus rings & Screen Reader Helpers */
+*:focus-visible {
+  outline: 2px solid #2563EB !important;
+  outline-offset: 2px !important;
+}
+
+/* Custom accessibility enhancements for inputs */
+input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 2px solid #2563EB !important;
+  outline-offset: 1px !important;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15) !important;
+}
+
+
