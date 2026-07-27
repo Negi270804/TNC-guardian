@@ -387,25 +387,26 @@ ${clausesText}
     switch (status.toUpperCase()) {
       case 'COMPLETED':
         return 'text-emerald-400 bg-emerald-950/30 border border-emerald-900/50';
+        return 'text-emerald-700 bg-emerald-50 border-emerald-200';
       case 'PROCESSING':
-        return 'text-blue-400 bg-blue-950/30 border border-blue-900/50 animate-pulse';
+        return 'text-blue-700 bg-blue-50 border-blue-200 animate-pulse';
       case 'FAILED':
-        return 'text-red-400 bg-red-950/30 border border-red-900/50';
+        return 'text-red-700 bg-red-50 border-red-200';
       default:
-        return 'text-slate-400 bg-slate-900 border border-slate-800';
+        return 'text-slate-600 bg-slate-100 border-slate-200';
     }
   };
 
   return (
-    <div className="space-y-6 relative">
+    <div className="space-y-6 relative fade-in">
       {/* Toast notifications */}
       {successToast && (
-        <div className="fixed top-4 right-4 z-50 p-4 rounded-lg bg-emerald-950 border border-emerald-800 text-sm text-emerald-300 shadow-xl animate-fade-in flex items-center gap-2">
+        <div className="fixed top-4 right-4 z-50 p-4 rounded-xl bg-white border border-green-200 text-sm font-semibold text-green-700 shadow-xl flex items-center gap-2 animate-fade-in">
           <span>✅</span> {successToast}
         </div>
       )}
       {errorToast && (
-        <div className="fixed top-4 right-4 z-50 p-4 rounded-lg bg-red-950 border border-red-800 text-sm text-red-300 shadow-xl animate-fade-in flex items-center gap-2">
+        <div className="fixed top-4 right-4 z-50 p-4 rounded-xl bg-white border border-red-200 text-sm font-semibold text-red-700 shadow-xl flex items-center gap-2 animate-fade-in">
           <span>❌</span> {errorToast}
         </div>
       )}
@@ -413,29 +414,29 @@ ${clausesText}
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-slate-100 font-display">Analysis History Logs</h2>
-          <p className="text-sm text-slate-400 mt-1">Review, query, and manage your previously analyzed documents.</p>
+          <h2 className="text-2xl font-bold text-slate-900 font-display">Analysis History Logs</h2>
+          <p className="text-sm text-slate-500 mt-1 font-medium">Review, query, and manage your previously analyzed documents.</p>
         </div>
         <button 
           onClick={() => refetch()}
-          className="self-start px-4 py-2 bg-slate-900 hover:bg-slate-850 text-slate-300 hover:text-white border border-slate-850 hover:border-slate-800 rounded-lg text-sm font-medium transition flex items-center gap-2"
+          className="btn-secondary py-2 px-4 text-xs font-bold flex items-center gap-2"
         >
           <span>🔄</span> Refresh Logs
         </button>
       </div>
 
       {/* Filter and Search controls */}
-      <div className="p-5 bg-slate-900 border border-slate-850 rounded-xl space-y-4 shadow-md">
+      <div className="bg-white border border-slate-200/60 rounded-2xl p-5 shadow-soft space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Search bar */}
           <div className="relative">
-            <span className="absolute left-3.5 top-2.5 text-slate-500 text-sm">🔍</span>
+            <span className="absolute left-3.5 top-3 text-slate-400 text-sm">🔍</span>
             <input
               type="text"
               placeholder="Search by file name, keywords..."
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-              className="w-full bg-slate-950 border border-slate-800 hover:border-slate-700 focus:border-green-600 focus:ring-1 focus:ring-green-600 rounded-lg pl-10 pr-4 py-2.5 text-sm text-slate-200 placeholder-slate-500 transition duration-150"
+              className="form-input pl-10 text-sm"
             />
           </div>
 
@@ -443,7 +444,7 @@ ${clausesText}
           <select
             value={riskLevel}
             onChange={(e) => { setRiskLevel(e.target.value); setPage(1); }}
-            className="w-full bg-slate-950 border border-slate-800 hover:border-slate-700 focus:border-green-600 focus:ring-1 focus:ring-green-600 rounded-lg px-4 py-2.5 text-sm text-slate-300 transition duration-150"
+            className="form-input text-sm"
           >
             <option value="">All Risk Levels</option>
             <option value="low">Low Risk</option>
@@ -456,7 +457,7 @@ ${clausesText}
           <select
             value={statusFilter}
             onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-            className="w-full bg-slate-950 border border-slate-800 hover:border-slate-700 focus:border-green-600 focus:ring-1 focus:ring-green-600 rounded-lg px-4 py-2.5 text-sm text-slate-300 transition duration-150"
+            className="form-input text-sm"
           >
             <option value="">All Statuses</option>
             <option value="completed">Completed</option>
@@ -466,14 +467,14 @@ ${clausesText}
         </div>
 
         {/* Extended filters */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-2 border-t border-slate-850/60">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-4 border-t border-slate-100">
           {/* File Type filter */}
           <div>
-            <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-1.5">File Format</label>
+            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">File Format</label>
             <select
               value={fileType}
               onChange={(e) => { setFileType(e.target.value); setPage(1); }}
-              className="w-full bg-slate-950 border border-slate-800 hover:border-slate-700 focus:border-green-600 focus:ring-1 focus:ring-green-600 rounded-lg px-3 py-2 text-xs text-slate-300 transition duration-150"
+              className="form-input py-2 text-xs"
             >
               <option value="">All Formats</option>
               <option value="pdf">PDF Document</option>
@@ -486,23 +487,23 @@ ${clausesText}
 
           {/* Upload Date filter */}
           <div>
-            <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Upload Date</label>
+            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Upload Date</label>
             <input
               type="date"
               value={uploadDate}
               onChange={(e) => { setUploadDate(e.target.value); setPage(1); }}
-              className="w-full bg-slate-950 border border-slate-800 hover:border-slate-700 focus:border-green-600 focus:ring-1 focus:ring-green-600 rounded-lg px-3 py-2 text-xs text-slate-300 transition duration-150"
+              className="form-input py-2 text-xs text-slate-600"
             />
           </div>
 
           {/* Analysis Date filter */}
           <div>
-            <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Analysis Date</label>
+            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Analysis Date</label>
             <input
               type="date"
               value={analysisDate}
               onChange={(e) => { setAnalysisDate(e.target.value); setPage(1); }}
-              className="w-full bg-slate-950 border border-slate-800 hover:border-slate-700 focus:border-green-600 focus:ring-1 focus:ring-green-600 rounded-lg px-3 py-2 text-xs text-slate-300 transition duration-150"
+              className="form-input py-2 text-xs text-slate-600"
             />
           </div>
 
@@ -518,7 +519,7 @@ ${clausesText}
                 setAnalysisDate('');
                 setPage(1);
               }}
-              className="w-full px-3 py-2 bg-slate-950 hover:bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-850 hover:border-slate-800 rounded-lg text-xs font-semibold tracking-wide transition duration-150"
+              className="btn-secondary w-full py-2.5 text-xs font-bold"
             >
               Clear All Filters
             </button>
@@ -527,13 +528,13 @@ ${clausesText}
       </div>
 
       {selectedIds.length > 0 && (
-        <div className="flex items-center justify-between p-4 bg-red-950/10 border border-red-900/20 rounded-xl animate-fade-in">
-          <span className="text-xs text-slate-350">
-            Selected <span className="font-bold text-red-400">{selectedIds.length}</span> audit logs for batch deletion.
+        <div className="flex items-center justify-between p-4 bg-red-50 border border-red-200 rounded-xl animate-fade-in">
+          <span className="text-xs text-slate-600 font-semibold">
+            Selected <span className="font-bold text-red-600">{selectedIds.length}</span> audit logs for batch deletion.
           </span>
           <button
             onClick={() => setBulkDeleteModalOpen(true)}
-            className="px-3.5 py-1.5 bg-red-600 hover:bg-red-500 text-xs font-semibold text-white rounded-lg border border-red-700 transition shadow-lg"
+            className="btn-danger py-1.5 px-3.5 text-xs font-bold shadow-sm"
           >
             🗑️ Delete Selected
           </button>
@@ -541,10 +542,10 @@ ${clausesText}
       )}
 
       {/* Main logs list container */}
-      <div className="overflow-x-auto rounded-xl bg-slate-900 border border-slate-850 shadow-md">
-        <table className="w-full text-left border-collapse min-w-[900px]">
+      <div className="overflow-x-auto rounded-xl border border-slate-200/60 bg-white shadow-soft">
+        <table className="w-full text-left border-collapse min-w-[900px] text-sm">
           <thead>
-            <tr className="border-b border-slate-850 bg-slate-950 text-xs font-bold text-slate-400 uppercase tracking-wider select-none">
+            <tr className="border-b border-slate-200 bg-[#F8FAFC] text-xs font-bold text-slate-500 uppercase tracking-wider select-none">
               <th className="p-4 w-12 text-center">
                 <input
                   type="checkbox"
@@ -555,34 +556,34 @@ ${clausesText}
                     }
                   }}
                   onChange={handleSelectAll}
-                  className="rounded bg-slate-950 border-slate-800 text-green-600 focus:ring-green-500/20 w-4 h-4 cursor-pointer"
+                  className="rounded border-slate-300 text-brand-600 focus:ring-brand-500/20 w-4 h-4 cursor-pointer"
                 />
               </th>
-              <th onClick={() => handleSort('original_filename')} className="p-4 cursor-pointer hover:bg-slate-900 transition">
+              <th onClick={() => handleSort('original_filename')} className="p-4 cursor-pointer hover:bg-slate-50/50 transition">
                 <div className="flex items-center gap-1.5">
                   <span>File Name</span>
                   {sortBy === 'original_filename' && (order === 'asc' ? '▲' : '▼')}
                 </div>
               </th>
-              <th onClick={() => handleSort('file_type')} className="p-4 cursor-pointer hover:bg-slate-900 transition w-28">
+              <th onClick={() => handleSort('file_type')} className="p-4 cursor-pointer hover:bg-slate-50/50 transition w-28">
                 <div className="flex items-center gap-1.5">
                   <span>Source</span>
                   {sortBy === 'file_type' && (order === 'asc' ? '▲' : '▼')}
                 </div>
               </th>
-              <th onClick={() => handleSort('created_at')} className="p-4 cursor-pointer hover:bg-slate-900 transition w-36">
+              <th onClick={() => handleSort('created_at')} className="p-4 cursor-pointer hover:bg-slate-50/50 transition w-36">
                 <div className="flex items-center gap-1.5">
                   <span>Upload Date</span>
                   {sortBy === 'created_at' && (order === 'asc' ? '▲' : '▼')}
                 </div>
               </th>
-              <th onClick={() => handleSort('analysis_date')} className="p-4 cursor-pointer hover:bg-slate-900 transition w-36">
+              <th onClick={() => handleSort('analysis_date')} className="p-4 cursor-pointer hover:bg-slate-50/50 transition w-36">
                 <div className="flex items-center gap-1.5">
                   <span>Analysis Date</span>
                   {sortBy === 'analysis_date' && (order === 'asc' ? '▲' : '▼')}
                 </div>
               </th>
-              <th onClick={() => handleSort('risk_score')} className="p-4 cursor-pointer hover:bg-slate-900 transition w-32">
+              <th onClick={() => handleSort('risk_score')} className="p-4 cursor-pointer hover:bg-slate-50/50 transition w-32">
                 <div className="flex items-center gap-1.5">
                   <span>Risk Score</span>
                   {sortBy === 'risk_score' && (order === 'asc' ? '▲' : '▼')}
@@ -593,20 +594,20 @@ ${clausesText}
               <th className="p-4 text-right w-44">Actions</th>
             </tr>
           </thead>
-          <tbody className="text-sm text-slate-300 divide-y divide-slate-850/60">
+          <tbody className="text-slate-600 divide-y divide-slate-100">
             {isLoading ? (
               // Loading Skeleton
               Array.from({ length: limit }).map((_, idx) => (
-                <tr key={idx} className="bg-slate-900/50">
-                  <td className="p-4 text-center"><div className="w-4 h-4 bg-slate-800/80 rounded mx-auto animate-pulse" /></td>
-                  <td className="p-4"><div className="h-4 bg-slate-800/80 rounded w-48 animate-pulse" /></td>
-                  <td className="p-4"><div className="h-4 bg-slate-800/80 rounded w-12 animate-pulse" /></td>
-                  <td className="p-4"><div className="h-4 bg-slate-800/80 rounded w-24 animate-pulse" /></td>
-                  <td className="p-4"><div className="h-4 bg-slate-800/80 rounded w-24 animate-pulse" /></td>
-                  <td className="p-4"><div className="h-4 bg-slate-800/80 rounded w-16 animate-pulse" /></td>
-                  <td className="p-4"><div className="h-4 bg-slate-800/80 rounded w-20 animate-pulse" /></td>
-                  <td className="p-4"><div className="h-4 bg-slate-800/80 rounded w-16 animate-pulse" /></td>
-                  <td className="p-4 text-right"><div className="h-7 bg-slate-800/80 rounded w-24 ml-auto animate-pulse" /></td>
+                <tr key={idx} className="bg-white">
+                  <td className="p-4 text-center"><div className="w-4 h-4 bg-slate-100 rounded mx-auto animate-pulse" /></td>
+                  <td className="p-4"><div className="h-4 bg-slate-100 rounded w-48 animate-pulse" /></td>
+                  <td className="p-4"><div className="h-4 bg-slate-100 rounded w-12 animate-pulse" /></td>
+                  <td className="p-4"><div className="h-4 bg-slate-100 rounded w-24 animate-pulse" /></td>
+                  <td className="p-4"><div className="h-4 bg-slate-100 rounded w-24 animate-pulse" /></td>
+                  <td className="p-4"><div className="h-4 bg-slate-100 rounded w-16 animate-pulse" /></td>
+                  <td className="p-4"><div className="h-4 bg-slate-100 rounded w-20 animate-pulse" /></td>
+                  <td className="p-4"><div className="h-4 bg-slate-100 rounded w-16 animate-pulse" /></td>
+                  <td className="p-4 text-right"><div className="h-7 bg-slate-100 rounded w-24 ml-auto animate-pulse" /></td>
                 </tr>
               ))
             ) : historyItems.length === 0 ? (
@@ -614,8 +615,8 @@ ${clausesText}
               <tr>
                 <td colSpan={9} className="p-16 text-center space-y-4">
                   <div className="text-5xl block animate-bounce">🔍</div>
-                  <h4 className="text-slate-200 font-semibold text-base font-display">No history logs found</h4>
-                  <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                  <h4 className="text-slate-800 font-bold text-base font-display">No history logs found</h4>
+                  <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed font-medium">
                     We couldn't find any audited documents matching your search queries or filter choices. Try adjusting your parameters.
                   </p>
                   <button
@@ -628,7 +629,7 @@ ${clausesText}
                       setAnalysisDate('');
                       setPage(1);
                     }}
-                    className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-lg border border-slate-750 transition"
+                    className="btn-secondary py-2 px-4 text-xs font-semibold"
                   >
                     Reset All Queries
                   </button>
@@ -637,20 +638,20 @@ ${clausesText}
             ) : (
               // Document History Rows
               historyItems.map((doc: any) => (
-                <tr key={doc.id} className={`${selectedIds.includes(doc.id) ? 'bg-green-950/10 hover:bg-green-950/20' : 'hover:bg-slate-850/30'} transition group duration-100`}>
+                <tr key={doc.id} className={`${selectedIds.includes(doc.id) ? 'bg-brand-50/40 hover:bg-brand-50/60' : 'hover:bg-slate-50/50'} transition duration-150`}>
                   <td className="p-4 text-center">
                     <input
                       type="checkbox"
                       checked={selectedIds.includes(doc.id)}
                       onChange={() => handleSelectRow(doc.id)}
-                      className="rounded bg-slate-950 border-slate-800 text-green-600 focus:ring-green-500/20 w-4 h-4 cursor-pointer"
+                      className="rounded border-slate-300 text-brand-600 focus:ring-brand-500/20 w-4 h-4 cursor-pointer"
                     />
                   </td>
                   {/* File Name */}
-                  <td className="p-4 font-medium text-slate-100 font-display">
+                  <td className="p-4 font-semibold text-slate-800 font-display">
                     <span 
                       onClick={() => openDetails(doc.id)} 
-                      className="hover:text-green-400 cursor-pointer transition underline decoration-dotted decoration-slate-600 hover:decoration-green-500"
+                      className="hover:text-brand-600 cursor-pointer transition underline decoration-dotted decoration-slate-400 hover:decoration-brand-500"
                     >
                       {doc.source_type === 'URL' && doc.source_url ? (
                         (() => {
@@ -667,7 +668,7 @@ ${clausesText}
                   
                   {/* Source */}
                   <td className="p-4">
-                    <span className="px-2 py-1 rounded bg-slate-950 border border-slate-850 text-xs text-slate-400 font-semibold uppercase font-display flex items-center gap-1.5 w-fit">
+                    <span className="px-2 py-1 rounded bg-[#F8FAFC] border border-slate-100 text-xs text-slate-500 font-bold uppercase font-display flex items-center gap-1.5 w-fit">
                       {doc.source_type === 'URL' && '🌐 URL'}
                       {doc.source_type === 'TEXT' && '📝 TEXT'}
                       {(doc.source_type === 'PDF' || !doc.source_type) && '📄 PDF'}
@@ -675,53 +676,53 @@ ${clausesText}
                   </td>
 
                   {/* Upload Date */}
-                  <td className="p-4 text-slate-400 text-xs">
+                  <td className="p-4 text-slate-500 font-medium text-xs">
                     {formatDate(doc.created_at)}
                   </td>
 
                   {/* Analysis Date */}
-                  <td className="p-4 text-slate-400 text-xs">
+                  <td className="p-4 text-slate-500 font-medium text-xs">
                     {doc.analysis ? formatDate(doc.analysis.created_at) : 'Not analyzed'}
                   </td>
 
                   {/* Risk Score */}
                   <td className="p-4">
                     {doc.analysis ? (
-                      <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold font-display ${getRiskBadgeStyles(doc.risk_level)}`}>
+                      <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold font-display border ${getRiskBadgeStyles(doc.risk_level)}`}>
                         {doc.analysis.overall_risk_score} ({doc.risk_level})
                       </span>
                     ) : (
-                      <span className="text-slate-500 text-xs italic">N/A</span>
+                      <span className="text-slate-400 text-xs italic">N/A</span>
                     )}
                   </td>
 
                   {/* Status */}
                   <td className="p-4">
-                    <span className={`px-2 py-0.5 rounded text-xs font-semibold tracking-wide ${getStatusBadgeStyles(doc.processing_status)}`}>
+                    <span className={`px-2 py-0.5 rounded text-xs font-bold border tracking-wide ${getStatusBadgeStyles(doc.processing_status)}`}>
                       {doc.processing_status}
                     </span>
                   </td>
 
                   {/* Provider */}
-                  <td className="p-4 text-slate-400 text-xs font-display">
+                  <td className="p-4 text-slate-500 text-xs font-display font-medium">
                     {doc.analysis ? (
                       <div className="flex flex-col">
-                        <span className="font-semibold text-slate-300 capitalize">{doc.analysis.provider}</span>
-                        <span className="text-[10px] text-slate-500 font-mono">{doc.analysis.model_name}</span>
+                        <span className="font-bold text-slate-700 capitalize">{doc.analysis.provider}</span>
+                        <span className="text-[10px] text-slate-400 font-mono">{doc.analysis.model_name}</span>
                       </div>
                     ) : (
-                      <span className="text-slate-600">-</span>
+                      <span className="text-slate-400 font-normal">-</span>
                     )}
                   </td>
 
                   {/* Actions column */}
                   <td className="p-4 text-right">
-                    <div className="flex items-center justify-end gap-1.5 opacity-80 group-hover:opacity-100 transition">
+                    <div className="flex items-center justify-end gap-1.5 whitespace-nowrap">
                       {/* View Details / Results */}
                       {doc.analysis ? (
                         <Link
                           to={`/results/${doc.id}`}
-                          className="p-1.5 bg-slate-950 hover:bg-green-950/20 text-slate-400 hover:text-green-400 border border-slate-850 hover:border-green-900 rounded transition"
+                          className="p-1.5 bg-[#F8FAFC] hover:bg-brand-50 border border-slate-200 hover:border-brand-300 rounded-lg transition text-slate-500 hover:text-brand-600 text-xs font-bold"
                           title="View Audit Results page"
                         >
                           👁️
@@ -729,7 +730,7 @@ ${clausesText}
                       ) : (
                         <button
                           disabled
-                          className="p-1.5 bg-slate-950 text-slate-700 border border-slate-850 rounded cursor-not-allowed"
+                          className="p-1.5 bg-slate-50 text-slate-300 border border-slate-100 rounded-lg cursor-not-allowed text-xs"
                           title="No analysis results available"
                         >
                           👁️
@@ -740,7 +741,7 @@ ${clausesText}
                       <button
                         onClick={() => handleDownload(doc.id)}
                         disabled={!doc.analysis || isDownloadingId === doc.id}
-                        className={`p-1.5 bg-slate-950 hover:bg-slate-850 border border-slate-850 hover:border-slate-700 rounded transition text-slate-400 hover:text-slate-200 ${
+                        className={`p-1.5 bg-[#F8FAFC] hover:bg-slate-100 border border-slate-200 hover:border-slate-350 rounded-lg transition text-slate-500 hover:text-slate-800 text-xs font-bold ${
                           (!doc.analysis || isDownloadingId === doc.id) && 'opacity-30 cursor-not-allowed'
                         }`}
                         title="Download Markdown Report"
@@ -752,7 +753,7 @@ ${clausesText}
                       <button
                         onClick={() => reanalyzeMutation.mutate(doc.id)}
                         disabled={reanalyzeMutation.isPending || doc.processing_status === 'PROCESSING'}
-                        className={`p-1.5 bg-slate-950 hover:bg-slate-850 border border-slate-850 hover:border-slate-700 rounded transition text-slate-400 hover:text-slate-200 ${
+                        className={`p-1.5 bg-[#F8FAFC] hover:bg-slate-100 border border-slate-200 hover:border-slate-350 rounded-lg transition text-slate-500 hover:text-slate-800 text-xs font-bold ${
                           (reanalyzeMutation.isPending || doc.processing_status === 'PROCESSING') && 'opacity-30 cursor-not-allowed'
                         }`}
                         title="Re-run AI Analysis"
@@ -766,7 +767,7 @@ ${clausesText}
                           setDocToDelete(doc);
                           setDeleteModalOpen(true);
                         }}
-                        className="p-1.5 bg-slate-950 hover:bg-red-950/20 text-slate-400 hover:text-red-400 border border-slate-850 hover:border-red-900 rounded transition"
+                        className="p-1.5 bg-red-50 hover:bg-red-100 border border-red-200 hover:border-red-300 rounded-lg transition text-danger font-bold text-xs"
                         title="Delete Document & History"
                       >
                         🗑️
@@ -782,14 +783,14 @@ ${clausesText}
 
       {/* Pagination controls */}
       {totalRecords > 0 && (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-slate-900/50 border border-slate-850 rounded-xl">
-          <div className="flex items-center gap-4 text-xs text-slate-400">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-[#F8FAFC] border border-slate-200 rounded-xl">
+          <div className="flex items-center gap-4 text-xs font-semibold text-slate-500">
             <span>
-              Showing <span className="font-semibold text-slate-200">{((page - 1) * limit) + 1}</span> to{' '}
-              <span className="font-semibold text-slate-200">
+              Showing <span className="font-bold text-slate-800">{((page - 1) * limit) + 1}</span> to{' '}
+              <span className="font-bold text-slate-800">
                 {Math.min(page * limit, totalRecords)}
               </span>{' '}
-              of <span className="font-semibold text-slate-200">{totalRecords}</span> logs
+              of <span className="font-bold text-slate-800">{totalRecords}</span> logs
             </span>
 
             <div className="flex items-center gap-1.5">
@@ -797,7 +798,7 @@ ${clausesText}
               <select
                 value={limit}
                 onChange={(e) => { setLimit(Number(e.target.value)); setPage(1); }}
-                className="bg-slate-950 border border-slate-800 rounded px-1.5 py-0.5 text-xs text-slate-300"
+                className="bg-white border border-slate-200 rounded-lg px-2 py-0.5 text-xs text-slate-700 focus:outline-none"
               >
                 <option value={5}>5</option>
                 <option value={10}>10</option>
@@ -811,7 +812,7 @@ ${clausesText}
             <button
               onClick={() => setPage(p => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="px-3 py-1.5 bg-slate-900 hover:bg-slate-850 border border-slate-850 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 disabled:opacity-30 disabled:cursor-not-allowed transition"
+              className="px-3 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed transition"
             >
               Previous
             </button>
@@ -822,10 +823,10 @@ ${clausesText}
                 <button
                   key={p}
                   onClick={() => setPage(p)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
                     page === p
-                      ? 'bg-green-600 text-white border border-green-500'
-                      : 'bg-slate-900 hover:bg-slate-850 border border-slate-850 text-slate-400 hover:text-slate-200'
+                      ? 'bg-brand-600 text-white border border-brand-500 shadow-sm'
+                      : 'bg-white hover:bg-slate-50 border border-slate-200 text-slate-600'
                   }`}
                 >
                   {p}
@@ -836,7 +837,7 @@ ${clausesText}
             <button
               onClick={() => setPage(p => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
-              className="px-3 py-1.5 bg-slate-900 hover:bg-slate-850 border border-slate-850 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 disabled:opacity-30 disabled:cursor-not-allowed transition"
+              className="px-3 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed transition"
             >
               Next
             </button>
@@ -846,19 +847,19 @@ ${clausesText}
 
       {/* 1. History Details Modal Drawer */}
       {detailModalOpen && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="w-full max-w-4xl bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl flex flex-col max-h-[85vh] overflow-hidden animate-zoom-in">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="w-full max-w-4xl bg-white border border-slate-200 rounded-2xl shadow-2xl flex flex-col max-h-[85vh] overflow-hidden animate-zoom-in text-slate-800">
             {/* Modal Header */}
-            <div className="p-6 border-b border-slate-800 bg-slate-950 flex items-center justify-between">
+            <div className="p-6 border-b border-slate-100 bg-[#F8FAFC] flex items-center justify-between">
               <div>
-                <span className="text-[10px] text-green-500 font-bold uppercase tracking-widest">Document Audit Details</span>
-                <h3 className="text-xl font-bold text-white font-display mt-0.5">
+                <span className="text-[10px] text-brand-600 font-extrabold uppercase tracking-widest">Document Audit Details</span>
+                <h3 className="text-xl font-bold text-slate-900 font-display mt-0.5">
                   {detailDoc?.original_filename || 'Loading Metadata...'}
                 </h3>
               </div>
               <button
                 onClick={() => { setDetailModalOpen(false); setActiveDetailId(null); }}
-                className="text-slate-400 hover:text-white bg-slate-850 hover:bg-slate-800 p-2 rounded-lg text-sm transition"
+                className="btn-secondary py-2 px-4 text-xs font-bold"
               >
                 ✕ Close
               </button>
@@ -868,13 +869,13 @@ ${clausesText}
             <div className="p-6 overflow-y-auto space-y-8 flex-1">
               {isDetailLoading ? (
                 <div className="space-y-6 py-12">
-                  <div className="h-6 bg-slate-800 rounded w-1/3 animate-pulse" />
-                  <div className="h-32 bg-slate-800 rounded animate-pulse" />
-                  <div className="h-6 bg-slate-800 rounded w-1/4 animate-pulse" />
-                  <div className="h-24 bg-slate-800 rounded animate-pulse" />
+                  <div className="h-6 bg-slate-100 rounded w-1/3 animate-pulse" />
+                  <div className="h-32 bg-slate-100 rounded animate-pulse" />
+                  <div className="h-6 bg-slate-100 rounded w-1/4 animate-pulse" />
+                  <div className="h-24 bg-slate-100 rounded animate-pulse" />
                 </div>
               ) : !detailDoc ? (
-                <div className="text-center py-12 text-slate-400">
+                <div className="text-center py-12 text-slate-400 font-medium">
                   Failed to load analysis details.
                 </div>
               ) : (
@@ -882,54 +883,54 @@ ${clausesText}
                   {/* Section: Score, Metadata and Stats */}
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                     {/* circular progress score */}
-                    <div className="md:col-span-1 p-4 bg-slate-950 border border-slate-850 rounded-xl flex flex-col items-center justify-center space-y-2 shadow-inner">
+                    <div className="md:col-span-1 p-4 bg-[#F8FAFC] border border-slate-200/60 rounded-xl flex flex-col items-center justify-center space-y-2 shadow-inner">
                       {detailDoc.analysis ? (
                         <>
                           <CircularRiskProgress score={detailDoc.analysis.overall_risk_score} />
-                          <span className={`text-[11px] font-bold px-2 py-0.5 rounded ${getRiskBadgeStyles(detailDoc.risk_level)}`}>
+                          <span className={`text-[11px] font-bold px-2 py-0.5 rounded border ${getRiskBadgeStyles(detailDoc.risk_level)}`}>
                             {detailDoc.risk_level}
                           </span>
                         </>
                       ) : (
                         <div className="text-center py-6">
                           <span className="text-4xl block">⚖️</span>
-                          <span className="text-xs text-slate-500 italic block mt-2">Not Audited</span>
+                          <span className="text-xs text-slate-400 italic block mt-2 font-medium">Not Audited</span>
                         </div>
                       )}
                     </div>
 
                     {/* Metadata Card */}
-                    <div className="md:col-span-3 p-5 bg-slate-950/50 border border-slate-850 rounded-xl space-y-3 text-xs text-slate-400">
-                      <h4 className="font-bold text-slate-200 text-sm font-display border-b border-slate-850 pb-1.5">Original File Information</h4>
+                    <div className="md:col-span-3 p-5 bg-[#F8FAFC]/50 border border-slate-200 rounded-xl space-y-3 text-xs text-slate-500 font-semibold">
+                      <h4 className="font-bold text-slate-800 text-sm font-display border-b border-slate-200/60 pb-1.5">Original File Information</h4>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <span className="block text-[10px] text-slate-500 font-semibold uppercase">File Name</span>
-                          <span className="text-slate-200 font-medium break-all">{detailDoc.original_filename}</span>
+                          <span className="block text-[10px] text-slate-400 font-bold uppercase">File Name</span>
+                          <span className="text-slate-700 font-semibold break-all">{detailDoc.original_filename}</span>
                         </div>
                         <div>
-                          <span className="block text-[10px] text-slate-500 font-semibold uppercase">Source Type</span>
-                          <span className="text-slate-200 font-semibold uppercase flex items-center gap-1.5">
+                          <span className="block text-[10px] text-slate-400 font-bold uppercase">Source Type</span>
+                          <span className="text-slate-700 font-bold uppercase flex items-center gap-1.5">
                             {detailDoc.source_type === 'URL' && '🌐 URL'}
                             {detailDoc.source_type === 'TEXT' && '📝 TEXT'}
                             {(detailDoc.source_type === 'PDF' || !detailDoc.source_type) && '📄 PDF'}
                           </span>
                         </div>
                         <div>
-                          <span className="block text-[10px] text-slate-500 font-semibold uppercase">File Size</span>
-                          <span className="text-slate-200 font-medium">{formatBytes(detailDoc.file_size)}</span>
+                          <span className="block text-[10px] text-slate-400 font-bold uppercase">File Size</span>
+                          <span className="text-slate-700 font-semibold">{formatBytes(detailDoc.file_size)}</span>
                         </div>
                         <div>
-                          <span className="block text-[10px] text-slate-500 font-semibold uppercase">Upload Date</span>
-                          <span className="text-slate-200 font-medium">{formatDate(detailDoc.created_at)}</span>
+                          <span className="block text-[10px] text-slate-400 font-bold uppercase">Upload Date</span>
+                          <span className="text-slate-700 font-semibold">{formatDate(detailDoc.created_at)}</span>
                         </div>
                         {detailDoc.source_type === 'URL' && detailDoc.source_url && (
                           <div className="col-span-2">
-                            <span className="block text-[10px] text-slate-500 font-semibold uppercase">Source URL</span>
+                            <span className="block text-[10px] text-slate-400 font-bold uppercase">Source URL</span>
                             <a
                               href={detailDoc.source_url}
                               target="_blank"
                               rel="noreferrer"
-                              className="text-green-400 hover:text-green-300 hover:underline break-all font-mono"
+                              className="text-brand-600 hover:text-brand-700 hover:underline break-all font-mono font-bold"
                             >
                               {detailDoc.source_url}
                             </a>
@@ -937,20 +938,20 @@ ${clausesText}
                         )}
                         {detailDoc.page_count && (
                           <div>
-                            <span className="block text-[10px] text-slate-500 font-semibold uppercase">Page Count</span>
-                            <span className="text-slate-200 font-medium">{detailDoc.page_count} pages</span>
+                            <span className="block text-[10px] text-slate-400 font-bold uppercase">Page Count</span>
+                            <span className="text-slate-700 font-semibold">{detailDoc.page_count} pages</span>
                           </div>
                         )}
                         {detailDoc.word_count && (
                           <div>
-                            <span className="block text-[10px] text-slate-500 font-semibold uppercase">Word Count</span>
-                            <span className="text-slate-200 font-medium">{detailDoc.word_count} words</span>
+                            <span className="block text-[10px] text-slate-400 font-bold uppercase">Word Count</span>
+                            <span className="text-slate-700 font-semibold">{detailDoc.word_count} words</span>
                           </div>
                         )}
                         {detailDoc.analysis && (
                           <div>
-                            <span className="block text-[10px] text-slate-500 font-semibold uppercase">Confidence Score</span>
-                            <span className="text-slate-200 font-medium">
+                            <span className="block text-[10px] text-slate-400 font-bold uppercase">Confidence Score</span>
+                            <span className="text-slate-700 font-semibold">
                               {detailDoc.analysis.confidence_score 
                                 ? (detailDoc.analysis.confidence_score <= 1 
                                   ? `${(detailDoc.analysis.confidence_score * 100).toFixed(0)}%` 
@@ -965,26 +966,26 @@ ${clausesText}
 
                   {/* Section: Analysis Summary & recommendations */}
                   {detailDoc.analysis ? (
-                    <div className="space-y-6">
+                    <div className="space-y-6 font-medium">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* Summary */}
-                        <div className="p-5 bg-slate-900 border border-slate-800 rounded-xl space-y-3">
+                        <div className="p-5 bg-white border border-slate-200/60 rounded-xl space-y-3 shadow-sm">
                           <div className="flex items-center gap-2">
                             <span className="text-lg">📝</span>
-                            <h4 className="font-bold text-slate-200 font-display text-sm">Executive Summary</h4>
+                            <h4 className="font-bold text-slate-900 font-display text-sm">Executive Summary</h4>
                           </div>
-                          <p className="text-xs text-slate-350 leading-relaxed whitespace-pre-wrap">
+                          <p className="text-xs text-slate-600 leading-relaxed whitespace-pre-wrap font-normal">
                             {detailDoc.analysis.summary}
                           </p>
                         </div>
 
                         {/* Recommendations */}
-                        <div className="p-5 bg-slate-900 border border-slate-800 rounded-xl space-y-3">
+                        <div className="p-5 bg-white border border-slate-200/60 rounded-xl space-y-3 shadow-sm">
                           <div className="flex items-center gap-2">
                             <span className="text-lg">💡</span>
-                            <h4 className="font-bold text-slate-200 font-display text-sm">Precautionary Recommendations</h4>
+                            <h4 className="font-bold text-slate-900 font-display text-sm">Precautionary Recommendations</h4>
                           </div>
-                          <p className="text-xs text-slate-350 leading-relaxed whitespace-pre-wrap">
+                          <p className="text-xs text-slate-600 leading-relaxed whitespace-pre-wrap font-normal">
                             {detailDoc.analysis.recommendations}
                           </p>
                         </div>
@@ -992,35 +993,35 @@ ${clausesText}
 
                       {/* AI Auditor Assessment */}
                       {detailDoc.analysis.ai_explanation && (
-                        <div className="p-5 bg-slate-900 border border-slate-800 rounded-xl space-y-3">
+                        <div className="p-5 bg-white border border-slate-200/60 rounded-xl space-y-3 shadow-sm">
                           <div className="flex items-center gap-2">
                             <span className="text-lg">🤖</span>
-                            <h4 className="font-bold text-slate-200 font-display text-sm">AI Auditor Assessment</h4>
+                            <h4 className="font-bold text-slate-900 font-display text-sm">AI Auditor Assessment</h4>
                           </div>
-                          <p className="text-xs text-slate-350 leading-relaxed whitespace-pre-wrap">
+                          <p className="text-xs text-slate-600 leading-relaxed whitespace-pre-wrap font-normal">
                             {detailDoc.analysis.ai_explanation}
                           </p>
                         </div>
                       )}
 
                       {/* Missing Clauses Card */}
-                      <div className="p-5 bg-slate-900 border border-slate-800 rounded-xl space-y-3">
+                      <div className="p-5 bg-white border border-slate-200/60 rounded-xl space-y-3 shadow-sm">
                         <div className="flex items-center gap-2">
                           <span className="text-lg">⚠️</span>
-                          <h4 className="font-bold text-slate-200 font-display text-sm">
+                          <h4 className="font-bold text-slate-900 font-display text-sm">
                             Missing Protective Clauses ({detailDoc.analysis.missing_clauses?.length || 0})
                           </h4>
                         </div>
                         {!detailDoc.analysis.missing_clauses || detailDoc.analysis.missing_clauses.length === 0 ? (
-                          <p className="text-xs text-slate-400 italic">
+                          <p className="text-xs text-slate-400 italic font-normal">
                             No standard protective clauses were found missing from this document.
                           </p>
                         ) : (
                           <div className="space-y-3 pt-2">
                             {detailDoc.analysis.missing_clauses.map((item: any, idx: number) => (
-                              <div key={idx} className="p-3 bg-slate-950 border border-slate-850 rounded-lg space-y-1">
-                                <h5 className="font-semibold text-slate-200 text-xs">{item.title}</h5>
-                                <p className="text-[11px] text-slate-400 leading-relaxed">{item.explanation}</p>
+                              <div key={idx} className="p-4 bg-[#F8FAFC] border border-slate-100 rounded-xl space-y-1">
+                                <h5 className="font-bold text-slate-800 text-xs">{item.title}</h5>
+                                <p className="text-[11px] text-slate-500 leading-relaxed font-normal">{item.explanation}</p>
                               </div>
                             ))}
                           </div>
@@ -1028,10 +1029,10 @@ ${clausesText}
                       </div>
                     </div>
                   ) : (
-                    <div className="p-8 rounded-xl bg-slate-900 border border-slate-800 text-center space-y-3">
+                    <div className="p-8 rounded-xl bg-[#F8FAFC] border border-slate-200 text-center space-y-3">
                       <span className="text-3xl block">⚠️</span>
-                      <h4 className="font-semibold text-slate-300 text-sm">No analysis reports generated</h4>
-                      <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                      <h4 className="font-bold text-slate-850 text-sm">No analysis reports generated</h4>
+                      <p className="text-xs text-slate-500 max-w-sm mx-auto font-medium leading-relaxed">
                         This document has been uploaded but has not been processed through the AI analysis engine.
                       </p>
                       <button
@@ -1039,7 +1040,7 @@ ${clausesText}
                           setDetailModalOpen(false);
                           reanalyzeMutation.mutate(detailDoc.id);
                         }}
-                        className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white text-xs font-semibold rounded-lg transition"
+                        className="btn-primary text-xs font-semibold"
                       >
                         Trigger AI Audit
                       </button>
@@ -1048,46 +1049,46 @@ ${clausesText}
 
                   {/* Section: Detected Clauses List */}
                   {detailDoc.analysis && detailDoc.analysis.items && (
-                    <div className="space-y-4">
-                      <h4 className="font-bold text-slate-200 text-sm font-display">
+                    <div className="space-y-4 font-medium">
+                      <h4 className="font-bold text-slate-900 text-sm font-display">
                         Flagged Risk Clauses ({detailDoc.analysis.items.length})
                       </h4>
                       <div className="space-y-4">
                         {detailDoc.analysis.items.map((clause: any, index: number) => (
-                          <div key={clause.id || index} className="p-5 bg-slate-950/40 border border-slate-850 rounded-xl space-y-3">
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-850 pb-2">
-                              <h5 className="font-semibold text-slate-100 text-sm font-display">
+                          <div key={clause.id || index} className="p-5 bg-[#F8FAFC]/50 border border-slate-200/60 rounded-xl space-y-3">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-2">
+                              <h5 className="font-bold text-slate-850 text-sm font-display">
                                 {index + 1}. {clause.title}
                               </h5>
                               <div className="flex items-center gap-2">
-                                <span className="px-2 py-0.5 rounded bg-slate-800 text-[10px] font-semibold text-slate-400 font-display">
+                                <span className="px-2 py-0.5 rounded bg-slate-100 text-[10px] font-bold text-slate-500 font-display">
                                   {clause.category}
                                 </span>
-                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold font-display ${getRiskBadgeStyles(clause.risk_level)}`}>
+                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold font-display border ${getRiskBadgeStyles(clause.risk_level)}`}>
                                   {clause.risk_level}
                                 </span>
                               </div>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs font-semibold text-slate-500">
                               {/* Original Text */}
                               <div className="md:col-span-1 space-y-1">
-                                <span className="block text-[10px] text-slate-500 font-semibold uppercase">Original Text</span>
-                                <blockquote className="italic text-slate-450 bg-slate-950/70 border-l-2 border-slate-800 p-2.5 rounded font-mono text-[11px] leading-relaxed break-words whitespace-pre-wrap">
+                                <span className="block text-[10px] text-slate-400 font-bold uppercase">Original Text</span>
+                                <blockquote className="italic text-slate-600 bg-white border-l-2 border-slate-300 p-2.5 rounded font-mono text-[11px] leading-relaxed break-words whitespace-pre-wrap">
                                   "{clause.original_text}"
                                 </blockquote>
                               </div>
 
                               {/* Explanation */}
                               <div className="md:col-span-1 space-y-1">
-                                <span className="block text-[10px] text-slate-500 font-semibold uppercase">Explanation</span>
-                                <p className="text-slate-350 leading-relaxed">{clause.explanation}</p>
+                                <span className="block text-[10px] text-slate-400 font-bold uppercase">Explanation</span>
+                                <p className="text-slate-600 leading-relaxed font-normal">{clause.explanation}</p>
                               </div>
 
                               {/* Suggestion */}
                               <div className="md:col-span-1 space-y-1">
-                                <span className="block text-[10px] text-slate-500 font-semibold uppercase text-green-500">Precaution / Suggestion</span>
-                                <p className="text-slate-350 leading-relaxed border-l-2 border-green-800/40 pl-2.5">{clause.suggestion}</p>
+                                <span className="block text-[10px] text-brand-600 font-bold uppercase">Precaution / Suggestion</span>
+                                <p className="text-slate-650 leading-relaxed border-l-2 border-brand-200 pl-2.5 font-normal">{clause.suggestion}</p>
                               </div>
                             </div>
                           </div>
@@ -1100,21 +1101,21 @@ ${clausesText}
             </div>
 
             {/* Modal Footer */}
-            <div className="p-4 bg-slate-950 border-t border-slate-800 flex items-center justify-between">
-              <span className="text-xs text-slate-500 font-mono">ID: {detailDoc?.id}</span>
+            <div className="p-4 bg-[#F8FAFC] border-t border-slate-100 flex items-center justify-between">
+              <span className="text-xs text-slate-400 font-mono font-medium">ID: {detailDoc?.id}</span>
               <div className="flex items-center gap-2">
                 {detailDoc?.analysis && (
                   <>
                     <button
                       onClick={() => handleDownload(detailDoc.id)}
                       disabled={isDownloadingId === detailDoc.id}
-                      className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 hover:border-slate-700 rounded-lg text-xs font-semibold transition"
+                      className="btn-outline py-2 px-4 text-xs font-bold"
                     >
                       {isDownloadingId === detailDoc.id ? 'Loading...' : 'Download Report'}
                     </button>
                     <Link
                       to={`/results/${detailDoc.id}`}
-                      className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-xs font-semibold transition"
+                      className="btn-primary py-2 px-4 text-xs font-bold"
                     >
                       Open Full Results Page
                     </Link>
@@ -1128,40 +1129,40 @@ ${clausesText}
 
       {/* 2. Safety Delete Confirmation Dialog */}
       {deleteModalOpen && docToDelete && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-xl shadow-2xl p-6 space-y-6 animate-zoom-in">
-            <div className="flex items-center gap-3 text-red-500">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-white border border-slate-200 rounded-2xl shadow-2xl p-6 space-y-6 animate-zoom-in text-slate-800">
+            <div className="flex items-center gap-3 text-danger">
               <span className="text-3xl">⚠️</span>
               <div>
-                <h3 className="text-lg font-bold text-white font-display">Delete Audit Record?</h3>
-                <p className="text-xs text-red-400/80">This action cannot be undone.</p>
+                <h3 className="text-lg font-bold text-slate-900 font-display">Delete Audit Record?</h3>
+                <p className="text-xs text-red-500 font-semibold">This action cannot be undone.</p>
               </div>
             </div>
 
-            <div className="p-4 bg-slate-950 border border-slate-850 rounded-lg space-y-2">
-              <p className="text-xs text-slate-400 font-semibold uppercase">Document to Delete</p>
-              <p className="text-sm font-semibold text-slate-200 break-all">{docToDelete.original_filename}</p>
-              <div className="flex justify-between text-[11px] text-slate-500 pt-1.5 border-t border-slate-850/50">
+            <div className="p-4 bg-[#F8FAFC] border border-slate-100 rounded-xl space-y-2 font-semibold">
+              <p className="text-[10px] text-slate-400 font-bold uppercase">Document to Delete</p>
+              <p className="text-sm font-bold text-slate-800 break-all">{docToDelete.original_filename}</p>
+              <div className="flex justify-between text-[11px] text-slate-500 pt-1.5 border-t border-slate-200/65">
                 <span>Type: {docToDelete.file_type.toUpperCase()}</span>
                 <span>Size: {formatBytes(docToDelete.file_size)}</span>
               </div>
             </div>
 
-            <p className="text-xs text-slate-400 leading-relaxed">
+            <p className="text-xs text-slate-500 leading-relaxed font-semibold">
               Confirming deletion will remove the uploaded file from S3 storage, scrub all OCR database texts, wipe AI audit analyses, and delete the logs entirely.
             </p>
 
             <div className="flex items-center justify-end gap-2.5">
               <button
                 onClick={() => { setDeleteModalOpen(false); setDocToDelete(null); }}
-                className="px-4 py-2 bg-slate-950 hover:bg-slate-900 border border-slate-850 hover:border-slate-800 text-slate-400 hover:text-slate-350 rounded-lg text-xs font-semibold transition"
+                className="btn-secondary py-2 px-4 text-xs font-bold"
               >
                 Cancel
               </button>
               <button
                 onClick={() => deleteMutation.mutate(docToDelete.id)}
                 disabled={deleteMutation.isPending}
-                className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg text-xs font-semibold transition flex items-center gap-1.5"
+                className="btn-danger py-2 px-4 text-xs font-bold flex items-center gap-1.5"
               >
                 {deleteMutation.isPending ? 'Deleting...' : 'Confirm Delete'}
               </button>
@@ -1172,30 +1173,30 @@ ${clausesText}
 
       {/* 3. Bulk Delete Confirmation Dialog */}
       {bulkDeleteModalOpen && selectedIds.length > 0 && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-xl shadow-2xl p-6 space-y-6 animate-zoom-in">
-            <div className="flex items-center gap-3 text-red-500">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-white border border-slate-200 rounded-2xl shadow-2xl p-6 space-y-6 animate-zoom-in text-slate-800">
+            <div className="flex items-center gap-3 text-danger">
               <span className="text-3xl">⚠️</span>
               <div>
-                <h3 className="text-lg font-bold text-white font-display">Delete Multiple Records?</h3>
-                <p className="text-xs text-red-400/80">This action is permanent and cannot be undone.</p>
+                <h3 className="text-lg font-bold text-slate-900 font-display">Delete Multiple Records?</h3>
+                <p className="text-xs text-red-500 font-semibold">This action is permanent and cannot be undone.</p>
               </div>
             </div>
 
-            <div className="p-4 bg-slate-950 border border-slate-850 rounded-lg text-center space-y-1">
-              <p className="text-xs text-slate-400 font-semibold uppercase">Documents Selected</p>
-              <p className="text-xl font-bold text-red-400">{selectedIds.length}</p>
+            <div className="p-4 bg-[#F8FAFC] border border-slate-100 rounded-xl text-center space-y-1 font-semibold">
+              <p className="text-[10px] text-slate-400 font-bold uppercase">Documents Selected</p>
+              <p className="text-xl font-extrabold text-danger">{selectedIds.length}</p>
               <p className="text-xs text-slate-500">Audit logs and physical files will be deleted.</p>
             </div>
 
-            <p className="text-xs text-slate-400 leading-relaxed">
+            <p className="text-xs text-slate-500 leading-relaxed font-semibold">
               Confirming deletion will remove the selected files, clear all OCR records, and wipe the associated AI legal reports from the database.
             </p>
 
             <div className="flex items-center justify-end gap-2.5">
               <button
                 onClick={() => { setBulkDeleteModalOpen(false); }}
-                className="px-4 py-2 bg-slate-950 hover:bg-slate-900 border border-slate-850 hover:border-slate-800 text-slate-400 hover:text-slate-350 rounded-lg text-xs font-semibold transition"
+                className="btn-secondary py-2 px-4 text-xs font-bold"
               >
                 Cancel
               </button>
@@ -1205,7 +1206,7 @@ ${clausesText}
                   setBulkDeleteModalOpen(false);
                 }}
                 disabled={bulkDeleteMutation.isPending}
-                className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg text-xs font-semibold transition flex items-center gap-1.5"
+                className="btn-danger py-2 px-4 text-xs font-bold flex items-center gap-1.5"
               >
                 {bulkDeleteMutation.isPending ? 'Deleting...' : 'Confirm Bulk Delete'}
               </button>

@@ -48,79 +48,79 @@ export const Register: React.FC = () => {
   };
 
   return (
-    <div>
-      <div className="text-center lg:text-left mb-6">
-        <h2 className="text-3xl font-extrabold">Create an account</h2>
-        <p className="text-sm text-slate-400 mt-2">
+    <div className="fade-in">
+      <div className="text-center lg:text-left mb-8">
+        <h2 className="text-3xl font-extrabold text-slate-900 font-display">Create an account</h2>
+        <p className="text-sm text-slate-500 mt-2">
           Start auditing Terms and Conditions policies in seconds.
         </p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         {errorMsg && (
-          <div className="p-3 rounded bg-red-950/50 border border-red-800 text-sm text-red-300">
+          <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700">
             {errorMsg}
           </div>
         )}
 
         <div>
-          <label className="block text-sm font-medium text-slate-300 mb-1">Full Name</label>
+          <label className="form-label">Full Name</label>
           <input
             type="text"
             {...register('fullName')}
-            className="w-full px-4 py-2.5 rounded-md bg-slate-900 border border-slate-800 text-slate-100 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 text-sm"
+            className={`form-input ${errors.fullName ? 'form-input-error' : ''}`}
             placeholder="John Doe"
           />
-          {errors.fullName && <span className="text-xs text-red-400 mt-1 block">{errors.fullName.message}</span>}
+          {errors.fullName && <span className="text-xs text-red-500 mt-1.5 block font-medium">{errors.fullName.message}</span>}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-300 mb-1">Email Address</label>
+          <label className="form-label">Email Address</label>
           <input
             type="email"
             {...register('email')}
-            className="w-full px-4 py-2.5 rounded-md bg-slate-900 border border-slate-800 text-slate-100 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 text-sm"
+            className={`form-input ${errors.email ? 'form-input-error' : ''}`}
             placeholder="name@company.com"
           />
-          {errors.email && <span className="text-xs text-red-400 mt-1 block">{errors.email.message}</span>}
+          {errors.email && <span className="text-xs text-red-500 mt-1.5 block font-medium">{errors.email.message}</span>}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-300 mb-1">Password</label>
+          <label className="form-label">Password</label>
           <input
             type="password"
             {...register('password')}
-            className="w-full px-4 py-2.5 rounded-md bg-slate-900 border border-slate-800 text-slate-100 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 text-sm"
+            className={`form-input ${errors.password ? 'form-input-error' : ''}`}
             placeholder="••••••••"
           />
-          {errors.password && <span className="text-xs text-red-400 mt-1 block">{errors.password.message}</span>}
+          {errors.password && <span className="text-xs text-red-500 mt-1.5 block font-medium">{errors.password.message}</span>}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-300 mb-1">Confirm Password</label>
+          <label className="form-label">Confirm Password</label>
           <input
             type="password"
             {...register('confirmPassword')}
-            className="w-full px-4 py-2.5 rounded-md bg-slate-900 border border-slate-800 text-slate-100 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 text-sm"
+            className={`form-input ${errors.confirmPassword ? 'form-input-error' : ''}`}
             placeholder="••••••••"
           />
           {errors.confirmPassword && (
-            <span className="text-xs text-red-400 mt-1 block">{errors.confirmPassword.message}</span>
+            <span className="text-xs text-red-500 mt-1.5 block font-medium">{errors.confirmPassword.message}</span>
           )}
         </div>
 
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full py-3 bg-green-600 hover:bg-green-500 disabled:bg-slate-700 disabled:cursor-not-allowed text-white rounded-md text-sm font-semibold transition mt-2"
+          className="btn-primary w-full mt-2"
         >
           {isSubmitting ? 'Registering...' : 'Register Account'}
         </button>
       </form>
 
-      <p className="text-center text-sm text-slate-400 mt-6">
+      <p className="text-center text-sm text-slate-500 mt-6">
         Already have an account?{' '}
-        <Link to="/login" className="text-green-500 hover:text-green-400 font-medium">
+        <Link to="/login" className="text-brand-500 hover:text-brand-600 font-semibold transition-colors duration-150">
           Sign in
         </Link>
       </p>

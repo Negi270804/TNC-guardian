@@ -35,50 +35,50 @@ export const ForgotPassword: React.FC = () => {
   };
 
   return (
-    <div>
-      <div className="text-center lg:text-left mb-6">
-        <h2 className="text-3xl font-extrabold">Reset Password</h2>
-        <p className="text-sm text-slate-400 mt-2">
+    <div className="fade-in">
+      <div className="text-center lg:text-left mb-8">
+        <h2 className="text-3xl font-extrabold text-slate-900 font-display">Reset Password</h2>
+        <p className="text-sm text-slate-500 mt-2">
           Enter your email address to receive password reset configuration links.
         </p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {errorMsg && (
-          <div className="p-3 rounded bg-red-950/50 border border-red-800 text-sm text-red-300">
+          <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700">
             {errorMsg}
           </div>
         )}
 
         {successMsg && (
-          <div className="p-3 rounded bg-green-950/50 border border-green-800 text-sm text-green-300">
+          <div className="p-3.5 rounded-xl bg-green-50 border border-green-200 text-sm text-green-700">
             {successMsg}
           </div>
         )}
 
         <div>
-          <label className="block text-sm font-medium text-slate-300 mb-2">Email Address</label>
+          <label className="form-label">Email Address</label>
           <input
             type="email"
             {...register('email')}
-            className="w-full px-4 py-3 rounded-md bg-slate-900 border border-slate-800 text-slate-100 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 text-sm"
+            className={`form-input ${errors.email ? 'form-input-error' : ''}`}
             placeholder="name@company.com"
           />
-          {errors.email && <span className="text-xs text-red-400 mt-1 block">{errors.email.message}</span>}
+          {errors.email && <span className="text-xs text-red-500 mt-1.5 block font-medium">{errors.email.message}</span>}
         </div>
 
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full py-3 bg-green-600 hover:bg-green-500 disabled:bg-slate-700 disabled:cursor-not-allowed text-white rounded-md text-sm font-semibold transition"
+          className="btn-primary w-full"
         >
           {isSubmitting ? 'Sending Request...' : 'Send Reset Link'}
         </button>
       </form>
 
-      <p className="text-center text-sm text-slate-400 mt-8">
+      <p className="text-center text-sm text-slate-500 mt-8">
         Remember your password?{' '}
-        <Link to="/login" className="text-green-500 hover:text-green-400 font-medium">
+        <Link to="/login" className="text-brand-500 hover:text-brand-600 font-semibold transition-colors duration-150">
           Sign in
         </Link>
       </p>

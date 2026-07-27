@@ -61,65 +61,67 @@ export const Settings: React.FC = () => {
   };
 
   return (
-    <div className="max-w-2xl space-y-8 relative">
+    <div className="max-w-2xl space-y-8 relative fade-in">
       {/* Toast notifications */}
       {successToast && (
-        <div className="fixed top-4 right-4 z-50 p-4 rounded-md bg-green-950 border border-green-800 text-sm text-green-300 shadow-lg animate-bounce">
+        <div className="fixed top-4 right-4 z-50 p-4 rounded-xl bg-white border border-green-200 text-sm font-semibold text-green-700 shadow-xl flex items-center gap-2">
+          <span>✅</span>
           {successToast}
         </div>
       )}
       {errorToast && (
-        <div className="fixed top-4 right-4 z-50 p-4 rounded-md bg-red-950 border border-red-800 text-sm text-red-300 shadow-lg">
+        <div className="fixed top-4 right-4 z-50 p-4 rounded-xl bg-white border border-red-200 text-sm font-semibold text-red-700 shadow-xl flex items-center gap-2">
+          <span>❌</span>
           {errorToast}
         </div>
       )}
 
       <div>
-        <h2 className="text-2xl font-bold text-slate-100 font-display">Security Settings</h2>
-        <p className="text-sm text-slate-400 mt-1">Configure your login credentials and password parameters.</p>
+        <h2 className="text-2xl font-bold text-slate-900 font-display">Security Settings</h2>
+        <p className="text-sm text-slate-500 mt-1 font-medium">Configure your login credentials and password parameters.</p>
       </div>
 
       {/* Change Password Form */}
-      <form onSubmit={handleSubmit(onSubmit)} className="p-6 rounded-lg bg-slate-900 border border-slate-800 space-y-6">
-        <h3 className="text-lg font-semibold text-slate-200">Change Password</h3>
+      <form onSubmit={handleSubmit(onSubmit)} className="p-6 rounded-2xl bg-white border border-slate-200/60 shadow-soft space-y-6">
+        <h3 className="text-lg font-bold text-slate-900 font-display">Change Password</h3>
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">Current Password</label>
+            <label className="form-label">Current Password</label>
             <input
               type="password"
               {...register('currentPassword')}
-              className="w-full px-4 py-2.5 rounded bg-slate-950 border border-slate-850 text-slate-100 focus:outline-none focus:border-green-500 text-sm"
+              className={`form-input ${errors.currentPassword ? 'form-input-error' : ''}`}
               placeholder="••••••••"
             />
             {errors.currentPassword && (
-              <span className="text-xs text-red-400 mt-1 block">{errors.currentPassword.message}</span>
+              <span className="text-xs text-red-500 mt-1.5 block font-medium">{errors.currentPassword.message}</span>
             )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">New Password</label>
+            <label className="form-label">New Password</label>
             <input
               type="password"
               {...register('newPassword')}
-              className="w-full px-4 py-2.5 rounded bg-slate-950 border border-slate-850 text-slate-100 focus:outline-none focus:border-green-500 text-sm"
+              className={`form-input ${errors.newPassword ? 'form-input-error' : ''}`}
               placeholder="••••••••"
             />
             {errors.newPassword && (
-              <span className="text-xs text-red-400 mt-1 block">{errors.newPassword.message}</span>
+              <span className="text-xs text-red-500 mt-1.5 block font-medium">{errors.newPassword.message}</span>
             )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">Confirm New Password</label>
+            <label className="form-label">Confirm New Password</label>
             <input
               type="password"
               {...register('confirmPassword')}
-              className="w-full px-4 py-2.5 rounded bg-slate-950 border border-slate-850 text-slate-100 focus:outline-none focus:border-green-500 text-sm"
+              className={`form-input ${errors.confirmPassword ? 'form-input-error' : ''}`}
               placeholder="••••••••"
             />
             {errors.confirmPassword && (
-              <span className="text-xs text-red-400 mt-1 block">{errors.confirmPassword.message}</span>
+              <span className="text-xs text-red-500 mt-1.5 block font-medium">{errors.confirmPassword.message}</span>
             )}
           </div>
         </div>
@@ -127,21 +129,21 @@ export const Settings: React.FC = () => {
         <button
           type="submit"
           disabled={mutation.isPending}
-          className="px-6 min-h-[44px] py-2 bg-green-600 hover:bg-green-500 disabled:bg-slate-700 text-white rounded text-sm font-semibold transition flex items-center justify-center"
+          className="btn-primary px-6 py-2.5 shadow-sm text-sm"
         >
           {mutation.isPending ? 'Updating...' : 'Update Password'}
         </button>
       </form>
 
       {/* Global application parameters mock checkboxes */}
-      <div className="p-6 rounded-lg bg-slate-900 border border-slate-800 space-y-4 opacity-60">
-        <h3 className="text-lg font-semibold text-slate-200">System Preferences</h3>
+      <div className="p-6 rounded-2xl bg-white border border-slate-200/60 shadow-soft space-y-4 opacity-75">
+        <h3 className="text-lg font-bold text-slate-900 font-display">System Preferences</h3>
         <div className="flex items-center justify-between">
           <div>
-            <h4 className="text-sm font-semibold text-slate-300">Scrub PII automatically</h4>
-            <p className="text-xs text-slate-500">Remove usernames, addresses, and private metadata before audits.</p>
+            <h4 className="text-sm font-semibold text-slate-800">Scrub PII automatically</h4>
+            <p className="text-xs text-slate-400 font-medium leading-relaxed">Remove usernames, addresses, and private metadata before audits.</p>
           </div>
-          <input type="checkbox" defaultChecked className="w-4 h-4 accent-green-600 rounded bg-slate-850" disabled />
+          <input type="checkbox" defaultChecked className="w-4 h-4 text-brand-600 focus:ring-brand-500 border-slate-300 rounded cursor-not-allowed" disabled />
         </div>
       </div>
     </div>

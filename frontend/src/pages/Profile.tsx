@@ -64,28 +64,30 @@ export const Profile: React.FC = () => {
   };
 
   return (
-    <div className="max-w-2xl space-y-6 relative">
+    <div className="max-w-2xl space-y-6 relative fade-in">
       {/* Toast notifications */}
       {successToast && (
-        <div className="fixed top-4 right-4 z-50 p-4 rounded-md bg-green-950 border border-green-800 text-sm text-green-300 shadow-lg animate-bounce">
+        <div className="fixed top-4 right-4 z-50 p-4 rounded-xl bg-white border border-green-200 text-sm font-semibold text-green-700 shadow-xl flex items-center gap-2">
+          <span>✅</span>
           {successToast}
         </div>
       )}
       {errorToast && (
-        <div className="fixed top-4 right-4 z-50 p-4 rounded-md bg-red-950 border border-red-800 text-sm text-red-300 shadow-lg">
+        <div className="fixed top-4 right-4 z-50 p-4 rounded-xl bg-white border border-red-200 text-sm font-semibold text-red-700 shadow-xl flex items-center gap-2">
+          <span>❌</span>
           {errorToast}
         </div>
       )}
 
       <div>
-        <h2 className="text-2xl font-bold text-slate-100 font-display">Manage Profile Details</h2>
-        <p className="text-sm text-slate-400 mt-1">Configure your personal information, company parameters, and biography details.</p>
+        <h2 className="text-2xl font-bold text-slate-900 font-display">Manage Profile Details</h2>
+        <p className="text-sm text-slate-500 mt-1 font-medium">Configure your personal information, company parameters, and biography details.</p>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="p-6 rounded-lg bg-slate-900 border border-slate-800 space-y-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="p-6 rounded-2xl bg-white border border-slate-200/60 shadow-soft space-y-6">
         {/* Avatar Upload Placeholder */}
         <div className="flex items-center gap-6">
-          <div className="w-20 h-20 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-3xl text-slate-300 relative overflow-hidden">
+          <div className="w-20 h-20 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center font-bold text-3xl text-slate-650 relative overflow-hidden">
             {user?.avatar_url ? (
               <img src={user.avatar_url} alt="User Avatar" className="w-full h-full object-cover" />
             ) : (
@@ -93,29 +95,31 @@ export const Profile: React.FC = () => {
             )}
           </div>
           <div className="space-y-1">
-            <h3 className="text-sm font-semibold text-slate-200">Avatar Photo</h3>
-            <p className="text-xs text-slate-500">Avatar uploads are not connected in Phase 3. Add link below to verify mock image render.</p>
+            <h3 className="text-sm font-bold text-slate-800">Avatar Photo</h3>
+            <p className="text-xs text-slate-400 font-medium leading-relaxed">
+              Avatar uploads are not connected in Phase 3. Add link below to verify mock image render.
+            </p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">Full Name</label>
+            <label className="form-label">Full Name</label>
             <input
               type="text"
               {...register('fullName')}
-              className="w-full px-4 py-2.5 rounded bg-slate-950 border border-slate-850 text-slate-100 focus:outline-none focus:border-green-500 text-sm"
-              placeholder="Name Details"
+              className={`form-input ${errors.fullName ? 'form-input-error' : ''}`}
+              placeholder="John Doe"
             />
-            {errors.fullName && <span className="text-xs text-red-400 mt-1 block">{errors.fullName.message}</span>}
+            {errors.fullName && <span className="text-xs text-red-500 mt-1.5 block font-medium">{errors.fullName.message}</span>}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">Email Address (Read Only)</label>
+            <label className="form-label">Email Address (Read Only)</label>
             <input
               type="email"
               value={user?.email || ''}
-              className="w-full px-4 py-2.5 rounded bg-slate-950 border border-slate-850 text-slate-500 focus:outline-none text-sm cursor-not-allowed"
+              className="form-input bg-slate-50 text-slate-400 cursor-not-allowed border-slate-200/60"
               disabled
             />
           </div>
@@ -123,42 +127,42 @@ export const Profile: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">Company</label>
+            <label className="form-label">Company</label>
             <input
               type="text"
               {...register('company')}
-              className="w-full px-4 py-2.5 rounded bg-slate-950 border border-slate-850 text-slate-100 focus:outline-none focus:border-green-500 text-sm"
+              className="form-input"
               placeholder="SaaS Corp"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">Designation</label>
+            <label className="form-label">Designation</label>
             <input
               type="text"
               {...register('designation')}
-              className="w-full px-4 py-2.5 rounded bg-slate-950 border border-slate-850 text-slate-100 focus:outline-none focus:border-green-500 text-sm"
+              className="form-input"
               placeholder="Engineer Manager"
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-300 mb-2">Avatar URL</label>
+          <label className="form-label">Avatar URL</label>
           <input
             type="text"
             {...register('avatarUrl')}
-            className="w-full px-4 py-2.5 rounded bg-slate-950 border border-slate-850 text-slate-100 focus:outline-none focus:border-green-500 text-sm"
+            className="form-input text-sm"
             placeholder="https://example.com/avatar.jpg"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-300 mb-2">Bio / Description</label>
+          <label className="form-label">Bio / Description</label>
           <textarea
             {...register('bio')}
             rows={4}
-            className="w-full px-4 py-2.5 rounded bg-slate-950 border border-slate-850 text-slate-100 focus:outline-none focus:border-green-500 text-sm"
+            className="form-input text-sm resize-y"
             placeholder="Share a brief context description..."
           />
         </div>
@@ -166,7 +170,7 @@ export const Profile: React.FC = () => {
         <button
           type="submit"
           disabled={mutation.isPending}
-          className="px-6 min-h-[44px] py-2 bg-green-600 hover:bg-green-500 disabled:bg-slate-700 text-white rounded text-sm font-semibold transition flex items-center justify-center"
+          className="btn-primary px-6 py-2.5 shadow-sm text-sm"
         >
           {mutation.isPending ? 'Saving...' : 'Save Changes'}
         </button>

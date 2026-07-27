@@ -42,46 +42,46 @@ export const Login: React.FC = () => {
   };
 
   return (
-    <div>
-      <div className="text-center lg:text-left mb-6">
-        <h2 className="text-3xl font-extrabold">Welcome back</h2>
-        <p className="text-sm text-slate-400 mt-2">
+    <div className="fade-in">
+      <div className="text-center lg:text-left mb-8">
+        <h2 className="text-3xl font-extrabold text-slate-900 font-display">Welcome back</h2>
+        <p className="text-sm text-slate-500 mt-2">
           Enter your account details to access your workspace.
         </p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {errorMsg && (
-          <div className="p-3 rounded bg-red-950/50 border border-red-800 text-sm text-red-300 animate-pulse">
+          <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700">
             {errorMsg}
           </div>
         )}
 
         <div>
-          <label className="block text-sm font-medium text-slate-300 mb-2">Email Address</label>
+          <label className="form-label">Email Address</label>
           <input
             type="email"
             {...register('email')}
-            className="w-full px-4 py-3 rounded-md bg-slate-900 border border-slate-800 text-slate-100 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 text-sm"
+            className={`form-input ${errors.email ? 'form-input-error' : ''}`}
             placeholder="name@company.com"
           />
-          {errors.email && <span className="text-xs text-red-400 mt-1 block">{errors.email.message}</span>}
+          {errors.email && <span className="text-xs text-red-500 mt-1.5 block font-medium">{errors.email.message}</span>}
         </div>
 
         <div>
-          <div className="flex justify-between items-center mb-2">
-            <label className="text-sm font-medium text-slate-300">Password</label>
-            <Link to="/forgot-password" className="text-xs text-green-500 hover:text-green-400">
+          <div className="flex justify-between items-center mb-1.5">
+            <label className="text-sm font-semibold text-slate-700">Password</label>
+            <Link to="/forgot-password" className="text-xs font-semibold text-brand-500 hover:text-brand-600 transition-colors duration-150">
               Forgot password?
             </Link>
           </div>
           <input
             type="password"
             {...register('password')}
-            className="w-full px-4 py-3 rounded-md bg-slate-900 border border-slate-800 text-slate-100 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 text-sm"
+            className={`form-input ${errors.password ? 'form-input-error' : ''}`}
             placeholder="••••••••"
           />
-          {errors.password && <span className="text-xs text-red-400 mt-1 block">{errors.password.message}</span>}
+          {errors.password && <span className="text-xs text-red-500 mt-1.5 block font-medium">{errors.password.message}</span>}
         </div>
 
         {/* Remember Me toggle check */}
@@ -90,9 +90,9 @@ export const Login: React.FC = () => {
             type="checkbox"
             id="rememberMe"
             {...register('rememberMe')}
-            className="w-4 h-4 rounded bg-slate-900 border-slate-800 text-green-600 focus:ring-green-500 accent-green-600"
+            className="w-4 h-4 rounded border-slate-200 text-brand-500 focus:ring-brand-500/20 accent-brand-500 cursor-pointer"
           />
-          <label htmlFor="rememberMe" className="ml-2 block text-sm text-slate-300 select-none">
+          <label htmlFor="rememberMe" className="ml-2 block text-sm font-medium text-slate-600 select-none cursor-pointer">
             Remember Me
           </label>
         </div>
@@ -100,15 +100,15 @@ export const Login: React.FC = () => {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full py-3 bg-green-600 hover:bg-green-500 disabled:bg-slate-700 disabled:cursor-not-allowed text-white rounded-md text-sm font-semibold transition"
+          className="btn-primary w-full"
         >
           {isSubmitting ? 'Signing In...' : 'Sign In'}
         </button>
       </form>
 
-      <p className="text-center text-sm text-slate-400 mt-8">
+      <p className="text-center text-sm text-slate-500 mt-8">
         Don't have an account?{' '}
-        <Link to="/register" className="text-green-500 hover:text-green-400 font-medium">
+        <Link to="/register" className="text-brand-500 hover:text-brand-600 font-semibold transition-colors duration-150">
           Sign up
         </Link>
       </p>

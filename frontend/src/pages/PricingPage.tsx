@@ -25,7 +25,7 @@ export const PricingPage: React.FC = () => {
   if (isSubLoading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-500" />
       </div>
     );
   }
@@ -77,12 +77,12 @@ export const PricingPage: React.FC = () => {
   ];
 
   return (
-    <div className="max-w-5xl mx-auto space-y-12 relative">
+    <div className="max-w-5xl mx-auto space-y-12 relative fade-in">
       <div className="text-center max-w-2xl mx-auto space-y-4">
-        <h2 className="text-3xl font-extrabold text-white tracking-tight font-display sm:text-4xl">
+        <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight font-display sm:text-4xl">
           Guardian Billing Plans
         </h2>
-        <div className="p-4 rounded-lg bg-green-950/40 border border-green-900 text-green-400 text-xs font-semibold max-w-xl mx-auto leading-relaxed shadow-lg">
+        <div className="p-4 rounded-xl bg-brand-50 border border-brand-100 text-brand-700 text-xs font-semibold max-w-xl mx-auto leading-relaxed shadow-sm">
           This MVP provides unrestricted access to all features. Paid plans will be introduced in a future release.
         </div>
       </div>
@@ -92,22 +92,24 @@ export const PricingPage: React.FC = () => {
         {plans.map((plan) => (
           <div
             key={plan.name}
-            className={`rounded-xl p-6 border flex flex-col justify-between transition-all duration-300 bg-slate-900 border-slate-800 ${
-              plan.isCurrent && !currentSub?.demo_mode ? 'border-green-500 shadow-md shadow-green-950/10' : ''
+            className={`rounded-2xl p-6 border flex flex-col justify-between transition-all duration-300 bg-white shadow-soft ${
+              plan.isCurrent && !currentSub?.demo_mode
+                ? 'border-brand-500 ring-4 ring-brand-50'
+                : 'border-slate-200/60'
             }`}
           >
             <div className="space-y-4">
-              <h3 className="text-xl font-bold font-display text-slate-100 uppercase tracking-wide">
+              <h3 className="text-lg font-bold font-display text-slate-900 uppercase tracking-wide">
                 {plan.name}
               </h3>
-              <div className="py-4 border-y border-slate-850">
-                <span className="text-3xl font-extrabold text-white">{plan.price}</span>
-                {plan.price !== 'Custom' && <span className="text-slate-500 text-xs ml-1">/ month</span>}
+              <div className="py-4 border-y border-slate-100 flex items-baseline gap-1">
+                <span className="text-3xl font-extrabold text-slate-900">{plan.price}</span>
+                {plan.price !== 'Custom' && <span className="text-slate-400 text-xs font-semibold">/ month</span>}
               </div>
               <ul className="space-y-3 pt-2">
                 {plan.features.map((feature, idx) => (
-                  <li key={idx} className="flex items-start gap-2.5 text-sm text-slate-350">
-                    <span className="text-green-500 font-bold mt-0.5">✓</span>
+                  <li key={idx} className="flex items-start gap-2.5 text-sm text-slate-600 font-medium">
+                    <span className="text-brand-500 font-bold mt-0.5">✓</span>
                     <span>{feature}</span>
                   </li>
                 ))}
@@ -116,7 +118,7 @@ export const PricingPage: React.FC = () => {
             <div className="mt-8 pt-4">
               <button
                 disabled={plan.disabled}
-                className="w-full py-3 bg-slate-950 border border-slate-850 text-slate-400 font-semibold rounded-lg text-sm cursor-not-allowed"
+                className="w-full py-3 bg-slate-50 border border-slate-200 text-slate-400 font-bold rounded-lg text-sm cursor-not-allowed"
               >
                 {plan.buttonText}
               </button>

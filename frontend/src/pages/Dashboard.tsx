@@ -44,74 +44,74 @@ export const Dashboard: React.FC = () => {
 
   const getRiskLevelColor = (score: number | undefined) => {
     if (score === undefined || score === 0) return 'text-slate-400';
-    if (score <= 30) return 'text-green-400';
-    if (score <= 60) return 'text-yellow-400';
-    return 'text-red-400';
+    if (score <= 30) return 'text-success';
+    if (score <= 60) return 'text-warning';
+    return 'text-danger';
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 fade-in">
       {/* Welcome & Overview Card */}
-      <section className="p-8 rounded-lg bg-gradient-to-r from-slate-900 via-slate-900 to-green-950/20 border border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+      <section className="p-8 rounded-2xl bg-gradient-to-br from-brand-600 via-brand-600 to-brand-900 text-white flex flex-col md:flex-row justify-between items-start md:items-center gap-6 shadow-soft">
         <div className="space-y-2">
-          <h2 className="text-3xl font-bold tracking-tight text-white font-display">
-            Welcome, <span className="text-green-500">{user?.full_name || 'Guardian'}</span>!
+          <h2 className="text-3xl font-extrabold tracking-tight font-display">
+            Welcome, {user?.full_name || 'Guardian'}!
           </h2>
-          <p className="text-sm text-slate-400">
-            Account Email: <span className="text-slate-200 font-semibold">{user?.email}</span>
+          <p className="text-sm text-brand-100">
+            Account Email: <span className="font-semibold">{user?.email}</span>
           </p>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-brand-200">
             Member since: {user?.created_at ? formatDate(user.created_at) : 'N/A'}
           </p>
         </div>
-        <div className="px-4 py-2 rounded bg-green-950/50 border border-green-800/60 text-xs font-semibold text-green-400 uppercase tracking-wider">
+        <div className="px-4 py-2 rounded-xl bg-white/20 border border-white/20 text-xs font-semibold text-white uppercase tracking-wider">
           Normal Account Active
         </div>
       </section>
 
       {/* Dynamic Statistics Grid */}
-      <section className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <section className="grid grid-cols-2 md:grid-cols-5 gap-6">
         {/* Card 1: Total Scans */}
-        <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 backdrop-blur-md shadow-lg flex flex-col justify-between space-y-2 hover:border-green-800/40 hover:shadow-green-950/5 hover:-translate-y-0.5 transition-all duration-200">
-          <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Total Scans</span>
+        <div className="saas-card flex flex-col justify-between space-y-2">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Scans</span>
           <div className="flex justify-between items-baseline">
-            <span className="text-2xl font-bold text-white font-mono">{isStatsLoading ? '...' : stats?.total_analyses ?? 0}</span>
-            <span className="text-lg">⚖️</span>
+            <span className="text-3xl font-bold text-slate-900 font-display">{isStatsLoading ? '...' : stats?.total_analyses ?? 0}</span>
+            <span className="text-xl">⚖️</span>
           </div>
         </div>
 
         {/* Card 2: PDF Scans */}
-        <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 backdrop-blur-md shadow-lg flex flex-col justify-between space-y-2 hover:border-green-800/40 hover:shadow-green-950/5 hover:-translate-y-0.5 transition-all duration-200">
-          <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">PDF Scans</span>
+        <div className="saas-card flex flex-col justify-between space-y-2">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">PDF Scans</span>
           <div className="flex justify-between items-baseline">
-            <span className="text-2xl font-bold text-white font-mono">{isStatsLoading ? '...' : stats?.pdf_count ?? 0}</span>
-            <span className="text-lg">📄</span>
+            <span className="text-3xl font-bold text-slate-900 font-display">{isStatsLoading ? '...' : stats?.pdf_count ?? 0}</span>
+            <span className="text-xl">📄</span>
           </div>
         </div>
 
         {/* Card 3: URL Scans */}
-        <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 backdrop-blur-md shadow-lg flex flex-col justify-between space-y-2 hover:border-green-800/40 hover:shadow-green-950/5 hover:-translate-y-0.5 transition-all duration-200">
-          <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">URL Scans</span>
+        <div className="saas-card flex flex-col justify-between space-y-2">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">URL Scans</span>
           <div className="flex justify-between items-baseline">
-            <span className="text-2xl font-bold text-white font-mono">{isStatsLoading ? '...' : stats?.url_count ?? 0}</span>
-            <span className="text-lg">🌐</span>
+            <span className="text-3xl font-bold text-slate-900 font-display">{isStatsLoading ? '...' : stats?.url_count ?? 0}</span>
+            <span className="text-xl">🌐</span>
           </div>
         </div>
 
         {/* Card 4: Text Scans */}
-        <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 backdrop-blur-md shadow-lg flex flex-col justify-between space-y-2 hover:border-green-800/40 hover:shadow-green-950/5 hover:-translate-y-0.5 transition-all duration-200">
-          <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Text Scans</span>
+        <div className="saas-card flex flex-col justify-between space-y-2">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Text Scans</span>
           <div className="flex justify-between items-baseline">
-            <span className="text-2xl font-bold text-white font-mono">{isStatsLoading ? '...' : stats?.text_count ?? 0}</span>
-            <span className="text-lg">📝</span>
+            <span className="text-3xl font-bold text-slate-900 font-display">{isStatsLoading ? '...' : stats?.text_count ?? 0}</span>
+            <span className="text-xl">📝</span>
           </div>
         </div>
 
         {/* Card 5: Average Risk */}
-        <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 backdrop-blur-md shadow-lg flex flex-col justify-between space-y-2 hover:border-green-800/40 hover:shadow-green-950/5 hover:-translate-y-0.5 transition-all duration-200 col-span-2 md:col-span-1">
-          <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Avg. Risk Score</span>
+        <div className="saas-card flex flex-col justify-between space-y-2 col-span-2 md:col-span-1">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Avg. Risk Score</span>
           <div className="flex justify-between items-baseline">
-            <span className="text-2xl font-bold text-white font-mono">
+            <span className="text-3xl font-bold text-slate-900 font-display">
               {isStatsLoading ? '...' : (stats?.average_risk_score ?? 0).toFixed(1)}
             </span>
             <span className={`text-[10px] font-bold uppercase tracking-wider ${getRiskLevelColor(stats?.average_risk_score)}`}>
@@ -126,41 +126,41 @@ export const Dashboard: React.FC = () => {
         {/* Left main: Quick Actions & Overview */}
         <div className="lg:col-span-2 space-y-8">
           {/* Quick Actions Panel */}
-          <section className="p-6 rounded-lg bg-slate-900 border border-slate-800 space-y-4">
-            <h3 className="text-lg font-semibold text-slate-200 font-display">Quick Action Hub</h3>
+          <section className="bg-white border border-slate-200/60 rounded-2xl p-6 shadow-soft space-y-4">
+            <h3 className="text-lg font-bold text-slate-900 font-display">Quick Action Hub</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Link
                 to="/profile"
-                className="p-4 rounded border border-slate-800 bg-slate-950 hover:border-green-800/40 text-left transition space-y-1 block"
+                className="p-5 rounded-xl border border-slate-100 bg-[#F8FAFC] hover:bg-slate-50 text-left hover:border-brand-300 transition-all duration-200 space-y-1.5 block shadow-sm"
               >
-                <h4 className="font-semibold text-slate-200 text-sm">Edit Profile</h4>
-                <p className="text-xs text-slate-500">Update company parameters, designation tags, and bio description details.</p>
+                <h4 className="font-semibold text-slate-800 text-sm">Edit Profile</h4>
+                <p className="text-xs text-slate-500 leading-relaxed">Update company parameters, designation tags, and bio description details.</p>
               </Link>
               <Link
                 to="/documents"
-                className="p-4 rounded border border-slate-800 bg-slate-950 hover:border-green-800/40 text-left transition space-y-1 block"
+                className="p-5 rounded-xl border border-slate-100 bg-[#F8FAFC] hover:bg-slate-50 text-left hover:border-brand-300 transition-all duration-200 space-y-1.5 block shadow-sm"
               >
-                <h4 className="font-semibold text-slate-200 text-sm">Analyze T&Cs</h4>
-                <p className="text-xs text-slate-500">Perform direct legal audits using PDF, Web URLs, or pasted document texts.</p>
+                <h4 className="font-semibold text-slate-800 text-sm">Analyze T&Cs</h4>
+                <p className="text-xs text-slate-500 leading-relaxed">Perform direct legal audits using PDF, Web URLs, or pasted document texts.</p>
               </Link>
             </div>
           </section>
 
           {/* Recent Activity Logs */}
-          <section className="p-6 rounded-lg bg-slate-900 border border-slate-800 space-y-4">
-            <h3 className="text-lg font-semibold text-slate-200 font-display">Recent Audits Activity</h3>
+          <section className="bg-white border border-slate-200/60 rounded-2xl p-6 shadow-soft space-y-4">
+            <h3 className="text-lg font-bold text-slate-900 font-display">Recent Audits Activity</h3>
             
             {isStatsLoading ? (
               <div className="space-y-3 py-6 animate-pulse">
-                <div className="h-10 bg-slate-800/50 rounded" />
-                <div className="h-10 bg-slate-800/50 rounded" />
-                <div className="h-10 bg-slate-800/50 rounded" />
+                <div className="h-12 bg-slate-100 rounded-xl" />
+                <div className="h-12 bg-slate-100 rounded-xl" />
+                <div className="h-12 bg-slate-100 rounded-xl" />
               </div>
             ) : historyItems.length === 0 ? (
-              <div className="p-12 rounded border border-slate-850 bg-slate-950 text-center space-y-2">
+              <div className="p-12 rounded-xl border border-slate-100 bg-[#F8FAFC] text-center space-y-2">
                 <span className="text-4xl block">📊</span>
-                <h4 className="font-semibold text-slate-300 text-sm">No analysis reports discovered</h4>
-                <p className="text-xs text-slate-500 max-w-xs mx-auto">
+                <h4 className="font-semibold text-slate-700 text-sm">No analysis reports discovered</h4>
+                <p className="text-xs text-slate-500 max-w-xs mx-auto leading-relaxed">
                   Scan a website URL, upload a PDF, or paste text to perform your first AI legalese audit.
                 </p>
               </div>
@@ -175,18 +175,18 @@ export const Dashboard: React.FC = () => {
                   };
 
                   const getRiskBadgeStyles = (level: string | null | undefined) => {
-                    if (!level) return 'text-slate-400 bg-slate-800/40 border border-slate-700/50';
+                    if (!level) return 'text-slate-600 bg-slate-50 border-slate-200';
                     switch (level.toUpperCase()) {
                       case 'CRITICAL':
-                        return 'text-red-400 bg-red-950/40 border border-red-800/50';
+                        return 'text-red-700 bg-red-50 border-red-200';
                       case 'HIGH':
-                        return 'text-orange-400 bg-orange-950/40 border border-orange-800/50';
+                        return 'text-red-700 bg-red-50 border-red-200';
                       case 'MEDIUM':
-                        return 'text-yellow-400 bg-yellow-950/40 border border-yellow-800/50';
+                        return 'text-amber-700 bg-amber-50 border-amber-200';
                       case 'LOW':
-                        return 'text-green-400 bg-green-950/40 border border-green-800/50';
+                        return 'text-green-700 bg-green-50 border-green-200';
                       default:
-                        return 'text-slate-400 bg-slate-800/40 border border-slate-700/50';
+                        return 'text-slate-600 bg-slate-50 border-slate-200';
                     }
                   };
 
@@ -204,17 +204,17 @@ export const Dashboard: React.FC = () => {
                   return (
                     <div
                       key={doc.id}
-                      className="p-4 rounded-lg bg-slate-950 border border-slate-850 hover:border-slate-750 transition flex items-center justify-between gap-4"
+                      className="p-4 rounded-xl border border-slate-100 hover:border-slate-200 hover:bg-[#F8FAFC]/50 transition-all duration-200 flex items-center justify-between gap-4"
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         <span className="text-2xl shrink-0" title={doc.source_type || 'PDF'}>
                           {getSourceIcon(doc.source_type)}
                         </span>
                         <div className="min-w-0">
-                          <h4 className="font-semibold text-slate-200 text-sm truncate max-w-[130px] sm:max-w-[250px] md:max-w-xs" title={doc.original_filename}>
+                          <h4 className="font-semibold text-slate-800 text-sm truncate max-w-[130px] sm:max-w-[250px] md:max-w-xs" title={doc.original_filename}>
                             {displayName}
                           </h4>
-                          <span className="text-[10px] text-slate-500 block mt-0.5">
+                          <span className="text-[10px] text-slate-400 block mt-0.5 font-medium">
                             Audited on {formatDate(doc.created_at)}
                           </span>
                         </div>
@@ -222,16 +222,16 @@ export const Dashboard: React.FC = () => {
 
                       <div className="flex items-center gap-3 shrink-0">
                         {doc.analysis ? (
-                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide font-display border ${getRiskBadgeStyles(doc.risk_level)}`}>
+                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold tracking-wide font-display border ${getRiskBadgeStyles(doc.risk_level)}`}>
                             Score: {doc.analysis.overall_risk_score}
                           </span>
                         ) : (
-                          <span className="text-[10px] text-slate-500 italic">Not Audited</span>
+                          <span className="text-[10px] text-slate-400 italic">Not Audited</span>
                         )}
                         {doc.analysis && (
                           <Link
                             to={`/results/${doc.id}`}
-                            className="px-2.5 py-1 bg-slate-900 border border-slate-800 hover:border-green-800/40 text-[11px] font-semibold text-slate-350 hover:text-white rounded transition"
+                            className="btn-outline py-1 px-3 text-[11px] font-semibold"
                           >
                             Results
                           </Link>
@@ -248,12 +248,12 @@ export const Dashboard: React.FC = () => {
         {/* Right side: Profile Snapshot Details */}
         <div className="space-y-6">
           {/* Subscription Status Widget */}
-          <section className="p-6 rounded-lg bg-slate-900 border border-slate-800 space-y-4">
+          <section className="bg-white border border-slate-200/60 rounded-2xl p-6 shadow-soft space-y-4">
             <div className="flex justify-between items-center">
-              <h3 className="text-lg font-semibold text-slate-200 font-display">Subscription</h3>
+              <h3 className="text-lg font-bold text-slate-900 font-display">Subscription</h3>
               {currentSub && (
                 currentSub.demo_mode ? (
-                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-green-955 text-green-400 border border-green-800/40">
+                  <span className="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-green-50 text-green-700 border border-green-200">
                     Demo Mode
                   </span>
                 ) : (
@@ -265,54 +265,54 @@ export const Dashboard: React.FC = () => {
             {currentSub && usage && (
               currentSub.demo_mode ? (
                 <div className="space-y-4 pt-2">
-                  <div className="flex justify-between text-xs font-medium border-b border-slate-850 pb-2">
-                    <span className="text-slate-400 font-semibold">Current Plan</span>
-                    <span className="text-green-400 font-bold">Demo Version</span>
+                  <div className="flex justify-between text-xs font-semibold border-b border-slate-100 pb-2.5">
+                    <span className="text-slate-500">Current Plan</span>
+                    <span className="text-green-600 font-bold">Demo Version</span>
                   </div>
-                  <div className="flex justify-between text-xs font-medium border-b border-slate-850 pb-2">
-                    <span className="text-slate-400 font-semibold">Status</span>
-                    <span className="text-green-400 font-bold">All Features Unlocked</span>
+                  <div className="flex justify-between text-xs font-semibold border-b border-slate-100 pb-2.5">
+                    <span className="text-slate-500">Status</span>
+                    <span className="text-green-600 font-bold">All Features Unlocked</span>
                   </div>
-                  <p className="text-[11px] text-slate-500 leading-relaxed pt-1">
+                  <p className="text-[11px] text-slate-400 leading-relaxed pt-1">
                     This MVP provides unrestricted access to all features. Paid plans will be introduced in a future release.
                   </p>
                 </div>
               ) : (
                 <div className="space-y-4 pt-2">
-                  <div className="flex justify-between text-xs font-medium">
-                    <span className="text-slate-400 font-semibold">Monthly Usage</span>
-                    <span className="text-slate-200">
+                  <div className="flex justify-between text-xs font-semibold">
+                    <span className="text-slate-500">Monthly Usage</span>
+                    <span className="text-slate-800 font-mono">
                       {currentSub.plan === 'FREE' 
                         ? `${usage.analysis_count} / ${usage.monthly_limits?.analyses || 10} scans` 
                         : `${usage.analysis_count} scans`}
                     </span>
                   </div>
-                  <div className="h-1.5 w-full bg-slate-950 border border-slate-850 rounded-full overflow-hidden">
+                  <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-200/20">
                     <div
-                      className="h-full bg-green-500 rounded-full"
-                      style={{ width: `${currentSub.plan === 'FREE' ? (usage.analysis_count / (usage.monthly_limits?.analyses || 10)) * 100 : 100}%` }}
+                      className="h-full bg-brand-500 rounded-full transition-all duration-300"
+                      style={{ width: `${currentSub.plan === 'FREE' ? Math.min((usage.analysis_count / (usage.monthly_limits?.analyses || 10)) * 100, 100) : 100}%` }}
                     />
                   </div>
                   {currentSub.plan === 'FREE' && (
-                    <div className="pt-2 space-y-2">
-                      <div className="text-xs font-semibold text-green-400">
-                        Free Plan: {usage.remaining_analyses !== null && usage.remaining_analyses !== undefined ? usage.remaining_analyses : (currentSub.remaining_analyses || 0)} analyses remaining
+                    <div className="pt-2 space-y-3">
+                      <div className="text-xs font-bold text-brand-600 bg-brand-50/50 border border-brand-100 rounded-xl px-3 py-1.5 inline-block">
+                        {usage.remaining_analyses !== null && usage.remaining_analyses !== undefined ? usage.remaining_analyses : (currentSub.remaining_analyses || 0)} analyses remaining
                       </div>
                       <p className="text-xs text-slate-500 leading-relaxed">
                         Upgrade to PRO for unlimited scans, priority processing and layout analysis.
                       </p>
                       <Link
                         to="/subscription"
-                        className="mt-3 w-full py-2 bg-green-600 hover:bg-green-500 text-white rounded text-xs font-bold transition block text-center shadow-lg"
+                        className="btn-primary w-full py-2 shadow-sm text-xs font-bold text-center"
                       >
                         Upgrade to Pro
                       </Link>
                     </div>
                   )}
                   {currentSub.plan === 'PRO' && (
-                    <div className="pt-2 text-xs text-slate-400 flex justify-between border-t border-slate-850 pt-3">
+                    <div className="pt-2 text-xs text-slate-500 flex justify-between border-t border-slate-100 pt-3 font-semibold">
                       <span>Renewal Period:</span>
-                      <span className="text-slate-200 font-semibold">Monthly</span>
+                      <span className="text-slate-800">Monthly</span>
                     </div>
                   )}
                 </div>
@@ -320,10 +320,10 @@ export const Dashboard: React.FC = () => {
             )}
           </section>
 
-          <section className="p-6 rounded-lg bg-slate-900 border border-slate-800 space-y-4">
-            <h3 className="text-lg font-semibold text-slate-200 font-display">Profile Overview</h3>
-            <div className="flex flex-col items-center justify-center py-4 border-b border-slate-850 space-y-3">
-              <div className="w-16 h-16 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-2xl text-slate-300 overflow-hidden">
+          <section className="bg-white border border-slate-200/60 rounded-2xl p-6 shadow-soft space-y-4">
+            <h3 className="text-lg font-bold text-slate-900 font-display">Profile Overview</h3>
+            <div className="flex flex-col items-center justify-center py-4 border-b border-slate-100 space-y-3">
+              <div className="w-16 h-16 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center font-bold text-2xl text-slate-600 overflow-hidden">
                 {user?.avatar_url ? (
                   <img src={user.avatar_url} alt="Profile" className="w-full h-full object-cover" />
                 ) : (
@@ -331,26 +331,26 @@ export const Dashboard: React.FC = () => {
                 )}
               </div>
               <div className="text-center">
-                <h4 className="font-semibold text-slate-100">{user?.full_name || 'Not Configured'}</h4>
-                <p className="text-xs text-slate-500 mt-0.5">{user?.designation || 'Visitor'}</p>
+                <h4 className="font-bold text-slate-800">{user?.full_name || 'Not Configured'}</h4>
+                <p className="text-xs text-slate-400 font-semibold mt-0.5">{user?.designation || 'Visitor'}</p>
               </div>
             </div>
 
-            <div className="space-y-3 pt-2 text-xs text-slate-400">
+            <div className="space-y-3 pt-2 text-xs text-slate-500 font-medium">
               <div className="flex justify-between">
                 <span>Company:</span>
-                <span className="text-slate-200 font-medium">{user?.company || 'None'}</span>
+                <span className="text-slate-800 font-semibold">{user?.company || 'None'}</span>
               </div>
               <div className="flex justify-between">
                 <span>Verified Status:</span>
-                <span className={user?.is_verified ? 'text-green-500' : 'text-yellow-500'}>
+                <span className={user?.is_verified ? 'text-success font-bold' : 'text-warning font-bold'}>
                   {user?.is_verified ? 'Verified' : 'Pending'}
                 </span>
               </div>
               {user?.bio && (
-                <div className="pt-2 border-t border-slate-850 space-y-1">
-                  <span className="block text-slate-500">Bio:</span>
-                  <p className="italic text-slate-300 leading-relaxed">{user.bio}</p>
+                <div className="pt-2.5 border-t border-slate-100 space-y-1">
+                  <span className="block text-slate-400">Bio:</span>
+                  <p className="italic text-slate-600 leading-relaxed font-normal">{user.bio}</p>
                 </div>
               )}
             </div>

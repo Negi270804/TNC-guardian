@@ -324,10 +324,10 @@ export const Documents: React.FC = () => {
   const isAnyAnalysisPending = analyzeMutation.isPending || analyzeUrlMutation.isPending || analyzeTextMutation.isPending;
 
   return (
-    <div className="space-y-8 relative">
+    <div className="space-y-8 relative fade-in">
       {/* AI Analysis Loading Screen Overlay */}
       {isAnyAnalysisPending && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex flex-col items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex flex-col items-center justify-center p-4 z-50">
           <style>{`
             @keyframes progress-indeterminate {
               0% { transform: translateX(-100%); }
@@ -339,33 +339,33 @@ export const Documents: React.FC = () => {
               width: 50%;
             }
           `}</style>
-          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-8 space-y-6 text-center shadow-2xl">
+          <div className="w-full max-w-md bg-white border border-slate-200/85 rounded-2xl p-8 space-y-6 text-center shadow-2xl">
             <div className="relative w-24 h-24 mx-auto flex items-center justify-center">
-              <div className="absolute inset-0 rounded-full border-4 border-t-emerald-500 border-r-emerald-500/20 border-b-emerald-500/20 border-l-emerald-500/20 animate-spin" />
-              <div className="absolute inset-2 rounded-full border-4 border-b-green-400 border-t-green-400/20 border-r-green-400/20 border-l-green-400/20 animate-spin" style={{ animationDirection: 'reverse' }} />
+              <div className="absolute inset-0 rounded-full border-4 border-t-brand-500 border-r-brand-500/20 border-b-brand-500/20 border-l-brand-500/20 animate-spin" />
+              <div className="absolute inset-2 rounded-full border-4 border-b-brand-400 border-t-brand-400/20 border-r-brand-400/20 border-l-brand-400/20 animate-spin" style={{ animationDirection: 'reverse' }} />
               <span className="text-3xl">⚖️</span>
             </div>
             
             <div className="space-y-2">
-              <h3 className="text-lg font-bold text-slate-100 font-display">
+              <h3 className="text-lg font-bold text-slate-900 font-display">
                 {urlLoadingStep === 'extracting' ? 'Extracting Webpage...' : 'AI Legal Audit in Progress'}
               </h3>
-              <p className="text-xs text-slate-400 max-w-xs mx-auto">
+              <p className="text-xs text-slate-500 max-w-xs mx-auto leading-relaxed">
                 {urlLoadingStep === 'extracting'
                   ? 'Fetching webpage content, parsing HTML elements, and cleaning cookie consent templates...'
                   : 'Analyzing clauses, identifying liability limits, checking hidden fees and auto-renewal constraints...'}
               </p>
             </div>
 
-            <div className="w-full bg-slate-950 border border-slate-850 rounded-lg p-3 space-y-2">
-              <div className="flex justify-between text-[11px] font-medium text-slate-400">
+            <div className="w-full bg-[#F8FAFC] border border-slate-200/60 rounded-xl p-4.5 space-y-2.5">
+              <div className="flex justify-between text-[11px] font-semibold text-slate-500">
                 <span>Auditing Engine Status</span>
-                <span className="text-emerald-400 font-semibold animate-pulse">
+                <span className="text-brand-600 font-extrabold animate-pulse">
                   {urlLoadingStep === 'extracting' ? 'EXTRACTING' : 'ANALYZING'}
                 </span>
               </div>
-              <div className="w-full bg-slate-850 rounded-full h-1 overflow-hidden relative">
-                <div className="bg-gradient-to-r from-emerald-500 to-green-400 h-1 rounded-full animate-progress-indeterminate absolute" />
+              <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden relative border border-slate-200/10">
+                <div className="bg-brand-500 h-full rounded-full animate-progress-indeterminate absolute" />
               </div>
             </div>
           </div>
@@ -374,29 +374,31 @@ export const Documents: React.FC = () => {
 
       {/* Toast notifications */}
       {successToast && (
-        <div className="fixed top-4 right-4 z-50 p-4 rounded-md bg-green-950 border border-green-800 text-sm text-green-300 shadow-lg animate-bounce">
+        <div className="fixed top-4 right-4 z-50 p-4 rounded-xl bg-white border border-green-200 text-sm font-semibold text-green-700 shadow-xl flex items-center gap-2">
+          <span>✅</span>
           {successToast}
         </div>
       )}
       {errorToast && (
-        <div className="fixed top-4 right-4 z-50 p-4 rounded-md bg-red-950 border border-red-800 text-sm text-red-300 shadow-lg">
+        <div className="fixed top-4 right-4 z-50 p-4 rounded-xl bg-white border border-red-200 text-sm font-semibold text-red-700 shadow-xl flex items-center gap-2">
+          <span>❌</span>
           {errorToast}
         </div>
       )}
 
       <div>
-        <h2 className="text-2xl font-bold text-slate-100 font-display">AI Legal Auditor</h2>
-        <p className="text-sm text-slate-400 mt-1">Select your source type and run immediate legalese analysis.</p>
+        <h2 className="text-2xl font-bold text-slate-900 font-display">AI Legal Auditor</h2>
+        <p className="text-sm text-slate-500 mt-1 font-medium">Select your source type and run immediate legalese analysis.</p>
       </div>
 
       {/* Tab Menu Header */}
-      <div className="grid grid-cols-3 border-b border-slate-800">
+      <div className="grid grid-cols-3 border-b border-slate-200">
         <button
           onClick={() => setActiveTab('pdf')}
-          className={`px-3 py-3 text-xs sm:text-sm font-semibold border-b-2 transition flex items-center justify-center gap-1.5 ${
+          className={`px-3 py-3 text-xs sm:text-sm font-bold border-b-2 transition flex items-center justify-center gap-1.5 ${
             activeTab === 'pdf'
-              ? 'border-green-500 text-green-400 bg-green-950/10'
-              : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/50'
+              ? 'border-brand-500 text-brand-600 bg-brand-50/50'
+              : 'border-transparent text-slate-500 hover:text-slate-950 hover:bg-slate-50'
           }`}
         >
           <span>📄</span>
@@ -405,10 +407,10 @@ export const Documents: React.FC = () => {
         </button>
         <button
           onClick={() => setActiveTab('url')}
-          className={`px-3 py-3 text-xs sm:text-sm font-semibold border-b-2 transition flex items-center justify-center gap-1.5 ${
+          className={`px-3 py-3 text-xs sm:text-sm font-bold border-b-2 transition flex items-center justify-center gap-1.5 ${
             activeTab === 'url'
-              ? 'border-green-500 text-green-400 bg-green-950/10'
-              : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/50'
+              ? 'border-brand-500 text-brand-600 bg-brand-50/50'
+              : 'border-transparent text-slate-500 hover:text-slate-950 hover:bg-slate-50'
           }`}
         >
           <span>🌐</span>
@@ -417,10 +419,10 @@ export const Documents: React.FC = () => {
         </button>
         <button
           onClick={() => setActiveTab('text')}
-          className={`px-3 py-3 text-xs sm:text-sm font-semibold border-b-2 transition flex items-center justify-center gap-1.5 ${
+          className={`px-3 py-3 text-xs sm:text-sm font-bold border-b-2 transition flex items-center justify-center gap-1.5 ${
             activeTab === 'text'
-              ? 'border-green-500 text-green-400 bg-green-950/10'
-              : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/50'
+              ? 'border-brand-500 text-brand-600 bg-brand-50/50'
+              : 'border-transparent text-slate-500 hover:text-slate-950 hover:bg-slate-50'
           }`}
         >
           <span>📝</span>
@@ -434,8 +436,8 @@ export const Documents: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Upload Panel */}
           <div className="lg:col-span-1 space-y-6">
-            <div className="p-6 rounded-lg bg-slate-900 border border-slate-800 space-y-4">
-              <h3 className="text-lg font-semibold text-slate-200 font-display">Upload Document</h3>
+            <div className="bg-white border border-slate-200/60 rounded-2xl p-6 shadow-soft space-y-4">
+              <h3 className="text-lg font-bold text-slate-900 font-display">Upload Document</h3>
               
               <div
                 onDragEnter={handleDrag}
@@ -443,10 +445,10 @@ export const Documents: React.FC = () => {
                 onDragLeave={handleDrag}
                 onDrop={handleDrop}
                 onClick={triggerBrowse}
-                className={`p-8 border-2 border-dashed rounded-lg text-center cursor-pointer transition flex flex-col items-center justify-center space-y-3 min-h-[220px] ${
+                className={`p-8 border-2 border-dashed rounded-xl text-center cursor-pointer transition flex flex-col items-center justify-center space-y-3 min-h-[220px] ${
                   dragActive
-                    ? 'border-green-500 bg-green-950/10'
-                    : 'border-slate-800 bg-slate-950 hover:border-slate-700'
+                    ? 'border-brand-500 bg-brand-50/50'
+                    : 'border-slate-200 bg-[#F8FAFC] hover:border-slate-350 hover:bg-slate-50/80'
                 }`}
               >
                 <input
@@ -457,48 +459,48 @@ export const Documents: React.FC = () => {
                   onChange={handleFileChange}
                   disabled={uploadMutation.isPending}
                 />
-                <span className="text-4xl text-slate-500">📁</span>
+                <span className="text-4xl text-slate-400">📁</span>
                 <div>
-                  <p className="text-sm font-semibold text-slate-300">Drag & drop files here</p>
-                  <p className="text-xs text-slate-500 mt-1">or click to browse local files</p>
+                  <p className="text-sm font-bold text-slate-700">Drag & drop files here</p>
+                  <p className="text-xs text-slate-400 mt-1 font-semibold">or click to browse local files</p>
                 </div>
-                <p className="text-[10px] text-slate-600">
+                <p className="text-[10px] text-slate-500 font-medium">
                   PDF, DOCX, TXT, PNG, JPG, JPEG (Max: 20MB)
                 </p>
               </div>
 
               {/* Supported/Optional Formats Info */}
-              <div className="pt-3 border-t border-slate-800/60 space-y-3 text-left">
-                <div className="space-y-1">
-                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Supported</span>
-                  <ul className="list-none space-y-1 pl-0 text-xs text-slate-350">
+              <div className="pt-4 border-t border-slate-100 space-y-3.5 text-left">
+                <div className="space-y-1.5">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Supported</span>
+                  <ul className="list-none space-y-1.5 pl-0 text-xs text-slate-650 font-medium">
                     <li className="flex items-center gap-1.5">
-                      <span>✅</span>
+                      <span className="text-brand-500">✓</span>
                       <span>Text PDF</span>
                     </li>
                     <li className="flex items-center gap-1.5">
-                      <span>✅</span>
+                      <span className="text-brand-500">✓</span>
                       <span>DOCX</span>
                     </li>
                     <li className="flex items-center gap-1.5">
-                      <span>✅</span>
+                      <span className="text-brand-500">✓</span>
                       <span>TXT</span>
                     </li>
                     <li className="flex items-center gap-1.5">
-                      <span>✅</span>
+                      <span className="text-brand-500">✓</span>
                       <span>URL Analysis</span>
                     </li>
                   </ul>
                 </div>
 
-                <div className="space-y-1">
-                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Optional</span>
+                <div className="space-y-1.5">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Optional</span>
                   <div className="space-y-1">
-                    <div className="flex items-center gap-1.5 text-xs text-slate-350">
+                    <div className="flex items-center gap-1.5 text-xs text-slate-650 font-medium">
                       <span>🧪</span>
                       <span>Image OCR (PNG/JPG/JPEG)</span>
                     </div>
-                    <span className="text-[10px] text-slate-500 block leading-tight">
+                    <span className="text-[10px] text-slate-450 block leading-tight font-normal">
                       Available only on supported deployments.
                     </span>
                   </div>
@@ -506,14 +508,14 @@ export const Documents: React.FC = () => {
               </div>
 
               {uploadProgress !== null && (
-                <div className="space-y-2 p-3 bg-slate-950 border border-slate-850 rounded">
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="text-slate-400 font-medium">Uploading file...</span>
-                    <span className="text-green-400 font-bold">{uploadProgress}%</span>
+                <div className="space-y-2 p-3.5 bg-[#F8FAFC] border border-slate-200/60 rounded-xl">
+                  <div className="flex justify-between items-center text-xs font-semibold">
+                    <span className="text-slate-500 font-semibold">Uploading file...</span>
+                    <span className="text-brand-600 font-bold">{uploadProgress}%</span>
                   </div>
-                  <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                  <div className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
                     <div
-                      className="bg-green-500 h-1.5 rounded-full transition-all duration-300"
+                      className="bg-brand-500 h-full rounded-full transition-all duration-300"
                       style={{ width: `${uploadProgress}%` }}
                     />
                   </div>
@@ -524,72 +526,72 @@ export const Documents: React.FC = () => {
 
           {/* Uploads List Table */}
           <div className="lg:col-span-2">
-            <section className="p-6 rounded-lg bg-slate-900 border border-slate-800 space-y-4">
-              <h3 className="text-lg font-semibold text-slate-200 font-display">Recent Uploads</h3>
+            <section className="bg-white border border-slate-200/60 rounded-2xl p-6 shadow-soft space-y-4">
+              <h3 className="text-lg font-bold text-slate-900 font-display">Recent Uploads</h3>
 
               {isLoading ? (
                 <div className="space-y-3 py-6">
-                  <div className="h-10 bg-slate-800/50 rounded animate-pulse" />
-                  <div className="h-10 bg-slate-800/50 rounded animate-pulse" />
-                  <div className="h-10 bg-slate-800/50 rounded animate-pulse" />
+                  <div className="h-12 bg-slate-100 rounded-xl animate-pulse" />
+                  <div className="h-12 bg-slate-100 rounded-xl animate-pulse" />
+                  <div className="h-12 bg-slate-100 rounded-xl animate-pulse" />
                 </div>
               ) : documents.length === 0 ? (
-                <div className="p-16 border border-slate-850 bg-slate-950 rounded-lg text-center space-y-3">
+                <div className="p-16 border border-slate-100 bg-[#F8FAFC] rounded-xl text-center space-y-3">
                   <span className="text-4xl block">📂</span>
-                  <h4 className="font-semibold text-slate-300 text-sm">No files uploaded yet</h4>
-                  <p className="text-xs text-slate-500 max-w-xs mx-auto">
+                  <h4 className="font-semibold text-slate-700 text-sm">No files uploaded yet</h4>
+                  <p className="text-xs text-slate-500 max-w-xs mx-auto leading-relaxed">
                     Drag and drop a legal document in the upload area to save its metadata configurations.
                   </p>
                 </div>
               ) : (
-                <div className="overflow-x-auto rounded border border-slate-800 bg-slate-950">
+                <div className="overflow-x-auto rounded-xl border border-slate-200/60 bg-white">
                   <table className="w-full text-left border-collapse text-sm">
                     <thead>
-                      <tr className="bg-slate-900 border-b border-slate-800 text-slate-400 font-medium">
-                        <th className="p-3">File Name</th>
-                        <th className="p-3 hidden md:table-cell">Type</th>
-                        <th className="p-3 hidden sm:table-cell">Size</th>
-                        <th className="p-3 hidden lg:table-cell">Upload Date</th>
-                        <th className="p-3">Status</th>
-                        <th className="p-3 text-right">Actions</th>
+                      <tr className="bg-[#F8FAFC] border-b border-slate-200 text-slate-500 font-semibold text-xs uppercase tracking-wider">
+                        <th className="p-4">File Name</th>
+                        <th className="p-4 hidden md:table-cell">Type</th>
+                        <th className="p-4 hidden sm:table-cell">Size</th>
+                        <th className="p-4 hidden lg:table-cell">Upload Date</th>
+                        <th className="p-4">Status</th>
+                        <th className="p-4 text-right">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-850">
+                    <tbody className="divide-y divide-slate-100">
                       {documents.map((doc) => {
                         const isProcessing = extractMutation.isPending && extractMutation.variables === doc.id;
                         
                         return (
-                          <tr key={doc.id} className="hover:bg-slate-900/40 text-slate-300 transition">
-                            <td className="p-3 font-medium text-slate-100 max-w-[120px] sm:max-w-[180px] truncate">
+                          <tr key={doc.id} className="hover:bg-slate-50/50 text-slate-600 transition duration-150">
+                            <td className="p-4 font-semibold text-slate-800 max-w-[120px] sm:max-w-[180px] truncate" title={doc.original_filename}>
                               {doc.original_filename}
                             </td>
-                            <td className="p-3 text-xs uppercase text-slate-500 hidden md:table-cell">{doc.file_type}</td>
-                            <td className="p-3 text-xs text-slate-400 hidden sm:table-cell">{formatBytes(doc.file_size)}</td>
-                            <td className="p-3 text-xs text-slate-400 hidden lg:table-cell">{formatDate(doc.created_at)}</td>
-                            <td className="p-3">
+                            <td className="p-4 text-xs uppercase font-semibold text-slate-400 hidden md:table-cell">{doc.file_type}</td>
+                            <td className="p-4 text-xs font-semibold text-slate-500 hidden sm:table-cell">{formatBytes(doc.file_size)}</td>
+                            <td className="p-4 text-xs font-semibold text-slate-500 hidden lg:table-cell">{formatDate(doc.created_at)}</td>
+                            <td className="p-4">
                               {doc.processing_status === 'COMPLETED' ? (
                                 doc.analysis ? (
-                                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border ${
                                     doc.analysis.overall_risk_score <= 30
-                                      ? 'bg-green-950/60 text-green-400 border-green-800/40'
+                                      ? 'bg-green-50 text-success border-green-200'
                                       : doc.analysis.overall_risk_score <= 60
-                                      ? 'bg-yellow-950/60 text-yellow-400 border-yellow-800/40'
-                                      : 'bg-red-950/60 text-red-400 border-red-800/40'
+                                      ? 'bg-amber-50 text-warning border-amber-200'
+                                      : 'bg-red-50 text-danger border-red-200'
                                   }`}>
                                     Risk: {doc.analysis.overall_risk_score}/100
                                   </span>
                                 ) : (
-                                  <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold border bg-emerald-950/40 text-emerald-400 border-emerald-800/20">
+                                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border bg-brand-50 text-brand-600 border-brand-100 animate-pulse">
                                     Ready to Analyze
                                   </span>
                                 )
                               ) : (
-                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
+                                <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border ${
                                   doc.processing_status === 'PROCESSING' || isProcessing
-                                    ? 'bg-yellow-950/60 text-yellow-400 border-yellow-800/40 animate-pulse'
+                                    ? 'bg-amber-50 text-warning border-amber-200 animate-pulse'
                                     : doc.processing_status === 'FAILED'
-                                    ? 'bg-red-950/60 text-red-400 border-red-800/40'
-                                    : 'bg-slate-950 text-slate-400 border-slate-800'
+                                    ? 'bg-red-50 text-danger border-red-200'
+                                    : 'bg-slate-50 text-slate-550 border-slate-200'
                                 }`}>
                                   {isProcessing || doc.processing_status === 'PROCESSING'
                                     ? 'Extracting text...'
@@ -599,7 +601,7 @@ export const Documents: React.FC = () => {
                                 </span>
                               )}
                             </td>
-                            <td className="p-3 text-right space-x-2">
+                            <td className="p-4 text-right space-x-2 whitespace-nowrap">
                               {(doc.processing_status === 'UPLOADED' || doc.processing_status === 'FAILED') && (
                                 <button
                                   onClick={() => {
@@ -608,7 +610,7 @@ export const Documents: React.FC = () => {
                                     }
                                   }}
                                   disabled={extractMutation.isPending || isProcessing}
-                                  className="text-xs text-green-400 hover:text-green-300 px-2 py-1 bg-green-950/20 hover:bg-green-950/40 border border-green-900/20 rounded transition disabled:opacity-50"
+                                  className="btn-outline py-1 px-2.5 text-[10px] font-bold border-brand-100 bg-brand-50 text-brand-600 hover:bg-brand-100 hover:text-brand-700"
                                 >
                                   {isProcessing ? 'Processing...' : 'Extract'}
                                 </button>
@@ -618,10 +620,10 @@ export const Documents: React.FC = () => {
                                 <button
                                   onClick={() => analyzeMutation.mutate(doc.id)}
                                   disabled={analyzeMutation.isPending}
-                                  className={`text-xs px-2 py-1 rounded border transition disabled:opacity-50 ${
+                                  className={`btn-outline py-1 px-2.5 text-[10px] font-bold border transition ${
                                     doc.analysis
-                                      ? 'text-slate-400 hover:text-slate-200 bg-slate-900 hover:bg-slate-855 border-slate-800'
-                                      : 'text-emerald-400 hover:text-emerald-300 bg-emerald-950/20 hover:bg-emerald-950/40 border-emerald-900/20 font-medium animate-pulse'
+                                      ? 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
+                                      : 'border-brand-200 bg-brand-50 text-brand-600 hover:bg-brand-100 animate-pulse'
                                   }`}
                                 >
                                   {doc.analysis ? 'Re-analyze' : 'Analyze'}
@@ -631,23 +633,23 @@ export const Documents: React.FC = () => {
                               {doc.analysis && (
                                 <Link
                                   to={`/results/${doc.id}`}
-                                  className="inline-block text-xs text-emerald-400 hover:text-emerald-300 px-2 py-1 bg-emerald-950/20 rounded border border-emerald-900/20 transition font-semibold"
+                                  className="btn-outline inline-block py-1 px-2.5 text-[10px] font-bold border-brand-100 bg-brand-50 text-brand-600 hover:bg-brand-100 hover:text-brand-700"
                                 >
                                   Results
                                 </Link>
                               )}
 
-                              <Link
-                                  to={`/documents/${doc.id}`}
-                                  className="inline-block text-xs text-slate-400 hover:text-white px-2 py-1 bg-slate-900 rounded border border-slate-800 transition"
+                              <button
+                                onClick={() => setSelectedDoc(doc)}
+                                className="btn-secondary py-1 px-2.5 text-[10px] font-bold"
                               >
                                 Details
-                              </Link>
+                              </button>
                               
                               <button
                                 onClick={() => deleteMutation.mutate(doc.id)}
                                 disabled={deleteMutation.isPending || isProcessing || analyzeMutation.isPending}
-                                className="text-xs text-red-400 hover:text-red-300 px-2 py-1 bg-red-950/20 hover:bg-red-950/40 rounded border border-red-900/20 transition disabled:opacity-50"
+                                className="btn-danger bg-red-50 text-danger border border-red-100 hover:bg-red-100 hover:text-red-700 py-1 px-2.5 text-[10px] font-bold"
                               >
                                 Delete
                               </button>
@@ -665,37 +667,37 @@ export const Documents: React.FC = () => {
       )}
 
       {activeTab === 'url' && (
-        <div className="p-6 rounded-lg bg-slate-900 border border-slate-800 space-y-6 max-w-2xl">
+        <div className="bg-white border border-slate-200/60 rounded-2xl p-6 shadow-soft space-y-6 max-w-2xl">
           <div>
-            <h3 className="text-lg font-semibold text-slate-200 font-display">Analyze Terms & Conditions from URL</h3>
-            <p className="text-xs text-slate-450 mt-1">
+            <h3 className="text-lg font-bold text-slate-900 font-display">Analyze Terms & Conditions from URL</h3>
+            <p className="text-xs text-slate-500 mt-1 leading-relaxed">
               Provide the direct address of the T&C page. {env.VITE_APP_NAME} will scrape the page, remove cookie banners/newsletters, bypass boilerplate scripts, and feed clean legal blocks to the AI analyzer.
             </p>
           </div>
 
           {urlAnalysisError ? (
-            <div className="p-6 rounded-lg bg-red-950/20 border border-red-900/40 space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <div className="p-6 rounded-xl bg-red-50 border border-red-200 space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
               <div className="flex items-center gap-3">
                 <span className="text-3xl">❌</span>
                 <div>
-                  <h4 className="text-base font-bold text-red-400 font-display">URL Analysis Failed</h4>
-                  <p className="text-[10px] text-slate-450 mt-0.5">
-                    Failure Type: <span className="font-mono bg-slate-950 px-1.5 py-0.5 rounded text-red-300 font-semibold border border-red-900/10">{urlAnalysisError.errorType}</span>
+                  <h4 className="text-base font-bold text-red-700 font-display">URL Analysis Failed</h4>
+                  <p className="text-[10px] text-slate-500 mt-0.5">
+                    Failure Type: <span className="font-mono bg-white px-1.5 py-0.5 rounded text-red-650 font-semibold border border-red-200">{urlAnalysisError.errorType}</span>
                   </p>
                 </div>
               </div>
 
-              <div className="bg-slate-950/80 border border-slate-850 p-4 rounded-lg text-xs leading-relaxed text-slate-300">
-                <strong className="text-slate-200">Reason:</strong> {urlAnalysisError.reason}
+              <div className="bg-white border border-red-100 p-4 rounded-xl text-xs leading-relaxed text-red-700 font-medium">
+                <strong className="text-red-800">Reason:</strong> {urlAnalysisError.reason}
               </div>
 
               {urlAnalysisError.suggestions && urlAnalysisError.suggestions.length > 0 && (
                 <div className="space-y-2">
-                  <h5 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Suggested Recovery Actions:</h5>
+                  <h5 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Suggested Recovery Actions:</h5>
                   <ul className="list-none space-y-1.5 pl-0">
                     {urlAnalysisError.suggestions.map((suggestion: string, idx: number) => (
-                      <li key={idx} className="flex items-start gap-2 text-xs text-slate-350">
-                        <span className="text-green-500 font-bold">✓</span>
+                      <li key={idx} className="flex items-start gap-2 text-xs text-slate-650 font-medium">
+                        <span className="text-brand-500 font-bold">✓</span>
                         <span>{suggestion}</span>
                       </li>
                     ))}
@@ -704,14 +706,14 @@ export const Documents: React.FC = () => {
               )}
 
               {/* Quick Action buttons */}
-              <div className="pt-4 border-t border-slate-800/45 flex flex-wrap gap-2">
+              <div className="pt-4 border-t border-red-100 flex flex-wrap gap-2">
                 <button
                   type="button"
                   onClick={() => {
                     setUrlAnalysisError(null);
                     setActiveTab('pdf');
                   }}
-                  className="px-4 py-2 bg-slate-950 hover:bg-slate-850 border border-slate-800 text-xs font-semibold text-slate-300 hover:text-white rounded-lg transition-all flex items-center gap-1.5 shadow"
+                  className="btn-outline py-1.5 px-3.5 text-xs shadow-sm"
                 >
                   📄 Upload PDF
                 </button>
@@ -721,7 +723,7 @@ export const Documents: React.FC = () => {
                     setUrlAnalysisError(null);
                     setActiveTab('text');
                   }}
-                  className="px-4 py-2 bg-slate-950 hover:bg-slate-850 border border-slate-800 text-xs font-semibold text-slate-300 hover:text-white rounded-lg transition-all flex items-center gap-1.5 shadow"
+                  className="btn-outline py-1.5 px-3.5 text-xs shadow-sm"
                 >
                   📝 Paste Text
                 </button>
@@ -731,7 +733,7 @@ export const Documents: React.FC = () => {
                     setUrlAnalysisError(null);
                     setActiveTab('pdf');
                   }}
-                  className="px-4 py-2 bg-slate-950 hover:bg-slate-850 border border-slate-800 text-xs font-semibold text-slate-300 hover:text-white rounded-lg transition-all flex items-center gap-1.5 shadow"
+                  className="btn-outline py-1.5 px-3.5 text-xs shadow-sm"
                 >
                   🖼 Upload Image (OCR)
                 </button>
@@ -741,7 +743,7 @@ export const Documents: React.FC = () => {
                     setUrlAnalysisError(null);
                     setUrl('');
                   }}
-                  className="px-4 py-2 bg-green-600/10 hover:bg-green-600/20 border border-green-500/20 text-xs font-semibold text-green-400 hover:text-green-300 rounded-lg transition-all flex items-center gap-1.5 shadow"
+                  className="btn-primary py-1.5 px-3.5 text-xs shadow-sm"
                 >
                   🔗 Try Another URL
                 </button>
@@ -750,7 +752,7 @@ export const Documents: React.FC = () => {
           ) : (
             <form onSubmit={handleUrlSubmit} className="space-y-4">
               <div className="space-y-2">
-                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">
                   Terms & Conditions URL
                 </label>
                 <input
@@ -758,18 +760,18 @@ export const Documents: React.FC = () => {
                   placeholder="https://openai.com/policies/terms-of-use/"
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 hover:border-slate-700 focus:border-green-500 focus:ring-1 focus:ring-green-500 rounded-lg px-4 py-3 text-sm text-slate-200 placeholder-slate-700 transition"
+                  className="form-input text-sm"
                   disabled={analyzeUrlMutation.isPending}
                 />
-                <span className="text-[11px] text-slate-500 block">
-                  Example URL: <span className="italic text-slate-450">https://openai.com/policies/terms-of-use/</span>
+                <span className="text-[11px] text-slate-400 block mt-1 font-medium">
+                  Example URL: <span className="italic font-normal">https://openai.com/policies/terms-of-use/</span>
                 </span>
               </div>
 
               <button
                 type="submit"
                 disabled={analyzeUrlMutation.isPending || !url.trim()}
-                className="px-6 py-2.5 bg-green-600 hover:bg-green-500 disabled:bg-slate-800 disabled:text-slate-500 text-white text-sm font-semibold rounded-lg shadow-lg hover:shadow-green-950/20 transition flex items-center gap-2"
+                className="btn-primary text-sm font-semibold flex items-center gap-2"
               >
                 {analyzeUrlMutation.isPending ? 'Extracting Webpage...' : 'Analyze URL'}
               </button>
@@ -779,17 +781,17 @@ export const Documents: React.FC = () => {
       )}
 
       {activeTab === 'text' && (
-        <div className="p-6 rounded-lg bg-slate-900 border border-slate-800 space-y-6 max-w-3xl">
+        <div className="bg-white border border-slate-200/60 rounded-2xl p-6 shadow-soft space-y-6 max-w-3xl">
           <div>
-            <h3 className="text-lg font-semibold text-slate-200 font-display">Analyze Direct Text Input</h3>
-            <p className="text-xs text-slate-455 mt-1">
+            <h3 className="text-lg font-bold text-slate-900 font-display">Analyze Direct Text Input</h3>
+            <p className="text-xs text-slate-500 mt-1 leading-relaxed">
               Copy and paste terms agreement document chunks directly below to process AI diagnostics.
             </p>
           </div>
 
           <div className="space-y-4">
             <div className="space-y-2 relative">
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">
                 Terms & Conditions Text
               </label>
               <textarea
@@ -798,12 +800,12 @@ export const Documents: React.FC = () => {
                 onChange={(e) => setTextInput(e.target.value)}
                 rows={12}
                 maxLength={150000}
-                className="w-full bg-slate-950 border border-slate-800 hover:border-slate-700 focus:border-green-500 focus:ring-1 focus:ring-green-500 rounded-lg px-4 py-3 text-sm text-slate-200 placeholder-slate-700 transition resize-y font-sans leading-relaxed"
+                className="form-input text-sm resize-y font-sans leading-relaxed"
                 disabled={analyzeTextMutation.isPending}
               />
-              <div className="flex justify-between items-center text-[11px] text-slate-500 mt-1">
+              <div className="flex justify-between items-center text-[11px] text-slate-400 mt-1 font-semibold">
                 <span>Minimum 100 characters required.</span>
-                <span className={textInput.length < 100 || textInput.length > 150000 ? 'text-yellow-500' : 'text-slate-400'}>
+                <span className={textInput.length < 100 || textInput.length > 150000 ? 'text-warning font-bold' : 'text-slate-400'}>
                   {textInput.length.toLocaleString()} / 150,000 characters
                 </span>
               </div>
@@ -812,7 +814,7 @@ export const Documents: React.FC = () => {
             <button
               onClick={handleTextSubmit}
               disabled={analyzeTextMutation.isPending || textInput.length < 100 || textInput.length > 150000}
-              className="px-6 py-2.5 bg-green-600 hover:bg-green-500 disabled:bg-slate-800 disabled:text-slate-500 text-white text-sm font-semibold rounded-lg shadow-lg hover:shadow-green-950/20 transition"
+              className="btn-primary"
             >
               {analyzeTextMutation.isPending ? 'Analyzing...' : 'Analyze Text'}
             </button>
@@ -822,62 +824,62 @@ export const Documents: React.FC = () => {
 
       {/* Details View Dialog Modal */}
       {selectedDoc && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-lg p-6 space-y-6">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="w-full max-w-lg bg-white border border-slate-200 rounded-2xl p-6 space-y-6 shadow-xl text-slate-800 animate-in fade-in zoom-in-95 duration-200">
             <div className="flex justify-between items-start">
               <div>
-                <h3 className="text-lg font-bold text-slate-100">Document Metadata</h3>
-                <p className="text-xs text-slate-500 mt-1">UUID reference and backend storage configurations.</p>
+                <h3 className="text-lg font-bold text-slate-900 font-display">Document Metadata</h3>
+                <p className="text-xs text-slate-400 mt-1 font-semibold">UUID reference and backend storage configurations.</p>
               </div>
               <button
                 onClick={() => setSelectedDoc(null)}
-                className="text-slate-400 hover:text-white font-semibold text-lg"
+                className="text-slate-400 hover:text-slate-900 font-semibold text-lg"
               >
                 ✕
               </button>
             </div>
 
-            <div className="space-y-3 text-sm text-slate-300 bg-slate-950 p-4 rounded border border-slate-850">
-              <div className="flex justify-between border-b border-slate-850 pb-2">
-                <span className="text-slate-500">Document ID:</span>
-                <span className="font-mono text-xs">{selectedDoc.id}</span>
+            <div className="space-y-3 text-sm text-slate-650 bg-[#F8FAFC] p-4.5 rounded-xl border border-slate-200/60 font-semibold">
+              <div className="flex justify-between border-b border-slate-200/60 pb-2">
+                <span className="text-slate-400">Document ID:</span>
+                <span className="font-mono text-xs text-slate-700">{selectedDoc.id}</span>
               </div>
-              <div className="flex justify-between border-b border-slate-850 pb-2">
-                <span className="text-slate-500">Original Name:</span>
-                <span className="max-w-[240px] truncate">{selectedDoc.original_filename}</span>
+              <div className="flex justify-between border-b border-slate-200/60 pb-2">
+                <span className="text-slate-400">Original Name:</span>
+                <span className="max-w-[240px] truncate text-slate-700">{selectedDoc.original_filename}</span>
               </div>
-              <div className="flex justify-between border-b border-slate-850 pb-2">
-                <span className="text-slate-500">Source Type:</span>
-                <span className="uppercase text-xs font-semibold text-green-400">{selectedDoc.source_type || 'PDF'}</span>
+              <div className="flex justify-between border-b border-slate-200/60 pb-2">
+                <span className="text-slate-400">Source Type:</span>
+                <span className="uppercase text-xs font-extrabold text-brand-600">{selectedDoc.source_type || 'PDF'}</span>
               </div>
               {selectedDoc.source_url && (
-                <div className="flex justify-between border-b border-slate-850 pb-2">
-                  <span className="text-slate-500">Source URL:</span>
-                  <span className="text-xs max-w-[240px] truncate underline text-slate-400" title={selectedDoc.source_url}>
+                <div className="flex justify-between border-b border-slate-200/60 pb-2">
+                  <span className="text-slate-400">Source URL:</span>
+                  <span className="text-xs max-w-[240px] truncate underline text-slate-500" title={selectedDoc.source_url}>
                     {selectedDoc.source_url}
                   </span>
                 </div>
               )}
-              <div className="flex justify-between border-b border-slate-850 pb-2">
-                <span className="text-slate-500">Stored Name:</span>
-                <span className="font-mono text-xs max-w-[240px] truncate">{selectedDoc.stored_filename || 'N/A'}</span>
+              <div className="flex justify-between border-b border-slate-200/60 pb-2">
+                <span className="text-slate-400">Stored Name:</span>
+                <span className="font-mono text-xs max-w-[240px] truncate text-slate-700">{selectedDoc.stored_filename || 'N/A'}</span>
               </div>
-              <div className="flex justify-between border-b border-slate-850 pb-2">
-                <span className="text-slate-500">File Type:</span>
-                <span className="uppercase text-xs">{selectedDoc.file_type}</span>
+              <div className="flex justify-between border-b border-slate-200/60 pb-2">
+                <span className="text-slate-400">File Type:</span>
+                <span className="uppercase text-xs text-slate-700">{selectedDoc.file_type}</span>
               </div>
-              <div className="flex justify-between border-b border-slate-850 pb-2">
-                <span className="text-slate-500">File Size:</span>
-                <span>{formatBytes(selectedDoc.file_size)}</span>
+              <div className="flex justify-between border-b border-slate-200/60 pb-2">
+                <span className="text-slate-400">File Size:</span>
+                <span className="text-slate-750">{formatBytes(selectedDoc.file_size)}</span>
               </div>
-              <div className="flex justify-between border-b border-slate-850 pb-2">
-                <span className="text-slate-500">Upload Date:</span>
-                <span>{formatDate(selectedDoc.created_at)}</span>
+              <div className="flex justify-between border-b border-slate-200/60 pb-2">
+                <span className="text-slate-400">Upload Date:</span>
+                <span className="text-slate-755">{formatDate(selectedDoc.created_at)}</span>
               </div>
               {selectedDoc.storage_path && (
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Disk Storage Path:</span>
-                  <span className="font-mono text-[10px] text-slate-400 max-w-[240px] truncate" title={selectedDoc.storage_path}>
+                  <span className="text-slate-400">Disk Storage Path:</span>
+                  <span className="font-mono text-[10px] text-slate-500 max-w-[240px] truncate" title={selectedDoc.storage_path}>
                     {selectedDoc.storage_path}
                   </span>
                 </div>
@@ -887,14 +889,14 @@ export const Documents: React.FC = () => {
             <div className="flex justify-end gap-3 pt-2">
               <button
                 onClick={() => setSelectedDoc(null)}
-                className="px-4 py-2 bg-slate-850 text-slate-300 hover:text-white rounded border border-slate-800 text-xs font-semibold transition"
+                className="btn-outline py-2 px-4 text-xs font-semibold"
               >
                 Close
               </button>
               <button
                 onClick={() => deleteMutation.mutate(selectedDoc.id)}
                 disabled={deleteMutation.isPending}
-                className="px-4 py-2 bg-red-950/30 text-red-400 hover:text-red-300 rounded border border-red-900/30 text-xs font-semibold transition"
+                className="btn-danger py-2 px-4 text-xs font-semibold"
               >
                 Delete Record
               </button>
@@ -905,35 +907,35 @@ export const Documents: React.FC = () => {
 
       {/* OCR Disabled Info Modal */}
       {ocrDisabledInfo && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
-          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-xl p-6 space-y-6 shadow-2xl animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+          <div className="w-full max-w-md bg-white border border-slate-200 rounded-2xl p-6 space-y-6 shadow-2xl animate-in zoom-in-95 duration-200 text-slate-800">
             <div className="flex items-start gap-4">
-              <span className="text-3xl p-2 bg-amber-500/10 text-amber-500 rounded-lg">🧪</span>
+              <span className="text-3xl p-2.5 bg-amber-50 text-amber-600 rounded-xl border border-amber-100">🧪</span>
               <div className="space-y-1">
-                <h3 className="text-lg font-bold text-slate-100 font-display">Image OCR (Beta)</h3>
-                <p className="text-xs text-slate-455 leading-relaxed">
+                <h3 className="text-lg font-bold text-slate-900 font-display">Image OCR (Beta)</h3>
+                <p className="text-xs text-slate-500 leading-relaxed font-semibold">
                   Image OCR requires higher-memory hosting and is not available on this deployment.
                 </p>
               </div>
             </div>
 
-            <div className="bg-slate-950 border border-slate-850 p-4 rounded-lg space-y-3">
-              <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Recommended alternatives:</h4>
-              <ul className="list-none space-y-2 text-xs text-slate-350">
+            <div className="bg-[#F8FAFC] border border-slate-100 p-4.5 rounded-xl space-y-3 font-semibold">
+              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Recommended alternatives:</h4>
+              <ul className="list-none space-y-2 text-xs text-slate-600 pl-0">
                 <li className="flex items-center gap-2">
-                  <span className="text-green-500 font-bold">✓</span>
+                  <span className="text-success font-bold">✓</span>
                   <span>Upload Text PDF</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="text-green-500 font-bold">✓</span>
+                  <span className="text-success font-bold">✓</span>
                   <span>Upload DOCX</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="text-green-500 font-bold">✓</span>
+                  <span className="text-success font-bold">✓</span>
                   <span>Upload TXT</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="text-green-500 font-bold">✓</span>
+                  <span className="text-success font-bold">✓</span>
                   <span>Analyze URL</span>
                 </li>
               </ul>
@@ -943,7 +945,7 @@ export const Documents: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setOcrDisabledInfo(null)}
-                className="px-5 py-2 bg-slate-800 hover:bg-slate-750 border border-slate-700 text-xs font-semibold text-slate-200 hover:text-white rounded-lg transition"
+                className="btn-secondary py-2 px-5 text-xs font-semibold"
               >
                 Close
               </button>

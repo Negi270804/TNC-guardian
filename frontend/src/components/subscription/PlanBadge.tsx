@@ -16,14 +16,14 @@ export const PlanBadge: React.FC<PlanBadgeProps> = ({ plan, size = 'md' }) => {
 
   if (isPro) {
     return (
-      <span className={`inline-flex items-center rounded-full border border-green-500/30 bg-green-500/10 font-bold text-green-400 uppercase tracking-wider ${sizeClasses[size]}`}>
+      <span className={`inline-flex items-center rounded-full border border-brand-200 bg-brand-50 font-extrabold text-brand-600 uppercase tracking-wider ${sizeClasses[size]}`}>
         Pro Plan
       </span>
     );
   }
 
   return (
-    <span className={`inline-flex items-center rounded-full border border-slate-800 bg-slate-900 font-semibold text-slate-400 uppercase tracking-wider ${sizeClasses[size]}`}>
+    <span className={`inline-flex items-center rounded-full border border-slate-200 bg-slate-100 font-bold text-slate-600 uppercase tracking-wider ${sizeClasses[size]}`}>
       Free Plan
     </span>
   );

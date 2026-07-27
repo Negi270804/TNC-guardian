@@ -17,10 +17,10 @@ export const UsageCard: React.FC<UsageCardProps> = ({
   uploadSizeLimit,
 }) => {
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 space-y-6">
+    <div className="bg-white border border-slate-200/60 rounded-2xl p-6 space-y-6 shadow-soft text-slate-800">
       <div>
-        <h3 className="text-lg font-semibold text-slate-200 font-display">Usage this Billing Cycle</h3>
-        <p className="text-xs text-slate-400 mt-1">Metrics reset on your monthly renewal date.</p>
+        <h3 className="text-lg font-bold text-slate-900 font-display">Usage this Billing Cycle</h3>
+        <p className="text-xs text-slate-505 mt-1 font-semibold">Metrics reset on your monthly renewal date.</p>
       </div>
 
       <div className="space-y-6 pt-2">
@@ -39,20 +39,20 @@ export const UsageCard: React.FC<UsageCardProps> = ({
         />
       </div>
 
-      <div className="grid grid-cols-3 gap-4 pt-4 border-t border-slate-800/40 text-center">
-        <div className="bg-slate-950/40 p-3 rounded-lg border border-slate-850">
-          <span className="block text-slate-500 text-xs uppercase tracking-wider font-semibold">Total Scans</span>
-          <span className="text-xl font-bold text-slate-200 mt-1 block">{analysisCount}</span>
+      <div className="grid grid-cols-3 gap-4 pt-4 border-t border-slate-100 text-center font-semibold">
+        <div className="bg-[#F8FAFC] p-3 rounded-xl border border-slate-200/60 shadow-sm">
+          <span className="block text-slate-400 text-[10px] uppercase tracking-wider font-bold">Total Scans</span>
+          <span className="text-xl font-extrabold text-slate-800 mt-1 block">{analysisCount}</span>
         </div>
-        <div className="bg-slate-950/40 p-3 rounded-lg border border-slate-850">
-          <span className="block text-slate-500 text-xs uppercase tracking-wider font-semibold">Storage Used</span>
-          <span className="text-xl font-bold text-slate-200 mt-1 block">
+        <div className="bg-[#F8FAFC] p-3 rounded-xl border border-slate-200/60 shadow-sm">
+          <span className="block text-slate-400 text-[10px] uppercase tracking-wider font-bold">Storage Used</span>
+          <span className="text-xl font-extrabold text-slate-800 mt-1 block">
             {(storageUsed / (1024 * 1024)).toFixed(1)} MB
           </span>
         </div>
-        <div className="bg-slate-950/40 p-3 rounded-lg border border-slate-850">
-          <span className="block text-slate-500 text-xs uppercase tracking-wider font-semibold">Remaining Limit</span>
-          <span className="text-xl font-bold text-green-500 mt-1 block">
+        <div className="bg-[#F8FAFC] p-3 rounded-xl border border-slate-200/60 shadow-sm">
+          <span className="block text-slate-400 text-[10px] uppercase tracking-wider font-bold">Remaining Limit</span>
+          <span className="text-xl font-extrabold text-success mt-1 block">
             {remainingAnalyses === null ? '∞' : remainingAnalyses}
           </span>
         </div>

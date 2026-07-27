@@ -65,22 +65,22 @@ export const ResetPassword: React.FC = () => {
   };
 
   return (
-    <div>
-      <div className="text-center lg:text-left mb-6">
-        <h2 className="text-3xl font-extrabold">New Password</h2>
-        <p className="text-sm text-slate-400 mt-2">
+    <div className="fade-in">
+      <div className="text-center lg:text-left mb-8">
+        <h2 className="text-3xl font-extrabold text-slate-900 font-display">New Password</h2>
+        <p className="text-sm text-slate-500 mt-2">
           Set your new password below.
         </p>
       </div>
 
       {!token ? (
         <div className="space-y-6">
-          <div className="p-3 rounded bg-red-950/50 border border-red-800 text-sm text-red-300">
+          <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700">
             No valid reset token was found in the link. Please make sure you copied the entire URL.
           </div>
           <Link
             to="/forgot-password"
-            className="block text-center w-full py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-md text-sm font-semibold transition"
+            className="btn-secondary w-full text-center"
           >
             Request New Link
           </Link>
@@ -88,52 +88,52 @@ export const ResetPassword: React.FC = () => {
       ) : (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {errorMsg && (
-            <div className="p-3 rounded bg-red-950/50 border border-red-800 text-sm text-red-300">
+            <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700">
               {errorMsg}
             </div>
           )}
 
           {successMsg && (
-            <div className="p-3 rounded bg-green-950/50 border border-green-800 text-sm text-green-300">
+            <div className="p-3.5 rounded-xl bg-green-50 border border-green-200 text-sm text-green-700">
               {successMsg}
             </div>
           )}
 
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">New Password</label>
+            <label className="form-label">New Password</label>
             <input
               type="password"
               {...register('password')}
-              className="w-full px-4 py-3 rounded-md bg-slate-900 border border-slate-800 text-slate-100 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 text-sm"
+              className={`form-input ${errors.password ? 'form-input-error' : ''}`}
               placeholder="••••••••"
             />
-            {errors.password && <span className="text-xs text-red-400 mt-1 block">{errors.password.message}</span>}
+            {errors.password && <span className="text-xs text-red-500 mt-1.5 block font-medium">{errors.password.message}</span>}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">Confirm New Password</label>
+            <label className="form-label">Confirm New Password</label>
             <input
               type="password"
               {...register('confirmPassword')}
-              className="w-full px-4 py-3 rounded-md bg-slate-900 border border-slate-800 text-slate-100 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 text-sm"
+              className={`form-input ${errors.confirmPassword ? 'form-input-error' : ''}`}
               placeholder="••••••••"
             />
-            {errors.confirmPassword && <span className="text-xs text-red-400 mt-1 block">{errors.confirmPassword.message}</span>}
+            {errors.confirmPassword && <span className="text-xs text-red-500 mt-1.5 block font-medium">{errors.confirmPassword.message}</span>}
           </div>
 
           <button
             type="submit"
             disabled={isSubmitting || !!successMsg}
-            className="w-full py-3 bg-green-600 hover:bg-green-500 disabled:bg-slate-700 disabled:cursor-not-allowed text-white rounded-md text-sm font-semibold transition"
+            className="btn-primary w-full"
           >
             {isSubmitting ? 'Updating Password...' : 'Update Password'}
           </button>
         </form>
       )}
 
-      <p className="text-center text-sm text-slate-400 mt-8">
+      <p className="text-center text-sm text-slate-500 mt-8">
         Back to{' '}
-        <Link to="/login" className="text-green-500 hover:text-green-400 font-medium">
+        <Link to="/login" className="text-brand-500 hover:text-brand-600 font-semibold transition-colors duration-150">
           Sign in
         </Link>
       </p>

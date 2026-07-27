@@ -22,29 +22,29 @@ export const UsageProgressBar: React.FC<UsageProgressBarProps> = ({ label, value
   const isStorage = unit.toLowerCase() === 'mb' || unit.toLowerCase() === 'gb' || label.toLowerCase().includes('storage');
 
   return (
-    <div className="space-y-2">
-      <div className="flex justify-between items-center text-sm font-medium">
-        <span className="text-slate-400">{label}</span>
-        <span className="text-slate-200">
+    <div className="space-y-2 font-medium">
+      <div className="flex justify-between items-center text-xs">
+        <span className="text-slate-500 font-semibold">{label}</span>
+        <span className="text-slate-800 font-bold">
           {formatValue(value, isStorage)} {unit} / {isUnlimited ? 'Unlimited' : `${formatValue(max as number, isStorage)} ${unit}`}
         </span>
       </div>
-      <div className="h-2 w-full bg-slate-950 border border-slate-850 rounded-full overflow-hidden">
+      <div className="h-2.5 w-full bg-slate-100 border border-slate-200/50 rounded-full overflow-hidden relative shadow-inner">
         <div
           className={`h-full rounded-full transition-all duration-500 ${
             isUnlimited
-              ? 'bg-gradient-to-r from-green-500 to-emerald-400 animate-pulse'
+              ? 'bg-brand-500'
               : percentage >= 90
-              ? 'bg-red-500'
+              ? 'bg-danger'
               : percentage >= 75
-              ? 'bg-yellow-500'
-              : 'bg-green-500'
+              ? 'bg-warning'
+              : 'bg-success'
           }`}
           style={{ width: `${percentage}%` }}
         />
       </div>
       {!isUnlimited && percentage >= 90 && (
-        <span className="text-[10px] text-red-400 font-semibold block mt-1">
+        <span className="text-[10px] text-danger font-bold block mt-1">
           Quota nearly reached. Consider upgrading your plan to bypass constraints.
         </span>
       )}

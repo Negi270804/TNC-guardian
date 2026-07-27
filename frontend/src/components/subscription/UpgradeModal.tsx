@@ -18,32 +18,32 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-xl bg-slate-900 border border-slate-800 p-6 space-y-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+      <div className="w-full max-w-md rounded-2xl bg-white border border-slate-200 p-6 space-y-6 shadow-2xl animate-scale-up">
         <div className="space-y-2 text-center">
           <span className="text-3xl block">💳</span>
-          <h3 className="text-xl font-bold font-display text-white">Upgrade Confirmation</h3>
-          <p className="text-sm text-slate-400">
-            You are upgrading your account workspace parameters to the <span className="text-green-500 font-semibold">{planName}</span> plan.
+          <h3 className="text-xl font-bold font-display text-slate-900">Upgrade Confirmation</h3>
+          <p className="text-sm text-slate-500 font-semibold leading-relaxed">
+            You are upgrading your account workspace parameters to the <span className="text-brand-600 font-bold">{planName}</span> plan.
           </p>
         </div>
 
-        <div className="bg-slate-950 p-4 rounded-lg border border-slate-850 space-y-3 text-xs text-slate-400">
+        <div className="bg-[#F8FAFC] p-4 rounded-xl border border-slate-200/60 space-y-3 text-xs text-slate-500 font-semibold shadow-inner">
           <div className="flex justify-between font-medium">
             <span>Billing Period:</span>
-            <span className="text-slate-200">Monthly</span>
+            <span className="text-slate-800">Monthly</span>
           </div>
           <div className="flex justify-between font-medium">
             <span>Price:</span>
-            <span className="text-slate-200">₹299 / month</span>
+            <span className="text-slate-800">₹299 / month</span>
           </div>
-          <div className="flex justify-between border-t border-slate-850 pt-2 font-semibold">
-            <span className="text-slate-300">Total Due Now:</span>
-            <span className="text-green-400">₹299</span>
+          <div className="flex justify-between border-t border-slate-200/60 pt-2.5 font-bold">
+            <span className="text-slate-800">Total Due Now:</span>
+            <span className="text-brand-600 font-extrabold">₹299</span>
           </div>
         </div>
 
-        <blockquote className="bg-green-950/20 border-l-2 border-green-500 p-3 text-[11px] text-green-300 rounded-r">
+        <blockquote className="bg-brand-50 border-l-4 border-brand-500 p-3 text-[11px] text-brand-900 rounded-r-xl font-medium leading-relaxed">
           <strong>Sandbox Notice:</strong> No payment details will be requested during this simulated transaction. Confirming updates your account immediately.
         </blockquote>
 
@@ -51,14 +51,14 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
           <button
             onClick={onClose}
             disabled={isLoading}
-            className="flex-1 py-2.5 bg-slate-800 hover:bg-slate-750 disabled:opacity-50 text-slate-300 rounded font-semibold text-sm transition"
+            className="flex-1 btn-secondary py-2.5 font-bold text-sm"
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
             disabled={isLoading}
-            className="flex-1 py-2.5 bg-green-600 hover:bg-green-500 disabled:opacity-50 text-white rounded font-semibold text-sm transition"
+            className="flex-1 btn-primary py-2.5 font-bold text-sm shadow-sm"
           >
             {isLoading ? 'Upgrading...' : 'Confirm Upgrade'}
           </button>
