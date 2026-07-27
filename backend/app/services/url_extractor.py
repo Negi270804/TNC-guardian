@@ -7,9 +7,6 @@ import time
 import json
 from urllib.parse import urlparse, urlunparse
 from fastapi import HTTPException, status
-from bs4 import BeautifulSoup
-from readability import Document as ReadabilityDocument
-import trafilatura
 from playwright.async_api import async_playwright
 from app.config import URL_INGESTION_TIMEOUT, URL_INGESTION_RETRIES, URL_INGESTION_MIN_THRESHOLD
 
@@ -559,6 +556,7 @@ class URLExtractorService:
         # 2. Extract content from static HTML if fetched successfully
         requires_browser = False
         
+        from bs4 import BeautifulSoup
         soup_check = BeautifulSoup(html_content, "html.parser")
         body = soup_check.body
         body_text_len = len(body.get_text().strip()) if body else 0
@@ -576,6 +574,7 @@ class URLExtractorService:
         else:
             # Stage 1: Readability-lxml
             try:
+                from readability import Document as ReadabilityDocument
                 doc = ReadabilityDocument(html_content)
                 summary_html = doc.summary()
                 readability_txt = URLExtractorService.clean_html(summary_html)
@@ -591,6 +590,7 @@ class URLExtractorService:
 
             # Stage 2: Trafilatura
             try:
+                import trafilatura
                 trafilatura_txt = trafilatura.extract(html_content)
                 if trafilatura_txt:
                     trafilatura_txt = trafilatura_txt.strip()
@@ -679,6 +679,7 @@ class URLExtractorService:
 
                 # Stage 4.1: Readability-lxml on Browser HTML
                 try:
+                    from readability import Document as ReadabilityDocument
                     doc = ReadabilityDocument(browser_html)
                     summary_html = doc.summary()
                     readability_txt = URLExtractorService.clean_html(summary_html)
@@ -694,6 +695,7 @@ class URLExtractorService:
 
                 # Stage 4.2: Trafilatura on Browser HTML
                 try:
+                    import trafilatura
                     trafilatura_txt = trafilatura.extract(browser_html)
                     if trafilatura_txt:
                         trafilatura_txt = trafilatura_txt.strip()
@@ -775,6 +777,7 @@ class URLExtractorService:
         Extracts clean plain text from HTML, removing headers, footers, scripts/styles,
         cookie banners, popups, and tracking selectors.
         """
+        from bs4 import BeautifulSoup
         soup = BeautifulSoup(html, "html.parser")
         
         # 1. Eliminate boilerplate scripts and interactive/layout components

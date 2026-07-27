@@ -1,7 +1,6 @@
 import json
 import time
 import logging
-from openai import AsyncOpenAI
 from app.services.ai.base import BaseAIService
 from app.services.ai.prompts import SYSTEM_PROMPT, USER_PROMPT_TEMPLATE
 from app.config import OPENAI_API_KEY
@@ -10,6 +9,7 @@ logger = logging.getLogger("app.services.ai.openai_service")
 
 class OpenAIService(BaseAIService):
     def __init__(self, api_key: str = OPENAI_API_KEY):
+        from openai import AsyncOpenAI
         self.client = AsyncOpenAI(api_key=api_key or "placeholder_key")
 
     async def analyze(self, text: str, detected_clauses: dict = None) -> dict:

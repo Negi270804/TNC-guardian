@@ -102,12 +102,14 @@ class OCRService:
                         else:
                             logger.warning(f"[OCR SERVICE] Cached model files folder does not exist at path: {model_dir}")
                         
-                        use_gpu = torch.cuda.is_available() if config.OCR_USE_GPU else False
+                        use_gpu = False
                         langs = [lang.strip() for lang in config.OCR_LANGUAGES.split(",") if lang.strip()]
                         
                         # Define Reader thread target to enforce initialization timeouts
                         def init_reader():
                             try:
+                                import torch
+                                torch.set_grad_enabled(False)
                                 mem_before = get_memory_usage_mb()
                                 logger.info(f"[OCR SERVICE] [THREAD] Process RSS memory immediately BEFORE Reader() initialization: {f'{mem_before:.2f} MB' if mem_before is not None else 'N/A'}")
                                 logger.info("[OCR SERVICE] [THREAD] Calling easyocr.Reader() constructor now...")
@@ -115,7 +117,7 @@ class OCRService:
                                 try:
                                     cls._reader = easyocr.Reader(
                                         langs, 
-                                        gpu=use_gpu,
+                                        gpu=False,
                                         download_enabled=False,
                                         verbose=False,
                                         quantize=True,
@@ -236,6 +238,7 @@ class OCRService:
                         else:
                             # PDF Page has no selectable text, fall back to OCR on the page image
                             logger.info(f"[OCR SERVICE] PDF page {i+1} has no selectable text. Executing image fallback OCR...")
+                            img_arr = None
                             try:
                                 pil_img = page.to_image(resolution=150).original.convert('RGB')
                                 width, height = pil_img.size
@@ -252,8 +255,13 @@ class OCRService:
                                 reader = await asyncio.to_thread(cls.get_reader)
                                 try:
                                     # Execute OCR in a thread pool with 30.0s timeout limit to prevent hangs
+                                    import torch
+                                    def perform_ocr_inference(reader_inst, img):
+                                        torch.set_grad_enabled(False)
+                                        return reader_inst.readtext(img, detail=0)
+
                                     ocr_results = await asyncio.wait_for(
-                                        asyncio.to_thread(reader.readtext, img_arr, detail=0),
+                                        asyncio.to_thread(perform_ocr_inference, reader, img_arr),
                                         timeout=30.0
                                     )
                                 except asyncio.TimeoutError:
@@ -262,18 +270,20 @@ class OCRService:
                                 ocr_text = " ".join(ocr_results)
                                 if ocr_text.strip():
                                     text += ocr_text + "\n"
-                                
-                                del img_arr
-                                gc.collect()
                             except Exception as ocr_err:
                                 logger.exception(f"[OCR WARNING] Failed to OCR PDF Page {i+1}: {str(ocr_err)}")
                                 text += f"[Page {i+1} OCR Extraction Failure]\n"
+                            finally:
+                                if img_arr is not None:
+                                    del img_arr
+                                gc.collect()
                 
                 elapsed = time.time() - start_time
                 mem = get_memory_usage_mb()
                 mem_str = f"{mem:.2f} MB" if mem is not None else "N/A"
                 logger.info(f"[OCR SERVICE] PDF processing finished in {elapsed:.2f}s. Extracted characters: {len(text)}. Memory: {mem_str}")
                 
+                gc.collect()
                 return {
                     "text": text,
                     "page_count": page_count,
@@ -286,6 +296,7 @@ class OCRService:
         # 4. Image Documents (PNG, JPG, JPEG, WEBP, BMP)
         elif file_ext in ["png", "jpg", "jpeg", "webp", "bmp"]:
             start_time = time.time()
+            preprocessed_arr = None
             try:
                 # Validate file exists and get size
                 file_size = os.path.getsize(file_path)
@@ -409,17 +420,19 @@ class OCRService:
                     reader = await asyncio.to_thread(cls.get_reader)
                      
                     try:
+                        import torch
+                        def perform_ocr_inference(reader_inst, img):
+                            torch.set_grad_enabled(False)
+                            return reader_inst.readtext(img, detail=1)
+
                         # Execute OCR in a thread pool with 60.0s timeout limit to prevent hangs
                         ocr_results = await asyncio.wait_for(
-                            asyncio.to_thread(reader.readtext, preprocessed_arr, detail=1),
+                            asyncio.to_thread(perform_ocr_inference, reader, preprocessed_arr),
                             timeout=60.0
                         )
                     except asyncio.TimeoutError:
                         logger.error(f"[OCR SERVICE] OCR execution timed out after 60 seconds for image: {file_path}")
                         raise RuntimeError("OCR processing timed out. The image might be too complex or server resources are constrained.")
-                     
-                    del preprocessed_arr
-                    gc.collect()
 
                 # Preserve Line Breaks
                 blocks = []
@@ -501,6 +514,10 @@ class OCRService:
                 elapsed_time = time.time() - start_time
                 logger.exception(f"OCR execution failed for image {file_path} after {elapsed_time:.2f}s: {str(e)}")
                 raise RuntimeError(f"Failed to OCR image file: {str(e)}")
+            finally:
+                if preprocessed_arr is not None:
+                    del preprocessed_arr
+                gc.collect()
 
         else:
             raise ValueError(f"Unsupported file type extension passed for text extraction: '{file_ext}'")
