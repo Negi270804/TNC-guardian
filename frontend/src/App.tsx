@@ -1,23 +1,24 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { lazyWithRetry } from '@/utils/lazy-retry';
 
-// Lazy load page components to enable code splitting and optimize build size
-const Landing = React.lazy(() => import('@/pages/Landing').then(m => ({ default: m.Landing })));
-const Login = React.lazy(() => import('@/pages/Login').then(m => ({ default: m.Login })));
-const Register = React.lazy(() => import('@/pages/Register').then(m => ({ default: m.Register })));
-const Dashboard = React.lazy(() => import('@/pages/Dashboard').then(m => ({ default: m.Dashboard })));
-const Documents = React.lazy(() => import('@/pages/Documents').then(m => ({ default: m.Documents })));
-const DocumentDetails = React.lazy(() => import('@/pages/DocumentDetails').then(m => ({ default: m.DocumentDetails })));
-const Results = React.lazy(() => import('@/pages/Results').then(m => ({ default: m.Results })));
-const Profile = React.lazy(() => import('@/pages/Profile').then(m => ({ default: m.Profile })));
-const History = React.lazy(() => import('@/pages/History').then(m => ({ default: m.History })));
-const Settings = React.lazy(() => import('@/pages/Settings').then(m => ({ default: m.Settings })));
-const NotFound = React.lazy(() => import('@/pages/NotFound').then(m => ({ default: m.NotFound })));
-const ForgotPassword = React.lazy(() => import('@/pages/ForgotPassword').then(m => ({ default: m.ForgotPassword })));
-const ResetPassword = React.lazy(() => import('@/pages/ResetPassword').then(m => ({ default: m.ResetPassword })));
-const SubscriptionPage = React.lazy(() => import('@/pages/SubscriptionPage').then(m => ({ default: m.SubscriptionPage })));
-const PricingPage = React.lazy(() => import('@/pages/PricingPage').then(m => ({ default: m.PricingPage })));
+// Lazy load page components to enable code splitting and optimize build size with self-healing retries
+const Landing = lazyWithRetry(() => import('@/pages/Landing').then(m => ({ default: m.Landing })));
+const Login = lazyWithRetry(() => import('@/pages/Login').then(m => ({ default: m.Login })));
+const Register = lazyWithRetry(() => import('@/pages/Register').then(m => ({ default: m.Register })));
+const Dashboard = lazyWithRetry(() => import('@/pages/Dashboard').then(m => ({ default: m.Dashboard })));
+const Documents = lazyWithRetry(() => import('@/pages/Documents').then(m => ({ default: m.Documents })));
+const DocumentDetails = lazyWithRetry(() => import('@/pages/DocumentDetails').then(m => ({ default: m.DocumentDetails })));
+const Results = lazyWithRetry(() => import('@/pages/Results').then(m => ({ default: m.Results })));
+const Profile = lazyWithRetry(() => import('@/pages/Profile').then(m => ({ default: m.Profile })));
+const History = lazyWithRetry(() => import('@/pages/History').then(m => ({ default: m.History })));
+const Settings = lazyWithRetry(() => import('@/pages/Settings').then(m => ({ default: m.Settings })));
+const NotFound = lazyWithRetry(() => import('@/pages/NotFound').then(m => ({ default: m.NotFound })));
+const ForgotPassword = lazyWithRetry(() => import('@/pages/ForgotPassword').then(m => ({ default: m.ForgotPassword })));
+const ResetPassword = lazyWithRetry(() => import('@/pages/ResetPassword').then(m => ({ default: m.ResetPassword })));
+const SubscriptionPage = lazyWithRetry(() => import('@/pages/SubscriptionPage').then(m => ({ default: m.SubscriptionPage })));
+const PricingPage = lazyWithRetry(() => import('@/pages/PricingPage').then(m => ({ default: m.PricingPage })));
 
 import { AppLayout } from '@/layouts/AppLayout';
 import { AuthLayout } from '@/layouts/AuthLayout';
