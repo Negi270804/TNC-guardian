@@ -22,6 +22,7 @@ const PricingPage = React.lazy(() => import('@/pages/PricingPage').then(m => ({ 
 import { AppLayout } from '@/layouts/AppLayout';
 import { AuthLayout } from '@/layouts/AuthLayout';
 import { AuthProvider } from '@/context/AuthContext';
+import { ThemeProvider } from '@/context/ThemeContext';
 import { ProtectedRoute } from '@/routes/ProtectedRoute';
 
 import { env } from '@/config/env';
@@ -43,8 +44,9 @@ export const App: React.FC = () => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <BrowserRouter>
+      <ThemeProvider>
+        <AuthProvider>
+          <BrowserRouter>
           <React.Suspense
             fallback={
               <div className="flex h-screen w-screen items-center justify-center bg-slate-950 text-slate-200">
@@ -89,6 +91,7 @@ export const App: React.FC = () => {
           </React.Suspense>
         </BrowserRouter>
       </AuthProvider>
+     </ThemeProvider>
     </QueryClientProvider>
   );
 };

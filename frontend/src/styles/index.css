@@ -4,18 +4,18 @@
 
 @layer base {
   body {
-    @apply font-sans bg-[#F8FAFC] text-slate-700 antialiased;
+    @apply font-sans bg-[#F8FAFC] text-slate-700 antialiased transition-colors duration-300 dark:bg-[#090d16] dark:text-slate-300;
   }
   
   h1, h2, h3, h4, h5, h6 {
-    @apply font-display tracking-tight text-slate-900;
+    @apply font-display tracking-tight text-slate-900 dark:text-white;
   }
 }
 
 @layer components {
   /* Cards */
   .saas-card {
-    @apply bg-white border border-slate-200/60 rounded-2xl p-6 shadow-soft hover:shadow-hover hover:-translate-y-1 transition-all duration-300 ease-out;
+    @apply bg-white border border-slate-200/60 rounded-2xl p-6 shadow-soft hover:shadow-hover hover:-translate-y-1 transition-all duration-300 ease-out dark:bg-slate-900 dark:border-slate-800/80;
   }
 
   /* Buttons */
@@ -24,11 +24,11 @@
   }
 
   .btn-secondary {
-    @apply px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-xl active:scale-95 transition-all duration-200 inline-flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none;
+    @apply px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-xl active:scale-95 transition-all duration-200 inline-flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200;
   }
 
   .btn-outline {
-    @apply px-4 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-medium rounded-xl hover:border-slate-300 active:scale-95 transition-all duration-200 inline-flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none;
+    @apply px-4 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-medium rounded-xl hover:border-slate-300 active:scale-95 transition-all duration-200 inline-flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-800 dark:text-slate-200 dark:hover:bg-slate-800;
   }
 
   .btn-danger {
@@ -37,11 +37,11 @@
 
   /* Forms */
   .form-input {
-    @apply w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 transition-all duration-200;
+    @apply w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 transition-all duration-200 dark:bg-slate-900 dark:border-slate-800 dark:text-white dark:placeholder-slate-500;
   }
 
   .form-label {
-    @apply block text-sm font-semibold text-slate-700 mb-1.5;
+    @apply block text-sm font-semibold text-slate-700 mb-1.5 dark:text-slate-300;
   }
 
   .form-input-error {
@@ -57,6 +57,7 @@
 .fade-in {
   animation: fadeIn 0.4s ease-out forwards;
 }
+
 
 @keyframes fadeIn {
   from {
@@ -83,3 +84,167 @@
 .dark-theme-ready {
   transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
 }
+
+/* 1. Global Dark Mode Overrides */
+.dark body {
+  background-color: #090d16 !important;
+  color: #cbd5e1 !important;
+}
+
+.dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
+  color: #ffffff !important;
+}
+
+.dark .bg-white {
+  background-color: #111827 !important; /* slate-900 */
+}
+
+.dark .bg-white\/80 {
+  background-color: rgba(17, 24, 39, 0.8) !important;
+}
+
+.dark .bg-\[\#F8FAFC\] {
+  background-color: #090d16 !important; /* slate-950 */
+}
+
+.dark .bg-\[\#F8FAFC\]\/50 {
+  background-color: rgba(9, 13, 22, 0.5) !important;
+}
+
+.dark .bg-slate-50 {
+  background-color: #0f172a !important; /* slate-900/40 */
+}
+
+.dark .bg-slate-50\/70 {
+  background-color: rgba(15, 23, 42, 0.7) !important;
+}
+
+.dark .bg-slate-50\/30 {
+  background-color: rgba(15, 23, 42, 0.3) !important;
+}
+
+.dark .bg-slate-100 {
+  background-color: #1e293b !important; /* slate-800 */
+}
+
+.dark .text-slate-900 {
+  color: #ffffff !important;
+}
+
+.dark .text-slate-800 {
+  color: #f1f5f9 !important;
+}
+
+.dark .text-slate-700 {
+  color: #cbd5e1 !important;
+}
+
+.dark .text-slate-600 {
+  color: #94a3b8 !important;
+}
+
+.dark .text-slate-550 {
+  color: #94a3b8 !important;
+}
+
+.dark .text-slate-500 {
+  color: #64748b !important;
+}
+
+.dark .text-slate-450 {
+  color: #64748b !important;
+}
+
+.dark .text-slate-440 {
+  color: #64748b !important;
+}
+
+.dark .text-slate-400 {
+  color: #64748b !important;
+}
+
+.dark .border-slate-200 {
+  border-color: #1e293b !important; /* slate-800 */
+}
+
+.dark .border-slate-200\/60 {
+  border-color: rgba(30, 41, 59, 0.6) !important;
+}
+
+.dark .border-slate-200\/80 {
+  border-color: rgba(30, 41, 59, 0.8) !important;
+}
+
+.dark .border-slate-250 {
+  border-color: #1e293b !important;
+}
+
+.dark .border-slate-100 {
+  border-color: #1e293b !important;
+}
+
+.dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #1e293b !important;
+}
+
+.dark .divide-slate-200 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #1e293b !important;
+}
+
+.dark .hover\:bg-slate-50:hover {
+  background-color: #1e293b !important;
+}
+
+.dark .hover\:bg-slate-100:hover {
+  background-color: #1e293b !important;
+}
+
+.dark .hover\:bg-slate-50\/30:hover {
+  background-color: rgba(30, 41, 59, 0.3) !important;
+}
+
+.dark .shadow-soft {
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.25), 0 2px 8px -1px rgba(0, 0, 0, 0.15) !important;
+}
+
+.dark .shadow-hover:hover {
+  box-shadow: 0 12px 30px -4px rgba(0, 0, 0, 0.35), 0 4px 12px -2px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* 2. Global Light Mode Overrides for Dark-Base pages */
+.light .bg-\[\#070A13\] {
+  background-color: #f8fafc !important;
+}
+
+.light .bg-\[\#070a13\] {
+  background-color: #f8fafc !important;
+}
+
+.light .text-slate-105 {
+  color: #334155 !important; /* slate-700 */
+}
+
+.light .text-slate-100 {
+  color: #334155 !important;
+}
+
+.light .text-slate-200 {
+  color: #1e293b !important;
+}
+
+.light .bg-slate-900\/35 {
+  background-color: #ffffff !important;
+}
+
+.light .border-slate-800 {
+  border-color: #e2e8f0 !important;
+}
+
+.light .border-slate-800\/80 {
+  border-color: #e2e8f0 !important;
+}
+
+.light .bg-slate-950\/60 {
+  background-color: rgba(248, 250, 252, 0.6) !important;
+}
+

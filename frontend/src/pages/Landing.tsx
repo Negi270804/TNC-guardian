@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { env } from '@/config/env';
+import { useTheme } from '@/context/ThemeContext';
 
 export const Landing: React.FC = () => {
+  const { theme, toggleTheme } = useTheme();
   // Mobile menu state
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -197,6 +199,19 @@ export const Landing: React.FC = () => {
           </nav>
 
           <div className="hidden md:flex items-center gap-4">
+            {/* Theme switcher */}
+            <button
+              onClick={toggleTheme}
+              className="p-2.5 rounded-xl border border-slate-800 bg-slate-900/60 hover:bg-slate-800 text-slate-400 hover:text-white transition select-none"
+              title="Toggle Light/Dark Mode"
+              aria-label="Toggle Theme"
+            >
+              {theme === 'light' ? (
+                <span className="text-sm block leading-none">🌙</span>
+              ) : (
+                <span className="text-sm block leading-none">☀️</span>
+              )}
+            </button>
             <Link to="/login" className="text-sm font-semibold text-slate-400 hover:text-white transition-colors">
               Log In
             </Link>
@@ -235,6 +250,17 @@ export const Landing: React.FC = () => {
             </nav>
             <hr className="border-slate-800" />
             <div className="flex flex-col gap-3">
+              {/* Mobile theme toggle */}
+              <button
+                onClick={() => {
+                  toggleTheme();
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full py-3 border border-slate-800 bg-slate-900/40 text-slate-400 hover:text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2 select-none"
+              >
+                <span>Theme:</span>
+                {theme === 'light' ? '🌙 Dark Mode' : '☀️ Light Mode'}
+              </button>
               <Link 
                 to="/login" 
                 onClick={() => setMobileMenuOpen(false)}
