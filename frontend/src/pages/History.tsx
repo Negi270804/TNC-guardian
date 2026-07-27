@@ -7,25 +7,25 @@ import { formatDate, formatBytes } from '@/utils';
 import { env } from '@/config/env';
 import { API_ROUTES } from '@/config/api-routes';
 
-// Reusable Circular Progress ring component for Details modal
+// Circular Progress Component Redesign for History Detail Drawers
 const CircularRiskProgress: React.FC<{ score: number }> = ({ score }) => {
-  const radius = 36;
+  const radius = 35;
   const strokeWidth = 6;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (score / 100) * circumference;
 
   let strokeColor = '#10B981'; // Green (0-30)
-  if (score > 30 && score <= 60) strokeColor = '#F59E0B'; // Yellow (31-60)
+  if (score > 30 && score <= 60) strokeColor = '#F59E0B'; // Amber (31-60)
   else if (score > 60) strokeColor = '#EF4444'; // Red (61-100)
 
   return (
-    <div className="relative flex items-center justify-center w-24 h-24">
+    <div className="relative flex items-center justify-center w-24 h-24 select-none">
       <svg className="w-full h-full transform -rotate-90">
         <circle
           cx="48"
           cy="48"
           r={radius}
-          stroke="#1e293b"
+          stroke="#f8fafc"
           strokeWidth={strokeWidth}
           fill="transparent"
         />
@@ -43,8 +43,8 @@ const CircularRiskProgress: React.FC<{ score: number }> = ({ score }) => {
         />
       </svg>
       <div className="absolute flex flex-col items-center justify-center">
-        <span className="text-2xl font-bold text-slate-100 font-display">{score}</span>
-        <span className="text-[7px] text-slate-500 font-bold uppercase tracking-wider">Score</span>
+        <span className="text-2xl font-black text-slate-900 font-display leading-none">{score}</span>
+        <span className="text-[7px] text-slate-400 font-bold uppercase tracking-wider mt-1">Score</span>
       </div>
     </div>
   );
@@ -53,7 +53,7 @@ const CircularRiskProgress: React.FC<{ score: number }> = ({ score }) => {
 export const History: React.FC = () => {
   const queryClient = useQueryClient();
 
-  // Search & Filter state
+  // Search & Filter states
   const [search, setSearch] = useState('');
   const [riskLevel, setRiskLevel] = useState('');
   const [fileType, setFileType] = useState('');
@@ -61,15 +61,15 @@ export const History: React.FC = () => {
   const [uploadDate, setUploadDate] = useState('');
   const [analysisDate, setAnalysisDate] = useState('');
 
-  // Pagination state
+  // Pagination states
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
 
-  // Sorting state
+  // Sorting states
   const [sortBy, setSortBy] = useState('created_at');
   const [order, setOrder] = useState<'asc' | 'desc'>('desc');
 
-  // UI state
+  // UI modal states
   const [activeDetailId, setActiveDetailId] = useState<string | null>(null);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [docToDelete, setDocToDelete] = useState<Document | null>(null);
@@ -80,35 +80,10 @@ export const History: React.FC = () => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [bulkDeleteModalOpen, setBulkDeleteModalOpen] = useState(false);
 
-  // Clear selections on query changes
+  // Reset multi-row selections on query parameters change
   React.useEffect(() => {
     setSelectedIds([]);
   }, [page, limit, search, riskLevel, fileType, statusFilter, uploadDate, analysisDate, sortBy, order]);
-
-  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.checked) {
-      setSelectedIds(historyItems.map((item: any) => item.id));
-    } else {
-      setSelectedIds([]);
-    }
-  };
-
-  const handleSelectRow = (id: string) => {
-    setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
-    );
-  };
-
-  // Toggle sorting helper
-  const handleSort = (column: string) => {
-    if (sortBy === column) {
-      setOrder(order === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortBy(column);
-      setOrder('desc');
-    }
-    setPage(1);
-  };
 
   // Build params dynamically
   const queryParams = {
@@ -124,7 +99,7 @@ export const History: React.FC = () => {
     ...(analysisDate && { analysis_date: analysisDate }),
   };
 
-  // Fetch History List using React Query
+  // Fetch History Logs list
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['history', queryParams],
     queryFn: async () => {
@@ -137,7 +112,33 @@ export const History: React.FC = () => {
   const totalRecords = data?.total || 0;
   const totalPages = data?.pages || 1;
 
-  // Fetch details of active document
+  // Handle checkboxes
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setSelectedIds(historyItems.map((item: any) => item.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleSelectRow = (id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  // Toggle sorting columns
+  const handleSort = (column: string) => {
+    if (sortBy === column) {
+      setOrder(order === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(column);
+      setOrder('desc');
+    }
+    setPage(1);
+  };
+
+  // Fetch detailed metadata of clicked row
   const { data: detailDoc, isLoading: isDetailLoading } = useQuery({
     queryKey: ['history-detail', activeDetailId],
     queryFn: async () => {
@@ -161,7 +162,6 @@ export const History: React.FC = () => {
       setSuccessToast(`AI Risk Audit refreshed! New score: ${newAnalysis.overall_risk_score}/100`);
       setTimeout(() => setSuccessToast(null), 5000);
       
-      // If modal is open displaying this document, refresh details too
       if (activeDetailId) {
         queryClient.invalidateQueries({ queryKey: ['history-detail', activeDetailId] });
       }
@@ -249,7 +249,7 @@ export const History: React.FC = () => {
     },
   });
 
-  // Client-side report generation & download
+  // Client-side report download trigger
   const downloadReport = (doc: any) => {
     if (!doc.analysis) {
       setErrorToast("No analysis audit results found for this document.");
@@ -269,7 +269,6 @@ export const History: React.FC = () => {
 `).join('\n')
       : 'No risk clauses detected.';
 
-    // Deserialize missing clauses if it is a JSON string
     let parsedMissing: any[] = [];
     if (analysis.missing_clauses) {
       if (typeof analysis.missing_clauses === 'string') {
@@ -359,74 +358,75 @@ ${clausesText}
     }
   };
 
-  // Open details helper
   const openDetails = (docId: string) => {
     setActiveDetailId(docId);
     setDetailModalOpen(true);
   };
 
-  // Risk badge color helper
+  // Badge Styling helpers
   const getRiskBadgeStyles = (level: string | null | undefined) => {
-    if (!level) return 'text-slate-400 bg-slate-800/40 border border-slate-700/50';
+    if (!level) return 'text-slate-400 bg-slate-50 border-slate-200';
     switch (level.toUpperCase()) {
       case 'CRITICAL':
-        return 'text-red-400 bg-red-950/40 border border-red-800/50';
       case 'HIGH':
-        return 'text-orange-400 bg-orange-950/40 border border-orange-800/50';
+        return 'text-red-650 bg-red-50 border border-red-200/60';
       case 'MEDIUM':
-        return 'text-yellow-400 bg-yellow-950/40 border border-yellow-800/50';
+        return 'text-amber-600 bg-amber-50 border border-amber-200/60';
       case 'LOW':
-        return 'text-green-400 bg-green-950/40 border border-green-800/50';
+        return 'text-emerald-600 bg-emerald-50 border border-emerald-200/60';
       default:
-        return 'text-slate-400 bg-slate-800/40 border border-slate-700/50';
+        return 'text-slate-500 bg-slate-50 border border-slate-250';
     }
   };
 
-  // Status badge styling
   const getStatusBadgeStyles = (status: string) => {
     switch (status.toUpperCase()) {
       case 'COMPLETED':
-        return 'text-emerald-400 bg-emerald-950/30 border border-emerald-900/50';
-        return 'text-emerald-700 bg-emerald-50 border-emerald-200';
+        return 'text-emerald-600 bg-emerald-500/10 border-emerald-500/20';
       case 'PROCESSING':
-        return 'text-blue-700 bg-blue-50 border-blue-200 animate-pulse';
+        return 'text-brand-650 bg-brand-500/10 border-brand-500/20 animate-pulse';
       case 'FAILED':
-        return 'text-red-700 bg-red-50 border-red-200';
+        return 'text-red-600 bg-red-500/10 border-red-500/20';
       default:
-        return 'text-slate-600 bg-slate-100 border-slate-200';
+        return 'text-slate-500 bg-slate-50 border-slate-200';
     }
   };
 
   return (
-    <div className="space-y-6 relative fade-in">
-      {/* Toast notifications */}
+    <div className="space-y-6 relative fade-in text-slate-700">
+      
+      {/* Floating Success Toast */}
       {successToast && (
-        <div className="fixed top-4 right-4 z-50 p-4 rounded-xl bg-white border border-green-200 text-sm font-semibold text-green-700 shadow-xl flex items-center gap-2 animate-fade-in">
-          <span>✅</span> {successToast}
+        <div className="fixed top-6 right-6 z-50 flex items-center gap-3 px-4.5 py-3.5 rounded-xl bg-emerald-950/90 text-emerald-400 border border-emerald-500/25 shadow-2xl animate-fadeIn print:hidden">
+          <span className="text-base select-none">✓</span>
+          <span className="text-xs font-bold">{successToast}</span>
         </div>
       )}
+
+      {/* Floating Error Toast */}
       {errorToast && (
-        <div className="fixed top-4 right-4 z-50 p-4 rounded-xl bg-white border border-red-200 text-sm font-semibold text-red-700 shadow-xl flex items-center gap-2 animate-fade-in">
-          <span>❌</span> {errorToast}
+        <div className="fixed top-6 right-6 z-50 flex items-center gap-3 px-4.5 py-3.5 rounded-xl bg-red-950/90 text-red-400 border border-red-500/25 shadow-2xl animate-fadeIn print:hidden">
+          <span className="text-base select-none">⚠️</span>
+          <span className="text-xs font-bold">{errorToast}</span>
         </div>
       )}
 
       {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 select-none">
         <div>
           <h2 className="text-2xl font-bold text-slate-900 font-display">Analysis History Logs</h2>
-          <p className="text-sm text-slate-500 mt-1 font-medium">Review, query, and manage your previously analyzed documents.</p>
+          <p className="text-sm text-slate-450 mt-1 font-semibold">Review, query, and manage your previously audited documents.</p>
         </div>
         <button 
           onClick={() => refetch()}
-          className="btn-secondary py-2 px-4 text-xs font-bold flex items-center gap-2"
+          className="px-4 py-2 border border-slate-250 hover:bg-slate-50 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-2 transition-colors shadow-sm"
         >
           <span>🔄</span> Refresh Logs
         </button>
       </div>
 
-      {/* Filter and Search controls */}
-      <div className="bg-white border border-slate-200/60 rounded-2xl p-5 shadow-soft space-y-4">
+      {/* Filter and Search Card Deck */}
+      <div className="bg-white border border-slate-200/60 rounded-2xl p-5 shadow-soft space-y-4 select-none">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Search bar */}
           <div className="relative">
@@ -436,7 +436,7 @@ ${clausesText}
               placeholder="Search by file name, keywords..."
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-              className="form-input pl-10 text-sm"
+              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 text-slate-900 placeholder-slate-400 rounded-xl text-sm transition-all outline-none font-semibold"
             />
           </div>
 
@@ -444,7 +444,7 @@ ${clausesText}
           <select
             value={riskLevel}
             onChange={(e) => { setRiskLevel(e.target.value); setPage(1); }}
-            className="form-input text-sm"
+            className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 text-slate-700 rounded-xl text-sm transition-all outline-none font-bold"
           >
             <option value="">All Risk Levels</option>
             <option value="low">Low Risk</option>
@@ -457,7 +457,7 @@ ${clausesText}
           <select
             value={statusFilter}
             onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-            className="form-input text-sm"
+            className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 text-slate-700 rounded-xl text-sm transition-all outline-none font-bold"
           >
             <option value="">All Statuses</option>
             <option value="completed">Completed</option>
@@ -467,14 +467,14 @@ ${clausesText}
         </div>
 
         {/* Extended filters */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-4 border-t border-slate-100">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-slate-100 font-bold">
           {/* File Type filter */}
           <div>
-            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">File Format</label>
+            <label className="block text-[10px] uppercase tracking-widest text-slate-400 mb-1.5">File Format</label>
             <select
               value={fileType}
               onChange={(e) => { setFileType(e.target.value); setPage(1); }}
-              className="form-input py-2 text-xs"
+              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 text-slate-650 rounded-xl text-xs transition-all outline-none"
             >
               <option value="">All Formats</option>
               <option value="pdf">PDF Document</option>
@@ -487,23 +487,23 @@ ${clausesText}
 
           {/* Upload Date filter */}
           <div>
-            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Upload Date</label>
+            <label className="block text-[10px] uppercase tracking-widest text-slate-400 mb-1.5">Upload Date</label>
             <input
               type="date"
               value={uploadDate}
               onChange={(e) => { setUploadDate(e.target.value); setPage(1); }}
-              className="form-input py-2 text-xs text-slate-600"
+              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 text-slate-600 rounded-xl text-xs transition-all outline-none"
             />
           </div>
 
           {/* Analysis Date filter */}
           <div>
-            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Analysis Date</label>
+            <label className="block text-[10px] uppercase tracking-widest text-slate-400 mb-1.5">Analysis Date</label>
             <input
               type="date"
               value={analysisDate}
               onChange={(e) => { setAnalysisDate(e.target.value); setPage(1); }}
-              className="form-input py-2 text-xs text-slate-600"
+              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 text-slate-600 rounded-xl text-xs transition-all outline-none"
             />
           </div>
 
@@ -519,7 +519,7 @@ ${clausesText}
                 setAnalysisDate('');
                 setPage(1);
               }}
-              className="btn-secondary w-full py-2.5 text-xs font-bold"
+              className="w-full py-2 border border-slate-250 bg-slate-50 hover:bg-slate-100 text-slate-705 text-xs rounded-xl shadow-sm transition-colors"
             >
               Clear All Filters
             </button>
@@ -527,131 +527,137 @@ ${clausesText}
         </div>
       </div>
 
+      {/* Batch deletion deck */}
       {selectedIds.length > 0 && (
-        <div className="flex items-center justify-between p-4 bg-red-50 border border-red-200 rounded-xl animate-fade-in">
-          <span className="text-xs text-slate-600 font-semibold">
-            Selected <span className="font-bold text-red-600">{selectedIds.length}</span> audit logs for batch deletion.
+        <div className="flex items-center justify-between p-4 bg-red-500/5 border border-red-500/10 rounded-2xl animate-fadeIn">
+          <span className="text-xs text-slate-600 font-bold select-none">
+            Selected <span className="text-red-650 font-black">{selectedIds.length}</span> audit logs for batch deletion.
           </span>
           <button
             onClick={() => setBulkDeleteModalOpen(true)}
-            className="btn-danger py-1.5 px-3.5 text-xs font-bold shadow-sm"
+            className="px-3.5 py-1.5 bg-red-500/10 border border-red-500/20 hover:bg-red-500 hover:text-white text-red-600 text-xs font-bold rounded-xl transition"
           >
             🗑️ Delete Selected
           </button>
         </div>
       )}
 
-      {/* Main logs list container */}
-      <div className="overflow-x-auto rounded-xl border border-slate-200/60 bg-white shadow-soft">
-        <table className="w-full text-left border-collapse min-w-[900px] text-sm">
-          <thead>
-            <tr className="border-b border-slate-200 bg-[#F8FAFC] text-xs font-bold text-slate-500 uppercase tracking-wider select-none">
-              <th className="p-4 w-12 text-center">
-                <input
-                  type="checkbox"
-                  checked={historyItems.length > 0 && selectedIds.length === historyItems.length}
-                  ref={(input) => {
-                    if (input) {
-                      input.indeterminate = selectedIds.length > 0 && selectedIds.length < historyItems.length;
-                    }
-                  }}
-                  onChange={handleSelectAll}
-                  className="rounded border-slate-300 text-brand-600 focus:ring-brand-500/20 w-4 h-4 cursor-pointer"
-                />
-              </th>
-              <th onClick={() => handleSort('original_filename')} className="p-4 cursor-pointer hover:bg-slate-50/50 transition">
-                <div className="flex items-center gap-1.5">
-                  <span>File Name</span>
-                  {sortBy === 'original_filename' && (order === 'asc' ? '▲' : '▼')}
-                </div>
-              </th>
-              <th onClick={() => handleSort('file_type')} className="p-4 cursor-pointer hover:bg-slate-50/50 transition w-28">
-                <div className="flex items-center gap-1.5">
-                  <span>Source</span>
-                  {sortBy === 'file_type' && (order === 'asc' ? '▲' : '▼')}
-                </div>
-              </th>
-              <th onClick={() => handleSort('created_at')} className="p-4 cursor-pointer hover:bg-slate-50/50 transition w-36">
-                <div className="flex items-center gap-1.5">
-                  <span>Upload Date</span>
-                  {sortBy === 'created_at' && (order === 'asc' ? '▲' : '▼')}
-                </div>
-              </th>
-              <th onClick={() => handleSort('analysis_date')} className="p-4 cursor-pointer hover:bg-slate-50/50 transition w-36">
-                <div className="flex items-center gap-1.5">
-                  <span>Analysis Date</span>
-                  {sortBy === 'analysis_date' && (order === 'asc' ? '▲' : '▼')}
-                </div>
-              </th>
-              <th onClick={() => handleSort('risk_score')} className="p-4 cursor-pointer hover:bg-slate-50/50 transition w-32">
-                <div className="flex items-center gap-1.5">
-                  <span>Risk Score</span>
-                  {sortBy === 'risk_score' && (order === 'asc' ? '▲' : '▼')}
-                </div>
-              </th>
-              <th className="p-4 w-32">Status</th>
-              <th className="p-4 w-32">AI Provider</th>
-              <th className="p-4 text-right w-44">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="text-slate-600 divide-y divide-slate-100">
-            {isLoading ? (
-              // Loading Skeleton
-              Array.from({ length: limit }).map((_, idx) => (
-                <tr key={idx} className="bg-white">
-                  <td className="p-4 text-center"><div className="w-4 h-4 bg-slate-100 rounded mx-auto animate-pulse" /></td>
-                  <td className="p-4"><div className="h-4 bg-slate-100 rounded w-48 animate-pulse" /></td>
-                  <td className="p-4"><div className="h-4 bg-slate-100 rounded w-12 animate-pulse" /></td>
-                  <td className="p-4"><div className="h-4 bg-slate-100 rounded w-24 animate-pulse" /></td>
-                  <td className="p-4"><div className="h-4 bg-slate-100 rounded w-24 animate-pulse" /></td>
-                  <td className="p-4"><div className="h-4 bg-slate-100 rounded w-16 animate-pulse" /></td>
-                  <td className="p-4"><div className="h-4 bg-slate-100 rounded w-20 animate-pulse" /></td>
-                  <td className="p-4"><div className="h-4 bg-slate-100 rounded w-16 animate-pulse" /></td>
-                  <td className="p-4 text-right"><div className="h-7 bg-slate-100 rounded w-24 ml-auto animate-pulse" /></td>
-                </tr>
-              ))
-            ) : historyItems.length === 0 ? (
-              // Empty State
-              <tr>
-                <td colSpan={9} className="p-16 text-center space-y-4">
-                  <div className="text-5xl block animate-bounce">🔍</div>
-                  <h4 className="text-slate-800 font-bold text-base font-display">No history logs found</h4>
-                  <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed font-medium">
-                    We couldn't find any audited documents matching your search queries or filter choices. Try adjusting your parameters.
-                  </p>
-                  <button
-                    onClick={() => {
-                      setSearch('');
-                      setRiskLevel('');
-                      setFileType('');
-                      setStatusFilter('');
-                      setUploadDate('');
-                      setAnalysisDate('');
-                      setPage(1);
+      {/* LOADING SKELETON */}
+      {isLoading && (
+        <div className="space-y-4">
+          {/* Skeleton representation (desktop style row list mockup) */}
+          <div className="hidden md:block bg-white border border-slate-200/60 rounded-2xl p-6 space-y-4 shadow-soft animate-pulse">
+            <div className="h-6 bg-slate-100 rounded w-1/5" />
+            <div className="space-y-3 pt-2">
+              <div className="h-10 bg-slate-50 rounded" />
+              <div className="h-10 bg-slate-50 rounded" />
+              <div className="h-10 bg-slate-50 rounded" />
+              <div className="h-10 bg-slate-50 rounded" />
+            </div>
+          </div>
+          {/* Skeleton representation (mobile cards layout) */}
+          <div className="grid grid-cols-1 gap-4 md:hidden animate-pulse">
+            <div className="p-5 border border-slate-100 bg-white rounded-2xl h-36" />
+            <div className="p-5 border border-slate-100 bg-white rounded-2xl h-36" />
+          </div>
+        </div>
+      )}
+
+      {/* EMPTY STATE */}
+      {!isLoading && historyItems.length === 0 && (
+        <div className="p-16 border border-slate-200 bg-white rounded-2xl text-center space-y-4 shadow-soft">
+          <span className="text-5xl block select-none">🔍</span>
+          <h4 className="text-slate-800 font-bold text-base font-display">No history logs found</h4>
+          <p className="text-xs text-slate-450 max-w-sm mx-auto leading-relaxed font-semibold">
+            We couldn't find any audited documents matching your search queries or filter choices. Try adjusting your parameters.
+          </p>
+          <button
+            onClick={() => {
+              setSearch('');
+              setRiskLevel('');
+              setFileType('');
+              setStatusFilter('');
+              setUploadDate('');
+              setAnalysisDate('');
+              setPage(1);
+            }}
+            className="px-4 py-2 border border-slate-250 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold rounded-xl"
+          >
+            Reset All Queries
+          </button>
+        </div>
+      )}
+
+      {/* PROFESSIONAL TABLE - DESKTOP ONLY */}
+      {!isLoading && historyItems.length > 0 && (
+        <div className="hidden md:block overflow-x-auto rounded-2xl border border-slate-200/60 bg-white shadow-soft">
+          <table className="w-full text-left border-collapse text-xs sm:text-sm font-semibold text-slate-500">
+            <thead>
+              <tr className="border-b border-slate-200 bg-slate-50/70 text-slate-500 uppercase tracking-widest text-[9px] select-none">
+                <th className="p-4 w-12 text-center">
+                  <input
+                    type="checkbox"
+                    checked={historyItems.length > 0 && selectedIds.length === historyItems.length}
+                    ref={(input) => {
+                      if (input) {
+                        input.indeterminate = selectedIds.length > 0 && selectedIds.length < historyItems.length;
+                      }
                     }}
-                    className="btn-secondary py-2 px-4 text-xs font-semibold"
-                  >
-                    Reset All Queries
-                  </button>
-                </td>
+                    onChange={handleSelectAll}
+                    className="rounded border-slate-300 text-brand-650 focus:ring-brand-500/10 w-4 h-4 cursor-pointer"
+                  />
+                </th>
+                <th onClick={() => handleSort('original_filename')} className="p-4 cursor-pointer hover:bg-slate-100/50 transition">
+                  <div className="flex items-center gap-1.5">
+                    <span>File Name</span>
+                    {sortBy === 'original_filename' && (order === 'asc' ? '▲' : '▼')}
+                  </div>
+                </th>
+                <th onClick={() => handleSort('file_type')} className="p-4 cursor-pointer hover:bg-slate-100/50 transition w-28">
+                  <div className="flex items-center gap-1.5">
+                    <span>Source</span>
+                    {sortBy === 'file_type' && (order === 'asc' ? '▲' : '▼')}
+                  </div>
+                </th>
+                <th onClick={() => handleSort('created_at')} className="p-4 cursor-pointer hover:bg-slate-100/50 transition w-36">
+                  <div className="flex items-center gap-1.5">
+                    <span>Upload Date</span>
+                    {sortBy === 'created_at' && (order === 'asc' ? '▲' : '▼')}
+                  </div>
+                </th>
+                <th onClick={() => handleSort('analysis_date')} className="p-4 cursor-pointer hover:bg-slate-100/50 transition w-36">
+                  <div className="flex items-center gap-1.5">
+                    <span>Analysis Date</span>
+                    {sortBy === 'analysis_date' && (order === 'asc' ? '▲' : '▼')}
+                  </div>
+                </th>
+                <th onClick={() => handleSort('risk_score')} className="p-4 cursor-pointer hover:bg-slate-100/50 transition w-32">
+                  <div className="flex items-center gap-1.5">
+                    <span>Risk Score</span>
+                    {sortBy === 'risk_score' && (order === 'asc' ? '▲' : '▼')}
+                  </div>
+                </th>
+                <th className="p-4 w-32">Status</th>
+                <th className="p-4 w-32">AI Provider</th>
+                <th className="p-4 text-right w-44">Actions</th>
               </tr>
-            ) : (
-              // Document History Rows
-              historyItems.map((doc: any) => (
-                <tr key={doc.id} className={`${selectedIds.includes(doc.id) ? 'bg-brand-50/40 hover:bg-brand-50/60' : 'hover:bg-slate-50/50'} transition duration-150`}>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {historyItems.map((doc: any) => (
+                <tr key={doc.id} className={`${selectedIds.includes(doc.id) ? 'bg-brand-50/20' : 'hover:bg-slate-50/20'} transition duration-150`}>
                   <td className="p-4 text-center">
                     <input
                       type="checkbox"
                       checked={selectedIds.includes(doc.id)}
                       onChange={() => handleSelectRow(doc.id)}
-                      className="rounded border-slate-300 text-brand-600 focus:ring-brand-500/20 w-4 h-4 cursor-pointer"
+                      className="rounded border-slate-300 text-brand-655 focus:ring-brand-500/10 w-4 h-4 cursor-pointer"
                     />
                   </td>
-                  {/* File Name */}
-                  <td className="p-4 font-semibold text-slate-800 font-display">
+                  {/* Filename hover */}
+                  <td className="p-4 font-bold text-slate-800 max-w-[180px] truncate" title={doc.original_filename}>
                     <span 
                       onClick={() => openDetails(doc.id)} 
-                      className="hover:text-brand-600 cursor-pointer transition underline decoration-dotted decoration-slate-400 hover:decoration-brand-500"
+                      className="hover:text-brand-600 cursor-pointer transition underline decoration-dotted decoration-slate-300 hover:decoration-brand-500"
                     >
                       {doc.source_type === 'URL' && doc.source_url ? (
                         (() => {
@@ -668,7 +674,7 @@ ${clausesText}
                   
                   {/* Source */}
                   <td className="p-4">
-                    <span className="px-2 py-1 rounded bg-[#F8FAFC] border border-slate-100 text-xs text-slate-500 font-bold uppercase font-display flex items-center gap-1.5 w-fit">
+                    <span className="px-2 py-0.5 rounded bg-slate-50 border border-slate-100 text-[10px] text-slate-450 font-bold uppercase block w-fit">
                       {doc.source_type === 'URL' && '🌐 URL'}
                       {doc.source_type === 'TEXT' && '📝 TEXT'}
                       {(doc.source_type === 'PDF' || !doc.source_type) && '📄 PDF'}
@@ -676,19 +682,19 @@ ${clausesText}
                   </td>
 
                   {/* Upload Date */}
-                  <td className="p-4 text-slate-500 font-medium text-xs">
+                  <td className="p-4 text-xs text-slate-450">
                     {formatDate(doc.created_at)}
                   </td>
 
                   {/* Analysis Date */}
-                  <td className="p-4 text-slate-500 font-medium text-xs">
+                  <td className="p-4 text-xs text-slate-450">
                     {doc.analysis ? formatDate(doc.analysis.created_at) : 'Not analyzed'}
                   </td>
 
                   {/* Risk Score */}
                   <td className="p-4">
                     {doc.analysis ? (
-                      <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold font-display border ${getRiskBadgeStyles(doc.risk_level)}`}>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border uppercase ${getRiskBadgeStyles(doc.risk_level)}`}>
                         {doc.analysis.overall_risk_score} ({doc.risk_level})
                       </span>
                     ) : (
@@ -698,99 +704,182 @@ ${clausesText}
 
                   {/* Status */}
                   <td className="p-4">
-                    <span className={`px-2 py-0.5 rounded text-xs font-bold border tracking-wide ${getStatusBadgeStyles(doc.processing_status)}`}>
+                    <span className={`px-2.5 py-0.5 rounded text-[10px] font-bold border uppercase tracking-wider ${getStatusBadgeStyles(doc.processing_status)}`}>
                       {doc.processing_status}
                     </span>
                   </td>
 
                   {/* Provider */}
-                  <td className="p-4 text-slate-500 text-xs font-display font-medium">
+                  <td className="p-4 text-slate-500 text-xs">
                     {doc.analysis ? (
-                      <div className="flex flex-col">
+                      <div className="flex flex-col leading-tight">
                         <span className="font-bold text-slate-700 capitalize">{doc.analysis.provider}</span>
-                        <span className="text-[10px] text-slate-400 font-mono">{doc.analysis.model_name}</span>
+                        <span className="text-[9px] text-slate-400 font-mono mt-0.5">{doc.analysis.model_name}</span>
                       </div>
                     ) : (
                       <span className="text-slate-400 font-normal">-</span>
                     )}
                   </td>
 
-                  {/* Actions column */}
-                  <td className="p-4 text-right">
-                    <div className="flex items-center justify-end gap-1.5 whitespace-nowrap">
-                      {/* View Details / Results */}
-                      {doc.analysis ? (
-                        <Link
-                          to={`/results/${doc.id}`}
-                          className="p-1.5 bg-[#F8FAFC] hover:bg-brand-50 border border-slate-200 hover:border-brand-300 rounded-lg transition text-slate-500 hover:text-brand-600 text-xs font-bold"
-                          title="View Audit Results page"
-                        >
-                          👁️
-                        </Link>
-                      ) : (
-                        <button
-                          disabled
-                          className="p-1.5 bg-slate-50 text-slate-300 border border-slate-100 rounded-lg cursor-not-allowed text-xs"
-                          title="No analysis results available"
-                        >
-                          👁️
-                        </button>
-                      )}
-
-                      {/* Download report */}
-                      <button
-                        onClick={() => handleDownload(doc.id)}
-                        disabled={!doc.analysis || isDownloadingId === doc.id}
-                        className={`p-1.5 bg-[#F8FAFC] hover:bg-slate-100 border border-slate-200 hover:border-slate-350 rounded-lg transition text-slate-500 hover:text-slate-800 text-xs font-bold ${
-                          (!doc.analysis || isDownloadingId === doc.id) && 'opacity-30 cursor-not-allowed'
-                        }`}
-                        title="Download Markdown Report"
+                  {/* Action group */}
+                  <td className="p-4 text-right whitespace-nowrap space-x-1.5">
+                    {doc.analysis ? (
+                      <Link
+                        to={`/results/${doc.id}`}
+                        className="px-2 py-1 border border-slate-200 hover:border-brand-500 bg-white hover:bg-brand-50 text-slate-550 hover:text-brand-650 text-[10px] font-bold rounded"
+                        title="View audit results report"
                       >
-                        {isDownloadingId === doc.id ? '⏳' : '📥'}
-                      </button>
-
-                      {/* Re-analyze */}
+                        Results
+                      </Link>
+                    ) : (
                       <button
-                        onClick={() => reanalyzeMutation.mutate(doc.id)}
-                        disabled={reanalyzeMutation.isPending || doc.processing_status === 'PROCESSING'}
-                        className={`p-1.5 bg-[#F8FAFC] hover:bg-slate-100 border border-slate-200 hover:border-slate-350 rounded-lg transition text-slate-500 hover:text-slate-800 text-xs font-bold ${
-                          (reanalyzeMutation.isPending || doc.processing_status === 'PROCESSING') && 'opacity-30 cursor-not-allowed'
-                        }`}
-                        title="Re-run AI Analysis"
+                        disabled
+                        className="px-2 py-1 bg-slate-50 text-slate-300 border border-slate-100 rounded text-[10px] cursor-not-allowed"
                       >
-                        🔄
+                        Results
                       </button>
+                    )}
 
-                      {/* Delete */}
-                      <button
-                        onClick={() => {
-                          setDocToDelete(doc);
-                          setDeleteModalOpen(true);
-                        }}
-                        className="p-1.5 bg-red-50 hover:bg-red-100 border border-red-200 hover:border-red-300 rounded-lg transition text-danger font-bold text-xs"
-                        title="Delete Document & History"
-                      >
-                        🗑️
-                      </button>
-                    </div>
+                    <button
+                      onClick={() => handleDownload(doc.id)}
+                      disabled={!doc.analysis || isDownloadingId === doc.id}
+                      className="px-2 py-1 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 text-[10px] font-bold rounded disabled:opacity-40"
+                    >
+                      {isDownloadingId === doc.id ? 'Loading...' : 'Report'}
+                    </button>
+
+                    <button
+                      onClick={() => reanalyzeMutation.mutate(doc.id)}
+                      disabled={reanalyzeMutation.isPending || doc.processing_status === 'PROCESSING'}
+                      className="px-2 py-1 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 text-[10px] font-bold rounded disabled:opacity-40"
+                    >
+                      Re-run
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setDocToDelete(doc);
+                        setDeleteModalOpen(true);
+                      }}
+                      className="px-2 py-1 bg-red-500/10 border border-red-500/20 hover:bg-red-500 hover:text-white text-red-650 text-[10px] font-bold rounded"
+                    >
+                      Delete
+                    </button>
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
-      {/* Pagination controls */}
-      {totalRecords > 0 && (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-[#F8FAFC] border border-slate-200 rounded-xl">
-          <div className="flex items-center gap-4 text-xs font-semibold text-slate-500">
+      {/* RESPONSIVE CARDS - MOBILE ONLY */}
+      {!isLoading && historyItems.length > 0 && (
+        <div className="grid grid-cols-1 gap-4 md:hidden font-semibold">
+          {historyItems.map((doc: any) => (
+            <div 
+              key={doc.id}
+              className={`p-5 rounded-2xl border bg-white shadow-soft space-y-4 transition ${
+                selectedIds.includes(doc.id) ? 'border-brand-500/60 bg-brand-50/5' : 'border-slate-200/65'
+              }`}
+            >
+              {/* Card top */}
+              <div className="flex justify-between items-start gap-3">
+                <div className="flex items-start gap-2.5">
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.includes(doc.id)}
+                    onChange={() => handleSelectRow(doc.id)}
+                    className="rounded border-slate-300 text-brand-650 focus:ring-brand-500/10 w-4 h-4 cursor-pointer mt-0.5"
+                  />
+                  <div>
+                    <h4 
+                      onClick={() => openDetails(doc.id)} 
+                      className="font-bold text-slate-800 hover:text-brand-600 break-all cursor-pointer underline decoration-dotted leading-snug"
+                    >
+                      {doc.original_filename}
+                    </h4>
+                    <span className="text-[10px] text-slate-450 font-normal mt-1 block">
+                      {formatDate(doc.created_at)}
+                    </span>
+                  </div>
+                </div>
+
+                <span className="px-2 py-0.5 rounded bg-slate-50 border border-slate-100 text-[9px] text-slate-450 font-bold uppercase shrink-0">
+                  {doc.source_type || 'PDF'}
+                </span>
+              </div>
+
+              {/* Status and Risk score info */}
+              <div className="grid grid-cols-2 gap-3 pt-3 border-t border-slate-50 text-xs font-semibold text-slate-500">
+                <div>
+                  <span className="block text-[8px] text-slate-400 uppercase tracking-wider select-none">Status</span>
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold border uppercase inline-block mt-1 ${getStatusBadgeStyles(doc.processing_status)}`}>
+                    {doc.processing_status}
+                  </span>
+                </div>
+                <div>
+                  <span className="block text-[8px] text-slate-400 uppercase tracking-wider select-none">Risk Score</span>
+                  {doc.analysis ? (
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border uppercase inline-block mt-1 ${getRiskBadgeStyles(doc.risk_level)}`}>
+                      {doc.analysis.overall_risk_score} ({doc.risk_level})
+                    </span>
+                  ) : (
+                    <span className="text-slate-400 text-xs italic inline-block mt-1">N/A</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Actions strip */}
+              <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-slate-50 text-[10px] font-bold">
+                {doc.analysis && (
+                  <Link
+                    to={`/results/${doc.id}`}
+                    className="px-3 py-1.5 border border-brand-500/20 bg-brand-500/10 hover:bg-brand-500 hover:text-white text-brand-600 rounded-lg text-center flex-1"
+                  >
+                    View Results
+                  </Link>
+                )}
+                <button
+                  onClick={() => handleDownload(doc.id)}
+                  disabled={!doc.analysis || isDownloadingId === doc.id}
+                  className="px-3 py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-lg flex-1 disabled:opacity-40"
+                >
+                  Download Report
+                </button>
+                <button
+                  onClick={() => reanalyzeMutation.mutate(doc.id)}
+                  disabled={reanalyzeMutation.isPending}
+                  className="px-3 py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-lg flex-1"
+                >
+                  Re-run
+                </button>
+                <button
+                  onClick={() => {
+                    setDocToDelete(doc);
+                    setDeleteModalOpen(true);
+                  }}
+                  className="px-3 py-1.5 bg-red-500/10 border border-red-500/20 hover:bg-red-50 hover:text-white text-red-650 rounded-lg"
+                >
+                  Delete
+                </button>
+              </div>
+
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Pagination controls deck */}
+      {!isLoading && totalRecords > 0 && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-slate-50/70 border border-slate-200 rounded-2xl select-none">
+          <div className="flex items-center gap-4 text-xs font-bold text-slate-500">
             <span>
-              Showing <span className="font-bold text-slate-800">{((page - 1) * limit) + 1}</span> to{' '}
-              <span className="font-bold text-slate-800">
+              Showing <span className="text-slate-800">{((page - 1) * limit) + 1}</span> to{' '}
+              <span className="text-slate-800">
                 {Math.min(page * limit, totalRecords)}
               </span>{' '}
-              of <span className="font-bold text-slate-800">{totalRecords}</span> logs
+              of <span className="text-slate-800 font-extrabold">{totalRecords}</span> logs
             </span>
 
             <div className="flex items-center gap-1.5">
@@ -798,7 +887,7 @@ ${clausesText}
               <select
                 value={limit}
                 onChange={(e) => { setLimit(Number(e.target.value)); setPage(1); }}
-                className="bg-white border border-slate-200 rounded-lg px-2 py-0.5 text-xs text-slate-700 focus:outline-none"
+                className="bg-white border border-slate-200 rounded-lg px-2 py-0.5 text-xs text-slate-700 font-bold outline-none cursor-pointer"
               >
                 <option value={5}>5</option>
                 <option value={10}>10</option>
@@ -812,7 +901,7 @@ ${clausesText}
             <button
               onClick={() => setPage(p => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="px-3 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed transition"
+              className="px-3.5 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed transition"
             >
               Previous
             </button>
@@ -823,9 +912,9 @@ ${clausesText}
                 <button
                   key={p}
                   onClick={() => setPage(p)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
                     page === p
-                      ? 'bg-brand-600 text-white border border-brand-500 shadow-sm'
+                      ? 'bg-brand-500 text-white border border-brand-500/80 shadow-md'
                       : 'bg-white hover:bg-slate-50 border border-slate-200 text-slate-600'
                   }`}
                 >
@@ -837,7 +926,7 @@ ${clausesText}
             <button
               onClick={() => setPage(p => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
-              className="px-3 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed transition"
+              className="px-3.5 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed transition"
             >
               Next
             </button>
@@ -845,34 +934,32 @@ ${clausesText}
         </div>
       )}
 
-      {/* 1. History Details Modal Drawer */}
+      {/* 1. History Details Drawer Modal */}
       {detailModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="w-full max-w-4xl bg-white border border-slate-200 rounded-2xl shadow-2xl flex flex-col max-h-[85vh] overflow-hidden animate-zoom-in text-slate-800">
+        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn">
+          <div className="w-full max-w-4xl bg-white border border-slate-200 rounded-2xl shadow-2xl flex flex-col max-h-[85vh] overflow-hidden animate-zoomIn text-slate-800 relative">
             {/* Modal Header */}
-            <div className="p-6 border-b border-slate-100 bg-[#F8FAFC] flex items-center justify-between">
+            <div className="p-6 border-b border-slate-100 bg-slate-50/70 flex items-center justify-between select-none">
               <div>
-                <span className="text-[10px] text-brand-600 font-extrabold uppercase tracking-widest">Document Audit Details</span>
+                <span className="text-[9px] text-brand-650 font-black uppercase tracking-widest">Document Audit Details</span>
                 <h3 className="text-xl font-bold text-slate-900 font-display mt-0.5">
                   {detailDoc?.original_filename || 'Loading Metadata...'}
                 </h3>
               </div>
               <button
                 onClick={() => { setDetailModalOpen(false); setActiveDetailId(null); }}
-                className="btn-secondary py-2 px-4 text-xs font-bold"
+                className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl"
               >
                 ✕ Close
               </button>
             </div>
 
             {/* Modal Body */}
-            <div className="p-6 overflow-y-auto space-y-8 flex-1">
+            <div className="p-6 overflow-y-auto space-y-6 flex-1 text-slate-700">
               {isDetailLoading ? (
-                <div className="space-y-6 py-12">
+                <div className="space-y-6 py-12 animate-pulse">
                   <div className="h-6 bg-slate-100 rounded w-1/3 animate-pulse" />
                   <div className="h-32 bg-slate-100 rounded animate-pulse" />
-                  <div className="h-6 bg-slate-100 rounded w-1/4 animate-pulse" />
-                  <div className="h-24 bg-slate-100 rounded animate-pulse" />
                 </div>
               ) : !detailDoc ? (
                 <div className="text-center py-12 text-slate-400 font-medium">
@@ -880,52 +967,52 @@ ${clausesText}
                 </div>
               ) : (
                 <>
-                  {/* Section: Score, Metadata and Stats */}
+                  {/* Score, Metadata and Stats */}
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                     {/* circular progress score */}
-                    <div className="md:col-span-1 p-4 bg-[#F8FAFC] border border-slate-200/60 rounded-xl flex flex-col items-center justify-center space-y-2 shadow-inner">
+                    <div className="md:col-span-1 p-4 bg-slate-50 border border-slate-200/60 rounded-xl flex flex-col items-center justify-center space-y-2 shadow-inner select-none">
                       {detailDoc.analysis ? (
                         <>
                           <CircularRiskProgress score={detailDoc.analysis.overall_risk_score} />
-                          <span className={`text-[11px] font-bold px-2 py-0.5 rounded border ${getRiskBadgeStyles(detailDoc.risk_level)}`}>
+                          <span className={`text-[10px] font-black px-2.5 py-0.5 rounded border uppercase tracking-wider ${getRiskBadgeStyles(detailDoc.risk_level)}`}>
                             {detailDoc.risk_level}
                           </span>
                         </>
                       ) : (
-                        <div className="text-center py-6">
+                        <div className="text-center py-6 select-none">
                           <span className="text-4xl block">⚖️</span>
-                          <span className="text-xs text-slate-400 italic block mt-2 font-medium">Not Audited</span>
+                          <span className="text-xs text-slate-400 italic block mt-2 font-semibold">Not Audited</span>
                         </div>
                       )}
                     </div>
 
                     {/* Metadata Card */}
-                    <div className="md:col-span-3 p-5 bg-[#F8FAFC]/50 border border-slate-200 rounded-xl space-y-3 text-xs text-slate-500 font-semibold">
-                      <h4 className="font-bold text-slate-800 text-sm font-display border-b border-slate-200/60 pb-1.5">Original File Information</h4>
+                    <div className="md:col-span-3 p-5 bg-slate-50 border border-slate-200/60 rounded-xl space-y-3.5 text-xs text-slate-500 font-semibold">
+                      <h4 className="font-bold text-slate-800 text-sm font-display border-b border-slate-200/40 pb-2">Original File Information</h4>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <span className="block text-[10px] text-slate-400 font-bold uppercase">File Name</span>
-                          <span className="text-slate-700 font-semibold break-all">{detailDoc.original_filename}</span>
+                          <span className="block text-[9px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">File Name</span>
+                          <span className="text-slate-700 break-all">{detailDoc.original_filename}</span>
                         </div>
                         <div>
-                          <span className="block text-[10px] text-slate-400 font-bold uppercase">Source Type</span>
-                          <span className="text-slate-700 font-bold uppercase flex items-center gap-1.5">
-                            {detailDoc.source_type === 'URL' && '🌐 URL'}
-                            {detailDoc.source_type === 'TEXT' && '📝 TEXT'}
-                            {(detailDoc.source_type === 'PDF' || !detailDoc.source_type) && '📄 PDF'}
+                          <span className="block text-[9px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Source Type</span>
+                          <span className="text-slate-800 font-bold uppercase flex items-center gap-1">
+                            {detailDoc.source_type === 'URL' && '🌐 URL Link'}
+                            {detailDoc.source_type === 'TEXT' && '📝 Plain Text'}
+                            {(detailDoc.source_type === 'PDF' || !detailDoc.source_type) && '📄 PDF Document'}
                           </span>
                         </div>
                         <div>
-                          <span className="block text-[10px] text-slate-400 font-bold uppercase">File Size</span>
-                          <span className="text-slate-700 font-semibold">{formatBytes(detailDoc.file_size)}</span>
+                          <span className="block text-[9px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">File Size</span>
+                          <span className="text-slate-700">{formatBytes(detailDoc.file_size)}</span>
                         </div>
                         <div>
-                          <span className="block text-[10px] text-slate-400 font-bold uppercase">Upload Date</span>
-                          <span className="text-slate-700 font-semibold">{formatDate(detailDoc.created_at)}</span>
+                          <span className="block text-[9px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Upload Date</span>
+                          <span className="text-slate-700">{formatDate(detailDoc.created_at)}</span>
                         </div>
                         {detailDoc.source_type === 'URL' && detailDoc.source_url && (
                           <div className="col-span-2">
-                            <span className="block text-[10px] text-slate-400 font-bold uppercase">Source URL</span>
+                            <span className="block text-[9px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Source URL</span>
                             <a
                               href={detailDoc.source_url}
                               target="_blank"
@@ -938,20 +1025,20 @@ ${clausesText}
                         )}
                         {detailDoc.page_count && (
                           <div>
-                            <span className="block text-[10px] text-slate-400 font-bold uppercase">Page Count</span>
-                            <span className="text-slate-700 font-semibold">{detailDoc.page_count} pages</span>
+                            <span className="block text-[9px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Page Count</span>
+                            <span className="text-slate-700">{detailDoc.page_count} pages</span>
                           </div>
                         )}
                         {detailDoc.word_count && (
                           <div>
-                            <span className="block text-[10px] text-slate-400 font-bold uppercase">Word Count</span>
-                            <span className="text-slate-700 font-semibold">{detailDoc.word_count} words</span>
+                            <span className="block text-[9px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Word Count</span>
+                            <span className="text-slate-700">{detailDoc.word_count} words</span>
                           </div>
                         )}
                         {detailDoc.analysis && (
                           <div>
-                            <span className="block text-[10px] text-slate-400 font-bold uppercase">Confidence Score</span>
-                            <span className="text-slate-700 font-semibold">
+                            <span className="block text-[9px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Confidence Score</span>
+                            <span className="text-slate-705 font-bold">
                               {detailDoc.analysis.confidence_score 
                                 ? (detailDoc.analysis.confidence_score <= 1 
                                   ? `${(detailDoc.analysis.confidence_score * 100).toFixed(0)}%` 
@@ -964,28 +1051,28 @@ ${clausesText}
                     </div>
                   </div>
 
-                  {/* Section: Analysis Summary & recommendations */}
+                  {/* Summary & recommendations */}
                   {detailDoc.analysis ? (
-                    <div className="space-y-6 font-medium">
+                    <div className="space-y-6 font-semibold">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* Summary */}
-                        <div className="p-5 bg-white border border-slate-200/60 rounded-xl space-y-3 shadow-sm">
-                          <div className="flex items-center gap-2">
-                            <span className="text-lg">📝</span>
-                            <h4 className="font-bold text-slate-900 font-display text-sm">Executive Summary</h4>
+                        <div className="p-5 bg-white border border-slate-200/60 rounded-xl space-y-2.5 shadow-sm">
+                          <div className="flex items-center gap-2 border-b border-slate-50 pb-2 select-none">
+                            <span className="text-base">📋</span>
+                            <h4 className="font-bold text-slate-800 font-display text-xs sm:text-sm">Executive Summary</h4>
                           </div>
-                          <p className="text-xs text-slate-600 leading-relaxed whitespace-pre-wrap font-normal">
+                          <p className="text-xs text-slate-550 leading-relaxed font-normal whitespace-pre-wrap">
                             {detailDoc.analysis.summary}
                           </p>
                         </div>
 
                         {/* Recommendations */}
-                        <div className="p-5 bg-white border border-slate-200/60 rounded-xl space-y-3 shadow-sm">
-                          <div className="flex items-center gap-2">
-                            <span className="text-lg">💡</span>
-                            <h4 className="font-bold text-slate-900 font-display text-sm">Precautionary Recommendations</h4>
+                        <div className="p-5 bg-white border border-slate-200/60 rounded-xl space-y-2.5 shadow-sm">
+                          <div className="flex items-center gap-2 border-b border-slate-50 pb-2 select-none">
+                            <span className="text-base">💡</span>
+                            <h4 className="font-bold text-slate-800 font-display text-xs sm:text-sm">Precautionary Recommendations</h4>
                           </div>
-                          <p className="text-xs text-slate-600 leading-relaxed whitespace-pre-wrap font-normal">
+                          <p className="text-xs text-slate-550 leading-relaxed font-normal whitespace-pre-wrap">
                             {detailDoc.analysis.recommendations}
                           </p>
                         </div>
@@ -993,12 +1080,12 @@ ${clausesText}
 
                       {/* AI Auditor Assessment */}
                       {detailDoc.analysis.ai_explanation && (
-                        <div className="p-5 bg-white border border-slate-200/60 rounded-xl space-y-3 shadow-sm">
-                          <div className="flex items-center gap-2">
-                            <span className="text-lg">🤖</span>
-                            <h4 className="font-bold text-slate-900 font-display text-sm">AI Auditor Assessment</h4>
+                        <div className="p-5 bg-white border border-slate-200/60 rounded-xl space-y-2.5 shadow-sm">
+                          <div className="flex items-center gap-2 border-b border-slate-50 pb-2 select-none">
+                            <span className="text-base">🤖</span>
+                            <h4 className="font-bold text-slate-800 font-display text-xs sm:text-sm">AI Auditor Assessment</h4>
                           </div>
-                          <p className="text-xs text-slate-600 leading-relaxed whitespace-pre-wrap font-normal">
+                          <p className="text-xs text-slate-550 leading-relaxed font-normal whitespace-pre-wrap">
                             {detailDoc.analysis.ai_explanation}
                           </p>
                         </div>
@@ -1006,9 +1093,9 @@ ${clausesText}
 
                       {/* Missing Clauses Card */}
                       <div className="p-5 bg-white border border-slate-200/60 rounded-xl space-y-3 shadow-sm">
-                        <div className="flex items-center gap-2">
-                          <span className="text-lg">⚠️</span>
-                          <h4 className="font-bold text-slate-900 font-display text-sm">
+                        <div className="flex items-center gap-2 border-b border-slate-50 pb-2 select-none">
+                          <span className="text-base">⚠️</span>
+                          <h4 className="font-bold text-slate-800 font-display text-xs sm:text-sm">
                             Missing Protective Clauses ({detailDoc.analysis.missing_clauses?.length || 0})
                           </h4>
                         </div>
@@ -1017,9 +1104,9 @@ ${clausesText}
                             No standard protective clauses were found missing from this document.
                           </p>
                         ) : (
-                          <div className="space-y-3 pt-2">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
                             {detailDoc.analysis.missing_clauses.map((item: any, idx: number) => (
-                              <div key={idx} className="p-4 bg-[#F8FAFC] border border-slate-100 rounded-xl space-y-1">
+                              <div key={idx} className="p-3.5 bg-slate-50 border border-slate-100 rounded-xl space-y-1">
                                 <h5 className="font-bold text-slate-800 text-xs">{item.title}</h5>
                                 <p className="text-[11px] text-slate-500 leading-relaxed font-normal">{item.explanation}</p>
                               </div>
@@ -1029,9 +1116,9 @@ ${clausesText}
                       </div>
                     </div>
                   ) : (
-                    <div className="p-8 rounded-xl bg-[#F8FAFC] border border-slate-200 text-center space-y-3">
-                      <span className="text-3xl block">⚠️</span>
-                      <h4 className="font-bold text-slate-850 text-sm">No analysis reports generated</h4>
+                    <div className="p-8 rounded-xl bg-slate-50 border border-slate-200 text-center space-y-3">
+                      <span className="text-3xl block select-none">⚠️</span>
+                      <h4 className="font-bold text-slate-800 text-sm">No analysis reports generated</h4>
                       <p className="text-xs text-slate-500 max-w-sm mx-auto font-medium leading-relaxed">
                         This document has been uploaded but has not been processed through the AI analysis engine.
                       </p>
@@ -1040,54 +1127,54 @@ ${clausesText}
                           setDetailModalOpen(false);
                           reanalyzeMutation.mutate(detailDoc.id);
                         }}
-                        className="btn-primary text-xs font-semibold"
+                        className="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-xl text-xs"
                       >
                         Trigger AI Audit
                       </button>
                     </div>
                   )}
 
-                  {/* Section: Detected Clauses List */}
+                  {/* Flagged Clauses Details */}
                   {detailDoc.analysis && detailDoc.analysis.items && (
-                    <div className="space-y-4 font-medium">
-                      <h4 className="font-bold text-slate-900 text-sm font-display">
+                    <div className="space-y-4 font-semibold">
+                      <h4 className="font-bold text-slate-900 text-sm font-display select-none">
                         Flagged Risk Clauses ({detailDoc.analysis.items.length})
                       </h4>
                       <div className="space-y-4">
                         {detailDoc.analysis.items.map((clause: any, index: number) => (
-                          <div key={clause.id || index} className="p-5 bg-[#F8FAFC]/50 border border-slate-200/60 rounded-xl space-y-3">
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-2">
-                              <h5 className="font-bold text-slate-850 text-sm font-display">
+                          <div key={clause.id || index} className="p-5 bg-white border border-slate-200/60 rounded-xl space-y-3.5 shadow-sm">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-2">
+                              <h5 className="font-bold text-slate-800 text-xs sm:text-sm font-display">
                                 {index + 1}. {clause.title}
                               </h5>
-                              <div className="flex items-center gap-2">
-                                <span className="px-2 py-0.5 rounded bg-slate-100 text-[10px] font-bold text-slate-500 font-display">
+                              <div className="flex items-center gap-2 select-none">
+                                <span className="px-2 py-0.5 rounded bg-slate-50 border border-slate-150 text-[9px] font-bold text-slate-450 font-mono tracking-wider">
                                   {clause.category}
                                 </span>
-                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold font-display border ${getRiskBadgeStyles(clause.risk_level)}`}>
+                                <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider ${getRiskBadgeStyles(clause.risk_level)}`}>
                                   {clause.risk_level}
                                 </span>
                               </div>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs font-semibold text-slate-500">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs text-slate-500">
                               {/* Original Text */}
                               <div className="md:col-span-1 space-y-1">
-                                <span className="block text-[10px] text-slate-400 font-bold uppercase">Original Text</span>
-                                <blockquote className="italic text-slate-600 bg-white border-l-2 border-slate-300 p-2.5 rounded font-mono text-[11px] leading-relaxed break-words whitespace-pre-wrap">
+                                <span className="block text-[9px] text-slate-450 font-bold uppercase tracking-wider">Original Text</span>
+                                <blockquote className="italic text-slate-700 bg-slate-50/50 border-l-4 border-slate-200 p-2.5 rounded-lg font-mono text-[11px] leading-relaxed break-words whitespace-pre-wrap">
                                   "{clause.original_text}"
                                 </blockquote>
                               </div>
 
                               {/* Explanation */}
                               <div className="md:col-span-1 space-y-1">
-                                <span className="block text-[10px] text-slate-400 font-bold uppercase">Explanation</span>
+                                <span className="block text-[9px] text-slate-450 font-bold uppercase tracking-wider">Explanation</span>
                                 <p className="text-slate-600 leading-relaxed font-normal">{clause.explanation}</p>
                               </div>
 
                               {/* Suggestion */}
                               <div className="md:col-span-1 space-y-1">
-                                <span className="block text-[10px] text-brand-600 font-bold uppercase">Precaution / Suggestion</span>
+                                <span className="block text-[9px] text-brand-700 font-bold uppercase tracking-wider">Precaution / Suggestion</span>
                                 <p className="text-slate-650 leading-relaxed border-l-2 border-brand-200 pl-2.5 font-normal">{clause.suggestion}</p>
                               </div>
                             </div>
@@ -1101,23 +1188,23 @@ ${clausesText}
             </div>
 
             {/* Modal Footer */}
-            <div className="p-4 bg-[#F8FAFC] border-t border-slate-100 flex items-center justify-between">
-              <span className="text-xs text-slate-400 font-mono font-medium">ID: {detailDoc?.id}</span>
+            <div className="p-4 bg-slate-50 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 select-none">
+              <span className="text-[10px] text-slate-400 font-mono">ID: {detailDoc?.id}</span>
               <div className="flex items-center gap-2">
                 {detailDoc?.analysis && (
                   <>
                     <button
                       onClick={() => handleDownload(detailDoc.id)}
                       disabled={isDownloadingId === detailDoc.id}
-                      className="btn-outline py-2 px-4 text-xs font-bold"
+                      className="px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-250 text-slate-700 text-xs font-bold rounded-xl shadow-sm"
                     >
                       {isDownloadingId === detailDoc.id ? 'Loading...' : 'Download Report'}
                     </button>
                     <Link
                       to={`/results/${detailDoc.id}`}
-                      className="btn-primary py-2 px-4 text-xs font-bold"
+                      className="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-xl text-xs shadow-md shadow-brand-500/20"
                     >
-                      Open Full Results Page
+                      Open Results Page
                     </Link>
                   </>
                 )}
@@ -1129,9 +1216,12 @@ ${clausesText}
 
       {/* 2. Safety Delete Confirmation Dialog */}
       {deleteModalOpen && docToDelete && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-white border border-slate-200 rounded-2xl shadow-2xl p-6 space-y-6 animate-zoom-in text-slate-800">
-            <div className="flex items-center gap-3 text-danger">
+        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn">
+          <div className="w-full max-w-md bg-white border border-slate-200 rounded-2xl shadow-2xl p-6 space-y-6 animate-zoomIn text-slate-800 relative">
+            {/* Top caution line */}
+            <div className="absolute top-0 left-0 right-0 h-1 bg-red-500" />
+            
+            <div className="flex items-center gap-3 text-red-500 select-none">
               <span className="text-3xl">⚠️</span>
               <div>
                 <h3 className="text-lg font-bold text-slate-900 font-display">Delete Audit Record?</h3>
@@ -1139,30 +1229,30 @@ ${clausesText}
               </div>
             </div>
 
-            <div className="p-4 bg-[#F8FAFC] border border-slate-100 rounded-xl space-y-2 font-semibold">
-              <p className="text-[10px] text-slate-400 font-bold uppercase">Document to Delete</p>
+            <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl space-y-2 font-semibold">
+              <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Document to Delete</p>
               <p className="text-sm font-bold text-slate-800 break-all">{docToDelete.original_filename}</p>
-              <div className="flex justify-between text-[11px] text-slate-500 pt-1.5 border-t border-slate-200/65">
+              <div className="flex justify-between text-[11px] text-slate-500 pt-1.5 border-t border-slate-200">
                 <span>Type: {docToDelete.file_type.toUpperCase()}</span>
                 <span>Size: {formatBytes(docToDelete.file_size)}</span>
               </div>
             </div>
 
             <p className="text-xs text-slate-500 leading-relaxed font-semibold">
-              Confirming deletion will remove the uploaded file from S3 storage, scrub all OCR database texts, wipe AI audit analyses, and delete the logs entirely.
+              Confirming deletion will remove the uploaded file from storage, scrub all OCR database texts, wipe AI audit analyses, and delete the logs entirely.
             </p>
 
-            <div className="flex items-center justify-end gap-2.5">
+            <div className="flex items-center justify-end gap-2.5 select-none">
               <button
                 onClick={() => { setDeleteModalOpen(false); setDocToDelete(null); }}
-                className="btn-secondary py-2 px-4 text-xs font-bold"
+                className="px-4 py-2 border border-slate-250 hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl"
               >
                 Cancel
               </button>
               <button
                 onClick={() => deleteMutation.mutate(docToDelete.id)}
                 disabled={deleteMutation.isPending}
-                className="btn-danger py-2 px-4 text-xs font-bold flex items-center gap-1.5"
+                className="px-4 py-2 bg-red-500/10 border border-red-500/20 hover:bg-red-500 hover:text-white text-red-650 text-xs font-bold rounded-xl"
               >
                 {deleteMutation.isPending ? 'Deleting...' : 'Confirm Delete'}
               </button>
@@ -1173,9 +1263,11 @@ ${clausesText}
 
       {/* 3. Bulk Delete Confirmation Dialog */}
       {bulkDeleteModalOpen && selectedIds.length > 0 && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-white border border-slate-200 rounded-2xl shadow-2xl p-6 space-y-6 animate-zoom-in text-slate-800">
-            <div className="flex items-center gap-3 text-danger">
+        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn">
+          <div className="w-full max-w-md bg-white border border-slate-200 rounded-2xl shadow-2xl p-6 space-y-6 animate-zoomIn text-slate-800 relative">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-red-500" />
+            
+            <div className="flex items-center gap-3 text-red-500 select-none">
               <span className="text-3xl">⚠️</span>
               <div>
                 <h3 className="text-lg font-bold text-slate-900 font-display">Delete Multiple Records?</h3>
@@ -1183,20 +1275,20 @@ ${clausesText}
               </div>
             </div>
 
-            <div className="p-4 bg-[#F8FAFC] border border-slate-100 rounded-xl text-center space-y-1 font-semibold">
-              <p className="text-[10px] text-slate-400 font-bold uppercase">Documents Selected</p>
-              <p className="text-xl font-extrabold text-danger">{selectedIds.length}</p>
-              <p className="text-xs text-slate-500">Audit logs and physical files will be deleted.</p>
+            <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl text-center space-y-1 font-semibold select-none">
+              <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Documents Selected</p>
+              <p className="text-2xl font-black text-red-650 leading-none">{selectedIds.length}</p>
+              <p className="text-xs text-slate-500 mt-1">Audit logs and files will be scrubbed.</p>
             </div>
 
             <p className="text-xs text-slate-500 leading-relaxed font-semibold">
               Confirming deletion will remove the selected files, clear all OCR records, and wipe the associated AI legal reports from the database.
             </p>
 
-            <div className="flex items-center justify-end gap-2.5">
+            <div className="flex items-center justify-end gap-2.5 select-none">
               <button
                 onClick={() => { setBulkDeleteModalOpen(false); }}
-                className="btn-secondary py-2 px-4 text-xs font-bold"
+                className="px-4 py-2 border border-slate-250 hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl"
               >
                 Cancel
               </button>
@@ -1206,7 +1298,7 @@ ${clausesText}
                   setBulkDeleteModalOpen(false);
                 }}
                 disabled={bulkDeleteMutation.isPending}
-                className="btn-danger py-2 px-4 text-xs font-bold flex items-center gap-1.5"
+                className="px-4 py-2 bg-red-500/10 border border-red-500/20 hover:bg-red-500 hover:text-white text-red-655 text-xs font-bold rounded-xl"
               >
                 {bulkDeleteMutation.isPending ? 'Deleting...' : 'Confirm Bulk Delete'}
               </button>
@@ -1214,6 +1306,7 @@ ${clausesText}
           </div>
         </div>
       )}
+
     </div>
   );
 };
