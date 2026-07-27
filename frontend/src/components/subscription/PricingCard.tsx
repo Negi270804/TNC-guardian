@@ -11,14 +11,14 @@ interface PricingCardProps {
 }
 
 export const PricingCard: React.FC<PricingCardProps> = ({
-  name,
+  name = 'Free',
   price,
   features,
   isCurrentPlan,
   isLoading = false,
   onUpgrade,
 }) => {
-  const isPro = name.toUpperCase() === 'PRO';
+  const isPro = (name ?? 'Free').toUpperCase() === 'PRO';
 
   return (
     <div

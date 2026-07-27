@@ -5,8 +5,8 @@ interface PlanBadgeProps {
   size?: 'sm' | 'md' | 'lg';
 }
 
-export const PlanBadge: React.FC<PlanBadgeProps> = ({ plan, size = 'md' }) => {
-  const isPro = plan.toUpperCase() === 'PRO';
+export const PlanBadge: React.FC<PlanBadgeProps> = ({ plan = 'Free', size = 'md' }) => {
+  const isPro = (plan ?? 'Free').toUpperCase() === 'PRO';
 
   const sizeClasses = {
     sm: 'px-2 py-0.5 text-xs',

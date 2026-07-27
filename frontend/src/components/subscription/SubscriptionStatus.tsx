@@ -11,13 +11,13 @@ interface SubscriptionStatusProps {
 }
 
 export const SubscriptionStatus: React.FC<SubscriptionStatusProps> = ({
-  plan,
-  status,
+  plan = 'Free',
+  status = 'active',
   renewalDate,
   onCancel,
   isCancelling = false,
 }) => {
-  const isPro = plan.toUpperCase() === 'PRO';
+  const isPro = (plan ?? 'Free').toUpperCase() === 'PRO';
 
   return (
     <div className="bg-white border border-slate-200/60 rounded-2xl p-6 space-y-6 shadow-soft text-slate-850">
@@ -34,7 +34,7 @@ export const SubscriptionStatus: React.FC<SubscriptionStatusProps> = ({
           <span className="text-slate-400 text-[10px] uppercase tracking-wider font-bold block">Billing Cycle Status</span>
           <span className="inline-flex items-center gap-1.5 text-sm text-slate-800 mt-1.5">
             <span className="w-2.5 h-2.5 bg-success rounded-full animate-ping" />
-            {status.toUpperCase()}
+            {(status ?? 'active').toUpperCase()}
           </span>
         </div>
 
