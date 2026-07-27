@@ -1,10 +1,11 @@
 import React from 'react';
 import { Outlet, Link } from 'react-router-dom';
 import { env } from '@/config/env';
+import { motion } from 'framer-motion';
 
 export const AuthLayout: React.FC = () => {
   return (
-    <div className="grid min-h-screen grid-cols-1 lg:grid-cols-2 bg-[#070A13] text-slate-100 antialiased font-sans">
+    <div className="grid min-h-screen grid-cols-1 lg:grid-cols-2 bg-[#070A13] text-slate-100 antialiased font-sans transition-colors duration-300">
       
       {/* Visual Identity Column (Left side) */}
       <div className="hidden lg:flex flex-col justify-between bg-gradient-to-br from-[#04060C] via-[#090D1A] to-[#0D1426] p-12 border-r border-slate-900 relative overflow-hidden text-white">
@@ -101,11 +102,16 @@ export const AuthLayout: React.FC = () => {
         </div>
 
         {/* Form Glassmorphism Card */}
-        <div className="w-full max-w-md bg-slate-900/35 backdrop-blur-xl border border-slate-800/80 shadow-2xl p-6 sm:p-8 rounded-2xl relative overflow-hidden">
+        <motion.div 
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, ease: 'easeOut' }}
+          className="w-full max-w-md bg-slate-900/35 backdrop-blur-xl border border-slate-800/80 shadow-2xl p-6 sm:p-8 rounded-2xl relative overflow-hidden"
+        >
           {/* Edge glow border */}
           <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-slate-700/60 to-transparent" />
           <Outlet />
-        </div>
+        </motion.div>
       </div>
 
     </div>

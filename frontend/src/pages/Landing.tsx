@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { env } from '@/config/env';
 import { useTheme } from '@/context/ThemeContext';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export const Landing: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
@@ -77,7 +78,7 @@ export const Landing: React.FC = () => {
     },
     {
       title: "Plain Language Summary",
-      description: "Tear down complex legal jargon. Our AI translates dense paragraphs into clear, human-readable bulleted bullet points.",
+      description: "Tear down complex legal jargon. Our AI translates dense paragraphs into clear, human-readable bullet points.",
       icon: (
         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M3 5h12M3 10h18M3 15h12M3 20h18" />
@@ -172,7 +173,7 @@ export const Landing: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#070A13] text-slate-105 selection:bg-brand-500 selection:text-white font-sans overflow-x-hidden antialiased">
+    <div className="min-h-screen bg-[#070A13] text-slate-105 selection:bg-brand-500 selection:text-white font-sans overflow-x-hidden antialiased transition-colors duration-300">
       
       {/* Background Glow Orbs */}
       <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-brand-600/10 rounded-full blur-[140px] -z-10 pointer-events-none" />
@@ -180,7 +181,7 @@ export const Landing: React.FC = () => {
       <div className="absolute top-[50%] left-10 w-[500px] h-[500px] bg-purple-500/5 rounded-full blur-[140px] -z-10 pointer-events-none" />
 
       {/* Sticky Glassmorphic Header */}
-      <header className="sticky top-0 z-50 w-full bg-[#070A13]/80 backdrop-blur-md border-b border-slate-900">
+      <header className="sticky top-0 z-50 w-full bg-[#070A13]/80 backdrop-blur-md border-b border-slate-900 transition-colors">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 group">
             <span className="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-600 flex items-center justify-center text-xl shadow-lg shadow-brand-500/10 group-hover:scale-105 transition-transform">
@@ -200,8 +201,10 @@ export const Landing: React.FC = () => {
 
           <div className="hidden md:flex items-center gap-4">
             {/* Theme switcher */}
-            <button
+            <motion.button
               onClick={toggleTheme}
+              whileHover={{ rotate: 15 }}
+              whileTap={{ scale: 0.95 }}
               className="p-2.5 rounded-xl border border-slate-800 bg-slate-900/60 hover:bg-slate-800 text-slate-400 hover:text-white transition select-none"
               title="Toggle Light/Dark Mode"
               aria-label="Toggle Theme"
@@ -211,16 +214,18 @@ export const Landing: React.FC = () => {
               ) : (
                 <span className="text-sm block leading-none">☀️</span>
               )}
-            </button>
+            </motion.button>
             <Link to="/login" className="text-sm font-semibold text-slate-400 hover:text-white transition-colors">
               Log In
             </Link>
-            <Link
-              to="/register"
-              className="px-5 py-2.5 bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-xl text-sm shadow-lg shadow-brand-500/20 active:scale-95 transition-all duration-200"
-            >
-              Analyze Now
-            </Link>
+            <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+              <Link
+                to="/register"
+                className="px-5 py-2.5 bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-xl text-sm shadow-lg shadow-brand-500/20 inline-block"
+              >
+                Analyze Now
+              </Link>
+            </motion.div>
           </div>
 
           {/* Mobile hamburger icon */}
@@ -281,157 +286,81 @@ export const Landing: React.FC = () => {
       </header>
 
       {/* 1. Hero Section */}
-      <section className="relative pt-12 pb-24 md:pt-20 md:pb-36 overflow-hidden">
-        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
+      <section className="relative pt-24 pb-20 md:pt-36 md:pb-32 overflow-hidden text-center select-none">
+        <div className="max-w-4xl mx-auto px-6 space-y-8 relative z-10">
           
-          {/* Left Column: Headings & CTA */}
-          <div className="lg:col-span-7 space-y-8 text-center lg:text-left">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand-500/10 border border-brand-500/20 text-xs font-bold text-brand-400 uppercase tracking-widest">
-              <span className="flex h-2 w-2 rounded-full bg-brand-500 animate-pulse" />
-              <span>AI-Powered Contract Intelligence</span>
-            </div>
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="inline-flex items-center gap-2 px-3 py-1 bg-brand-500/10 border border-brand-500/20 text-brand-400 rounded-full text-xs font-bold uppercase tracking-wider"
+          >
+            <span>✨</span> Intelligent Legalese Auditor
+          </motion.div>
 
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-white leading-tight font-display">
-              Understand Terms & <span className="bg-gradient-to-r from-brand-400 via-indigo-400 to-purple-500 bg-clip-text text-transparent">Conditions</span> Before Clicking <span className="bg-gradient-to-r from-brand-400 to-indigo-500 bg-clip-text text-transparent">"I Agree"</span>
-            </h1>
+          <motion.h1
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="text-4xl sm:text-5xl md:text-6xl font-black text-white tracking-tight leading-[1.1] font-display"
+          >
+            Understand Terms & Conditions <br className="hidden sm:inline" />
+            <span className="bg-gradient-to-r from-brand-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent">
+              Before Clicking "I Agree"
+            </span>
+          </motion.h1>
 
-            <p className="text-base sm:text-lg text-slate-400 font-medium leading-relaxed max-w-2xl mx-auto lg:mx-0">
-              Simplify binding agreements in seconds. Spot auto-renewals, critical waivers, cookie tracking, and hidden liabilities using fine-tuned legal AI.
-            </p>
+          <motion.p
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="text-slate-400 text-base sm:text-lg md:text-xl max-w-2xl mx-auto leading-relaxed font-medium"
+          >
+            TNC Guardian reviews contracts, privacy updates, and legalese in seconds. Spots hidden waivers, automatic renewals, and data sharing risks.
+          </motion.p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="flex flex-wrap items-center justify-center gap-4 pt-4"
+          >
+            <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
               <Link
                 to="/register"
-                className="group relative px-8 py-4 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-xl shadow-lg shadow-brand-500/20 hover:shadow-brand-500/30 transition-all duration-200 active:scale-95 flex items-center justify-center gap-2"
+                className="px-6.5 py-3.5 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-xl text-sm shadow-xl shadow-brand-500/25 inline-block"
               >
-                <span>Analyze Now</span>
-                <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                </svg>
+                Analyze Now
               </Link>
-              <a
-                href="#features"
-                className="px-8 py-4 bg-slate-900 border border-slate-800 hover:border-slate-700 hover:text-white text-slate-350 font-bold rounded-xl transition-all duration-200 active:scale-95 flex items-center justify-center gap-2"
-              >
-                <span>Learn More</span>
-                <svg className="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-                </svg>
-              </a>
-            </div>
-
-            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-x-8 gap-y-4 pt-4 text-xs font-semibold text-slate-500 border-t border-slate-900/60">
-              <div className="flex items-center gap-2">
-                <span className="text-brand-500 text-lg">✓</span> PDF, DOCX, TXT Support
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-brand-500 text-lg">✓</span> Live Website Crawler
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-brand-500 text-lg">✓</span> Zero PII Data Retention
-              </div>
-            </div>
-          </div>
-
-          {/* Right Column: Hero Illustration (Glassmorphic Mockup UI) */}
-          <div className="lg:col-span-5 flex justify-center relative">
-            
-            {/* Ambient Background Glow inside frame */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-brand-500/10 rounded-full blur-[80px] -z-10" />
-
-            <div className="w-full max-w-[440px] bg-slate-950/60 backdrop-blur-xl border border-slate-800/80 rounded-3xl p-6 shadow-2xl space-y-6 hover:shadow-brand-500/5 hover:-translate-y-1 transition-all duration-500 relative overflow-hidden group">
-              
-              {/* Top reflection line */}
-              <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-slate-700 to-transparent" />
-              
-              {/* Header inside mockup */}
-              <div className="flex justify-between items-center pb-4 border-b border-slate-900">
-                <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-white font-bold text-sm">
-                    📄
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-slate-200 text-xs truncate max-w-[170px]">saas_terms_service.pdf</h4>
-                    <span className="text-[10px] text-slate-500 font-semibold block">PDF Document • 4.2 MB</span>
-                  </div>
-                </div>
-                <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[9px] font-bold tracking-widest uppercase">
-                  Analyzed
-                </span>
-              </div>
-
-              {/* Ingestion risk gauge info */}
-              <div className="flex items-center gap-5 bg-slate-900/40 border border-slate-900 p-4 rounded-2xl">
-                <div className="relative flex items-center justify-center w-16 h-16 bg-slate-950 rounded-full shadow-inner border border-slate-900">
-                  <svg className="w-full h-full transform -rotate-90">
-                    <circle cx="32" cy="32" r="26" stroke="#1e293b" strokeWidth="5" fill="transparent" />
-                    <circle cx="32" cy="32" r="26" stroke="#EF4444" strokeWidth="5" fill="transparent" strokeDasharray="163.3" strokeDashoffset="35.9" strokeLinecap="round" />
-                  </svg>
-                  <span className="absolute text-lg font-black text-white">78</span>
-                </div>
-                <div className="space-y-1">
-                  <span className="text-[10px] font-bold text-red-400 uppercase tracking-widest block">High Risk Rating</span>
-                  <p className="text-xs text-slate-400 font-medium leading-relaxed">
-                    Contains mandatory class-action waivers and automatic renewal charges.
-                  </p>
-                </div>
-              </div>
-
-              {/* Flagged items summary list */}
-              <div className="space-y-2.5">
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block">Flagged Clauses (3)</span>
-                
-                {/* Item 1 */}
-                <div className="p-3 bg-slate-900/30 border border-slate-900 rounded-xl flex items-center justify-between text-xs font-semibold hover:bg-slate-900/60 transition-colors">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                    <span className="text-slate-350">Class Action Waiver</span>
-                  </div>
-                  <span className="px-2 py-0.5 rounded bg-red-500/10 text-red-400 text-[9px] font-bold border border-red-500/20">CRITICAL</span>
-                </div>
-
-                {/* Item 2 */}
-                <div className="p-3 bg-slate-900/30 border border-slate-900 rounded-xl flex items-center justify-between text-xs font-semibold hover:bg-slate-900/60 transition-colors">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-orange-500 rounded-full" />
-                    <span className="text-slate-350">Automatic Renewal Charges</span>
-                  </div>
-                  <span className="px-2 py-0.5 rounded bg-orange-500/10 text-orange-400 text-[9px] font-bold border border-orange-500/20">HIGH</span>
-                </div>
-              </div>
-
-              {/* Floating micro notification inside illustration */}
-              <div className="absolute -bottom-4 -right-4 bg-brand-600 text-white rounded-2xl p-4 shadow-2xl border border-brand-500/40 flex items-center gap-3 animate-bounce max-w-[210px] hidden sm:flex" style={{ animationDuration: '3s' }}>
-                <span className="text-xl">🤖</span>
-                <div>
-                  <h5 className="font-extrabold text-[11px] leading-tight">Guardian Audit</h5>
-                  <p className="text-[9px] text-brand-100 font-semibold leading-relaxed mt-0.5">Analysis completed in 1.4s</p>
-                </div>
-              </div>
-
-            </div>
-          </div>
+            </motion.div>
+            <a
+              href="#features"
+              className="px-6.5 py-3.5 border border-slate-800 hover:bg-slate-900/40 text-slate-400 hover:text-white font-bold rounded-xl text-sm transition"
+            >
+              Learn More
+            </a>
+          </motion.div>
         </div>
 
-        {/* Smooth Scroll Indicator */}
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 pointer-events-none animate-pulse">
-          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Scroll Down</span>
-          <div className="w-5 h-8 rounded-full border border-slate-700 flex justify-center p-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce" />
-          </div>
-        </div>
+        {/* Scroll Indicator */}
+        <motion.div
+          animate={{ y: [0, 8, 0] }}
+          transition={{ repeat: Infinity, duration: 1.8 }}
+          className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-1.5 opacity-50 cursor-pointer pointer-events-none select-none text-slate-400"
+        >
+          <span className="text-[10px] font-bold uppercase tracking-widest">Scroll</span>
+          <span className="text-sm">↓</span>
+        </motion.div>
       </section>
 
       {/* 2. Features Section */}
       <section id="features" className="py-24 bg-[#090D1A]/60 border-y border-slate-900 relative">
+        <div className="absolute inset-0 bg-gradient-to-b from-brand-650/5 via-transparent to-transparent pointer-events-none" />
         
-        {/* Glow behind features headers */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-80 h-80 bg-brand-500/5 rounded-full blur-[100px] pointer-events-none" />
-
-        <div className="max-w-7xl mx-auto px-6 text-center space-y-16">
+        <div className="max-w-7xl mx-auto px-6 text-center space-y-16 relative z-10">
           <div className="space-y-4 max-w-2xl mx-auto">
-            <div className="inline-block text-xs font-bold text-brand-400 uppercase tracking-widest bg-brand-500/10 border border-brand-500/20 px-3 py-1 rounded-full">
-              Core Capabilities
+            <div className="inline-block text-xs font-bold text-brand-400 uppercase tracking-widest bg-brand-500/10 border border-brand-500/20 px-3 py-1 rounded-full select-none">
+              Features
             </div>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-white font-display">
               Powered by Intelligent Compliance
@@ -444,9 +373,14 @@ export const Landing: React.FC = () => {
           {/* Features Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feat, index) => (
-              <div 
+              <motion.div 
                 key={index} 
-                className="p-8 rounded-2xl bg-slate-950/40 border border-slate-900 hover:border-slate-800 hover:bg-slate-950/60 shadow-xl hover:shadow-brand-500/5 hover:-translate-y-1 transition-all duration-300 text-left space-y-5 group"
+                initial={{ opacity: 0, y: 15 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-60px" }}
+                transition={{ duration: 0.4, delay: index * 0.05 }}
+                whileHover={{ y: -5, transition: { duration: 0.2 } }}
+                className="p-8 rounded-2xl bg-slate-950/40 border border-slate-900 hover:border-slate-800 hover:bg-slate-950/60 shadow-xl hover:shadow-brand-500/5 transition-all text-left space-y-5 group"
               >
                 <div className="w-12 h-12 rounded-xl bg-brand-500/10 border border-brand-500/25 flex items-center justify-center text-brand-400 group-hover:scale-110 group-hover:bg-brand-500 group-hover:text-white transition-all duration-300">
                   {feat.icon}
@@ -457,7 +391,7 @@ export const Landing: React.FC = () => {
                 <p className="text-xs sm:text-sm text-slate-400 leading-relaxed font-medium">
                   {feat.description}
                 </p>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -467,7 +401,7 @@ export const Landing: React.FC = () => {
       <section id="how-it-works" className="py-24 bg-[#070A13] relative">
         <div className="max-w-7xl mx-auto px-6 text-center space-y-20">
           <div className="space-y-4 max-w-2xl mx-auto">
-            <div className="inline-block text-xs font-bold text-brand-400 uppercase tracking-widest bg-brand-500/10 border border-brand-500/20 px-3 py-1 rounded-full">
+            <div className="inline-block text-xs font-bold text-brand-400 uppercase tracking-widest bg-brand-500/10 border border-brand-500/20 px-3 py-1 rounded-full select-none">
               Process Flow
             </div>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-white font-display">How It Works</h2>
@@ -476,203 +410,192 @@ export const Landing: React.FC = () => {
             </p>
           </div>
 
-          {/* Stepper container with horizontal timeline line */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 relative">
-            
-            {/* Timeline connector lines (Desktop) */}
-            <div className="hidden md:block absolute top-[44px] left-[15%] right-[15%] h-[2px] bg-gradient-to-r from-brand-500/20 via-brand-500 to-brand-500/20 -z-10" />
-
+          {/* Steps Timeline Checklist */}
+          <div className="relative grid grid-cols-1 md:grid-cols-3 gap-12 max-w-5xl mx-auto z-10 text-left">
             {steps.map((step, idx) => (
-              <div key={idx} className="space-y-6 flex flex-col items-center group">
-                <div className="w-[88px] h-[88px] rounded-full bg-slate-950 border-2 border-slate-800 group-hover:border-brand-500/70 flex items-center justify-center font-black text-slate-500 group-hover:text-brand-400 font-display text-2xl transition-all duration-300 shadow-xl relative">
-                  
-                  {/* Glowing halo */}
-                  <div className="absolute inset-0 rounded-full bg-brand-500/0 group-hover:bg-brand-500/5 blur-md transition-all duration-300" />
-                  
-                  <span>{step.num}</span>
+              <motion.div 
+                key={idx}
+                initial={{ opacity: 0, y: 15 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-60px" }}
+                transition={{ duration: 0.45, delay: idx * 0.1 }}
+                className="space-y-4 relative"
+              >
+                <div className="text-4xl font-black text-brand-500/20 font-display select-none">
+                  {step.num}
                 </div>
-                <div className="space-y-2 max-w-xs text-center">
-                  <h3 className="font-bold text-white text-lg font-display">
-                    {step.title}
-                  </h3>
-                  <p className="text-xs sm:text-sm text-slate-400 leading-relaxed font-medium">
-                    {step.description}
-                  </p>
-                </div>
-              </div>
+                <h3 className="text-lg font-bold text-white font-display">
+                  {step.title}
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-400 leading-relaxed font-semibold">
+                  {step.description}
+                </p>
+              </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* 4. Benefits Section ("Why TNC Guardian") */}
-      <section id="why-us" className="py-24 bg-[#090D1A]/60 border-t border-slate-900 relative">
-        <div className="max-w-7xl mx-auto px-6 space-y-16">
-          
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
-            
-            {/* Left column: Text info */}
-            <div className="lg:col-span-5 space-y-6 text-center lg:text-left">
-              <div className="inline-block text-xs font-bold text-brand-400 uppercase tracking-widest bg-brand-500/10 border border-brand-500/20 px-3 py-1 rounded-full">
-                Value Proposition
-              </div>
-              <h2 className="text-3xl sm:text-4xl font-extrabold text-white font-display leading-tight">
-                Why Choose <br />TNC Guardian?
-              </h2>
-              <p className="text-slate-400 text-sm sm:text-base leading-relaxed font-medium">
-                We translate dense fine print into transparent metrics to protect you from legal surprises. Stop signing terms blindly.
-              </p>
-
-              {/* Before/After Visualization */}
-              <div className="pt-4 border-t border-slate-900 space-y-4 hidden sm:block text-left">
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block">Visual Translation</span>
-                <div className="grid grid-cols-2 gap-4">
-                  {/* Before */}
-                  <div className="p-4 rounded-xl bg-red-950/15 border border-red-500/10 space-y-2">
-                    <span className="px-1.5 py-0.5 bg-red-500/20 text-red-400 border border-red-500/30 text-[9px] font-bold uppercase rounded">Legalese</span>
-                    <p className="text-[10px] text-slate-600 leading-normal line-through">
-                      Licensor grants Licensee a worldwide, non-exclusive, non-sublicensable, perpetual royalty-free license to use data collected during...
-                    </p>
-                  </div>
-                  {/* After */}
-                  <div className="p-4 rounded-xl bg-emerald-950/15 border border-emerald-500/10 space-y-2">
-                    <span className="px-1.5 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[9px] font-bold uppercase rounded">Simple</span>
-                    <p className="text-[10px] text-emerald-400 font-semibold leading-normal">
-                      ✓ They can use your data, but you keep ownership and pay no royalties.
-                    </p>
-                  </div>
-                </div>
-              </div>
+      {/* 4. Benefits Section */}
+      <section id="why-us" className="py-24 bg-[#090D1A]/60 border-y border-slate-900 relative">
+        <div className="max-w-7xl mx-auto px-6 space-y-16 relative z-10 text-center">
+          <div className="space-y-4 max-w-2xl mx-auto">
+            <div className="inline-block text-xs font-bold text-brand-400 uppercase tracking-widest bg-brand-500/10 border border-brand-500/20 px-3 py-1 rounded-full select-none">
+              Benefits
             </div>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-white font-display">
+              Understand Agreements Faster
+            </h2>
+          </div>
 
-            {/* Right column: Benefits cards */}
-            <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-6xl mx-auto text-left items-center">
+            {/* Left list details */}
+            <div className="space-y-6">
               {benefits.map((benefit, idx) => (
-                <div 
-                  key={idx} 
-                  className={`p-6 rounded-2xl bg-slate-950/50 border border-slate-900 hover:border-slate-800 hover:bg-slate-950/80 transition-all duration-300 flex items-start gap-4 ${
-                    idx === benefits.length - 1 ? 'sm:col-span-2 max-w-full' : ''
-                  }`}
+                <motion.div 
+                  key={idx}
+                  initial={{ opacity: 0, x: -15 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true, margin: "-60px" }}
+                  transition={{ duration: 0.4, delay: idx * 0.05 }}
+                  className="flex items-start gap-4 p-4 rounded-xl border border-slate-900/60 hover:border-slate-800 hover:bg-slate-900/10 transition duration-200"
                 >
-                  <span className="text-3xl p-3 bg-slate-900 border border-slate-800 rounded-xl h-fit">
+                  <span className="text-2xl p-2 bg-slate-950/80 border border-slate-800 rounded-lg shrink-0 select-none">
                     {benefit.icon}
                   </span>
                   <div className="space-y-1">
-                    <h4 className="font-bold text-white text-base font-display">
+                    <h4 className="font-bold text-white text-sm sm:text-base font-display">
                       {benefit.title}
                     </h4>
-                    <p className="text-xs sm:text-sm text-slate-400 leading-relaxed font-medium">
+                    <p className="text-xs text-slate-400 leading-relaxed font-semibold">
                       {benefit.description}
                     </p>
                   </div>
-                </div>
+                </motion.div>
               ))}
             </div>
 
+            {/* Right details box comparison panel */}
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.98 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true, margin: "-60px" }}
+              transition={{ duration: 0.5 }}
+              className="bg-slate-950/40 border border-slate-900 p-6.5 rounded-2xl space-y-6 shadow-2xl relative overflow-hidden"
+            >
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-brand-500 via-indigo-500 to-transparent" />
+              <div>
+                <h3 className="font-extrabold text-white text-base font-display">The Compliance Difference</h3>
+                <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mt-0.5 select-none">T&C Legalese vs Plain Language</p>
+              </div>
+
+              <div className="space-y-4 text-xs font-semibold">
+                <div className="space-y-2 p-3 bg-red-950/15 border border-red-500/10 rounded-xl">
+                  <span className="text-[9px] font-black text-red-500 uppercase select-none">Dense Legal Jargon</span>
+                  <p className="text-slate-450 italic leading-relaxed">
+                    \"You agree that we may, in our sole discretion, track, aggregate and sell telemetry datasets to third-party ad brokers without notice...\"
+                  </p>
+                </div>
+                <div className="space-y-2 p-3 bg-emerald-950/15 border border-emerald-500/10 rounded-xl">
+                  <span className="text-[9px] font-black text-emerald-500 uppercase select-none">Plain Language Summary</span>
+                  <p className="text-slate-350 leading-relaxed font-sans font-medium">
+                    • Company tracks usage logs. <br />
+                    • Sells data to advertisers. <br />
+                    • No notification required.
+                  </p>
+                </div>
+              </div>
+            </motion.div>
           </div>
         </div>
       </section>
 
       {/* 5. Testimonials Section */}
       <section className="py-24 bg-[#070A13] relative">
-        <div className="max-w-7xl mx-auto px-6 text-center space-y-16">
+        <div className="max-w-7xl mx-auto px-6 text-center space-y-16 relative z-10">
           <div className="space-y-4 max-w-2xl mx-auto">
-            <div className="inline-block text-xs font-bold text-brand-400 uppercase tracking-widest bg-brand-500/10 border border-brand-500/20 px-3 py-1 rounded-full">
-              Trust & Validation
+            <div className="inline-block text-xs font-bold text-brand-400 uppercase tracking-widest bg-brand-500/10 border border-brand-500/20 px-3 py-1 rounded-full select-none">
+              Testimonials
             </div>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-white font-display">
-              Trusted by Compliance Leaders
-            </h2>
-            <p className="text-slate-400 text-sm sm:text-base leading-relaxed">
-              Read what developers, managers, and everyday users are saying about our analysis tools.
-            </p>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-white font-display">Trusted by Users</h2>
           </div>
 
-          {/* Testimonial Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {testimonials.map((test, index) => (
-              <div 
-                key={index} 
-                className="p-8 rounded-2xl bg-slate-950/40 border border-slate-900 hover:border-slate-800 hover:bg-slate-950/60 shadow-xl transition-all duration-300 flex flex-col justify-between text-left space-y-6 group hover:-translate-y-1"
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto text-left">
+            {testimonials.map((item, idx) => (
+              <motion.div 
+                key={idx}
+                initial={{ opacity: 0, y: 15 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-60px" }}
+                transition={{ duration: 0.45, delay: idx * 0.1 }}
+                whileHover={{ y: -4, transition: { duration: 0.2 } }}
+                className="p-6 rounded-2xl bg-slate-950/40 border border-slate-900 hover:border-slate-800 space-y-6 shadow-lg flex flex-col justify-between"
               >
-                {/* Stars */}
-                <div className="flex gap-1 text-amber-400 text-sm">
-                  <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
-                </div>
-                
-                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-medium italic">
-                  "{test.quote}"
+                <p className="text-xs sm:text-sm text-slate-400 leading-relaxed italic font-medium">
+                  "{item.quote}"
                 </p>
-
-                <div className="flex items-center gap-3 pt-4 border-t border-slate-900">
-                  <div className={`w-10 h-10 rounded-full bg-gradient-to-tr ${test.avatarBg} flex items-center justify-center font-bold text-white text-sm`}>
-                    {test.author.charAt(0)}
+                <div className="flex items-center gap-3.5 select-none pt-4 border-t border-slate-900/60">
+                  <div className={`w-10 h-10 rounded-xl bg-gradient-to-tr ${item.avatarBg} flex items-center justify-center font-bold text-white text-sm shadow-md`}>
+                    {item.author.charAt(0)}
                   </div>
                   <div>
-                    <h5 className="font-bold text-white text-xs sm:text-sm">
-                      {test.author}
-                    </h5>
-                    <span className="text-[10px] sm:text-xs text-slate-500 font-semibold">
-                      {test.role}
-                    </span>
+                    <h4 className="font-bold text-white text-xs sm:text-sm">{item.author}</h4>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase mt-0.5 tracking-wider">{item.role}</p>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
       </section>
 
       {/* 6. FAQ Section */}
-      <section id="faq" className="py-24 bg-[#090D1A]/60 border-t border-slate-900 relative">
-        <div className="max-w-4xl mx-auto px-6 space-y-16">
-          <div className="space-y-4 text-center max-w-2xl mx-auto">
-            <div className="inline-block text-xs font-bold text-brand-400 uppercase tracking-widest bg-brand-500/10 border border-brand-500/20 px-3 py-1 rounded-full">
-              Help Center
+      <section id="faq" className="py-24 bg-[#090D1A]/60 border-y border-slate-900 relative">
+        <div className="max-w-4xl mx-auto px-6 space-y-16 relative z-10 text-center">
+          <div className="space-y-4 max-w-2xl mx-auto">
+            <div className="inline-block text-xs font-bold text-brand-400 uppercase tracking-widest bg-brand-500/10 border border-brand-500/20 px-3 py-1 rounded-full select-none">
+              FAQ
             </div>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-white font-display">
-              Frequently Asked Questions
-            </h2>
-            <p className="text-slate-400 text-sm sm:text-base leading-relaxed">
-              Find quick answers to common questions about document limitations, security protocols, and compliance metrics.
-            </p>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-white font-display">Frequently Asked Questions</h2>
           </div>
 
-          {/* Accordion UI */}
-          <div className="space-y-4">
+          <div className="space-y-4 max-w-3xl mx-auto text-left">
             {faqs.map((faq, index) => {
               const isOpen = openFaqIndex === index;
               return (
                 <div 
-                  key={index}
-                  className="bg-slate-950/60 border border-slate-900 hover:border-slate-800 rounded-2xl overflow-hidden transition-all duration-300"
+                  key={index} 
+                  className="bg-slate-950/40 border border-slate-900 hover:border-slate-850 rounded-2xl overflow-hidden shadow-md transition-colors"
                 >
                   <button
                     onClick={() => toggleFaq(index)}
-                    className="w-full px-6 py-5 flex items-center justify-between text-left focus:outline-none"
+                    className="w-full px-6 py-5 flex items-center justify-between text-left focus:outline-none select-none text-white hover:text-brand-400 font-bold font-display text-sm sm:text-base gap-4"
                   >
-                    <span className="font-bold text-white text-sm sm:text-base pr-4">
-                      {faq.question}
-                    </span>
-                    <span className={`w-8 h-8 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 group-hover:text-white transition-transform duration-300 ${
-                      isOpen ? 'rotate-180 text-white border-brand-500/40 bg-brand-500/10' : ''
-                    }`}>
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-                      </svg>
+                    <span>{faq.question}</span>
+                    <span className="text-slate-500 text-lg transition-transform duration-300" style={{ transform: isOpen ? 'rotate(45deg)' : 'rotate(0deg)' }}>
+                      ＋
                     </span>
                   </button>
-                  
-                  {/* Dynamic Height Transition Container */}
-                  <div 
-                    className={`transition-all duration-350 ease-in-out overflow-hidden ${
-                      isOpen ? 'max-h-[300px] border-t border-slate-900' : 'max-h-0'
-                    }`}
-                  >
-                    <div className="px-6 py-5 text-xs sm:text-sm text-slate-400 leading-relaxed font-medium">
-                      {faq.answer}
-                    </div>
-                  </div>
+
+                  <AnimatePresence initial={false}>
+                    {isOpen && (
+                      <motion.div
+                        initial="collapsed"
+                        animate="open"
+                        exit="collapsed"
+                        variants={{
+                          open: { opacity: 1, height: "auto" },
+                          collapsed: { opacity: 0, height: 0 }
+                        }}
+                        transition={{ duration: 0.25, ease: "easeInOut" }}
+                        className="overflow-hidden"
+                      >
+                        <div className="px-6 pb-6 text-sm text-slate-400 leading-relaxed pt-2 border-t border-slate-900/60 font-semibold font-sans">
+                          {faq.answer}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               );
             })}
@@ -680,97 +603,43 @@ export const Landing: React.FC = () => {
         </div>
       </section>
 
-      {/* Hero-like Final Call-To-Action (CTA) Section */}
-      <section className="py-24 bg-gradient-to-b from-[#070A13] to-[#04060C] text-center relative overflow-hidden border-t border-slate-900">
-        
-        {/* Soft background light */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-brand-500/10 rounded-full blur-[100px] -z-10" />
-
-        <div className="max-w-4xl mx-auto px-6 space-y-8">
-          <h2 className="text-3xl sm:text-5xl font-extrabold font-display tracking-tight text-white leading-tight">
-            Stop Signing Agreements Blindly.<br />
-            Scan Your Terms Now.
-          </h2>
-          <p className="text-slate-400 text-sm sm:text-base font-semibold max-w-xl mx-auto leading-relaxed">
-            Gain full transparency. TNC Guardian parses terms instantly, pointing out hidden costs, cookie tracking, and data limits.
-          </p>
-          <div className="pt-4">
-            <Link
-              to="/register"
-              className="px-8 py-4 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-xl shadow-lg shadow-brand-500/20 active:scale-95 transition-all duration-200 inline-flex items-center gap-2.5"
-            >
-              <span>Analyze Now (Free Scan)</span>
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-              </svg>
-            </Link>
-          </div>
-        </div>
-      </section>
-
       {/* 7. Footer Section */}
-      <footer className="bg-[#03050A] border-t border-slate-950 text-slate-500 py-16 text-sm relative">
-        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-12 gap-10 pb-12 border-b border-slate-900/60">
-          
-          {/* Logo & Description */}
-          <div className="md:col-span-5 space-y-4">
-            <span className="text-lg font-bold text-white font-display tracking-tight flex items-center gap-2">
-              <span className="w-8 h-8 rounded-lg bg-gradient-to-tr from-brand-600 to-indigo-600 flex items-center justify-center text-sm shadow-md shadow-brand-500/5">
-                🛡️
-              </span>
-              {env.VITE_APP_NAME}
-            </span>
-            <p className="text-xs text-slate-500 font-semibold leading-relaxed max-w-md">
-              TNC Guardian is an automated, AI-powered compliance auditor that reviews legal disclosures, service terms, and agreements. We simplify visual compliance checks.
+      <footer className="py-16 bg-[#070A13] border-t border-slate-900 select-none text-slate-400 text-xs">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12 font-semibold">
+          <div className="space-y-4">
+            <span className="text-white font-extrabold text-base tracking-wider block">{env.VITE_APP_NAME}</span>
+            <p className="leading-relaxed font-semibold max-w-xs">
+              AI-powered document auditing dashboard helping you understand legal bindings before signing.
             </p>
           </div>
-
-          {/* Sub Navigation Columns */}
-          <div className="md:col-span-7 grid grid-cols-3 gap-6">
-            {/* Col 1 */}
-            <div className="space-y-3">
-              <h5 className="font-extrabold text-white text-xs uppercase tracking-wider">Product</h5>
-              <ul className="space-y-2 text-xs font-semibold text-slate-500">
-                <li><a href="#features" className="hover:text-slate-300 transition-colors">Features</a></li>
-                <li><a href="#how-it-works" className="hover:text-slate-300 transition-colors">How It Works</a></li>
-                <li><Link to="/register" className="hover:text-slate-300 transition-colors">Register</Link></li>
-              </ul>
-            </div>
-
-            {/* Col 2 */}
-            <div className="space-y-3">
-              <h5 className="font-extrabold text-white text-xs uppercase tracking-wider">Legal</h5>
-              <ul className="space-y-2 text-xs font-semibold text-slate-500">
-                <li><a href="#" className="hover:text-slate-300 transition-colors">Privacy Policy</a></li>
-                <li><a href="#" className="hover:text-slate-300 transition-colors">Terms of Service</a></li>
-                <li>
-                  <a 
-                    href="https://github.com" 
-                    target="_blank" 
-                    rel="noreferrer" 
-                    className="hover:text-slate-300 transition-colors inline-flex items-center gap-1"
-                  >
-                    GitHub
-                  </a>
-                </li>
-              </ul>
-            </div>
-
-            {/* Col 3 */}
-            <div className="space-y-3">
-              <h5 className="font-extrabold text-white text-xs uppercase tracking-wider">Contact</h5>
-              <p className="text-xs text-slate-500 font-semibold leading-relaxed">
-                Questions? <br />
-                <span className="text-slate-300 font-bold block mt-1">support@tnc-guardian.dev</span>
-              </p>
-            </div>
+          <div>
+            <h4 className="text-[10px] text-white uppercase font-bold tracking-widest mb-4">Product</h4>
+            <ul className="list-none space-y-2.5 pl-0">
+              <li><a href="#features" className="hover:text-slate-300 transition-colors">Features</a></li>
+              <li><a href="#how-it-works" className="hover:text-slate-300 transition-colors">How It Works</a></li>
+              <li><Link to="/pricing" className="hover:text-slate-300 transition-colors">Pricing</Link></li>
+            </ul>
           </div>
-
+          <div>
+            <h4 className="text-[10px] text-white uppercase font-bold tracking-widest mb-4">Security</h4>
+            <ul className="list-none space-y-2.5 pl-0">
+              <li><span className="hover:text-slate-300 cursor-pointer transition">Anonymization</span></li>
+              <li><span className="hover:text-slate-300 cursor-pointer transition">Sandbox Isolation</span></li>
+              <li><span className="hover:text-slate-300 cursor-pointer transition">Zero Data Leaks</span></li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="text-[10px] text-white uppercase font-bold tracking-widest mb-4">Legal</h4>
+            <ul className="list-none space-y-2.5 pl-0">
+              <li><span className="hover:text-slate-300 cursor-pointer transition">Terms of Use</span></li>
+              <li><span className="hover:text-slate-300 cursor-pointer transition">Privacy Policy</span></li>
+            </ul>
+          </div>
         </div>
-
-        <div className="max-w-7xl mx-auto px-6 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-slate-600 font-semibold">
-          <span>&copy; {new Date().getFullYear()} {env.VITE_APP_NAME}. All rights reserved.</span>
-          <span>Powered by Claude & EasyOCR Compliance Pipeline.</span>
+        
+        <div className="max-w-7xl mx-auto px-6 mt-12 pt-8 border-t border-slate-900/60 flex flex-col sm:flex-row items-center justify-between gap-4 text-[10px] text-slate-500 font-bold uppercase tracking-wider">
+          <span>&copy; {new Date().getFullYear()} {env.VITE_APP_NAME} Inc. All rights reserved.</span>
+          <span>Designed with absolute precision.</span>
         </div>
       </footer>
 

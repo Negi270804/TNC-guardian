@@ -3,6 +3,7 @@ import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import { env } from '@/config/env';
+import { motion } from 'framer-motion';
 
 export const AppLayout: React.FC = () => {
   const navigate = useNavigate();
@@ -62,18 +63,23 @@ export const AppLayout: React.FC = () => {
               { to: '/profile', label: 'Profile' },
               { to: '/settings', label: 'Settings' }
             ].map((item) => (
-              <Link
+              <motion.div
                 key={item.to}
-                to={item.to}
-                onClick={closeSidebar}
-                className={`block px-3 py-2.5 rounded-md text-sm font-medium transition ${
-                  isActive(item.to) || (item.to === '/subscription' && isActive('/pricing'))
-                    ? 'bg-brand-50 dark:bg-brand-950/20 text-brand-600 dark:text-brand-400 border-l-2 border-brand-500 font-semibold'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200'
-                }`}
+                whileHover={{ x: 4 }}
+                transition={{ type: 'spring', stiffness: 350, damping: 25 }}
               >
-                {item.label}
-              </Link>
+                <Link
+                  to={item.to}
+                  onClick={closeSidebar}
+                  className={`block px-3 py-2.5 rounded-md text-sm font-medium transition ${
+                    isActive(item.to) || (item.to === '/subscription' && isActive('/pricing'))
+                      ? 'bg-brand-50 dark:bg-brand-950/20 text-brand-600 dark:text-brand-400 border-l-2 border-brand-500 font-semibold'
+                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200'
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              </motion.div>
             ))}
           </nav>
         </div>
@@ -112,8 +118,10 @@ export const AppLayout: React.FC = () => {
           <div className="flex items-center gap-2.5 sm:gap-4">
             
             {/* Smooth Theme Switcher Button */}
-            <button
+            <motion.button
               onClick={toggleTheme}
+              whileHover={{ rotate: 15 }}
+              whileTap={{ scale: 0.95 }}
               className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition shadow-sm select-none"
               aria-label="Toggle Light/Dark Theme"
               title="Toggle Light/Dark Theme"
@@ -123,7 +131,7 @@ export const AppLayout: React.FC = () => {
               ) : (
                 <span className="text-sm block leading-none">☀️</span>
               )}
-            </button>
+            </motion.button>
 
             <div className="text-right hidden md:block select-none">
               <span className="block text-sm font-semibold text-slate-800 dark:text-slate-200">{user?.full_name || 'User'}</span>
@@ -139,18 +147,26 @@ export const AppLayout: React.FC = () => {
               )}
             </div>
 
-            <button
+            <motion.button
               onClick={handleLogout}
+              whileTap={{ scale: 0.96 }}
               className="text-xs px-2.5 py-1.5 sm:px-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-red-500 border border-slate-200 dark:border-slate-800 rounded-lg font-medium transition select-none"
             >
               Logout
-            </button>
+            </motion.button>
           </div>
         </header>
 
-        <main className="flex-1 p-4 sm:p-8 overflow-y-auto">
+        {/* Animate outlet transitions */}
+        <motion.main
+          key={location.pathname}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.25, ease: 'easeOut' }}
+          className="flex-1 p-4 sm:p-8 overflow-y-auto"
+        >
           <Outlet />
-        </main>
+        </motion.main>
       </div>
     </div>
   );

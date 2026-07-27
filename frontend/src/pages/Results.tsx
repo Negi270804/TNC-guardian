@@ -6,8 +6,9 @@ import { Document, Analysis, AnalysisItem } from '@/types';
 import { formatDate } from '@/utils';
 import { env } from '@/config/env';
 import { API_ROUTES } from '@/config/api-routes';
+import { motion, AnimatePresence } from 'framer-motion';
 
-// Circular Progress Component Redesign
+// Circular Progress Component Redesign for Results
 const CircularProgress: React.FC<{ score: number }> = ({ score }) => {
   const radius = 46;
   const strokeWidth = 8;
@@ -19,7 +20,7 @@ const CircularProgress: React.FC<{ score: number }> = ({ score }) => {
   else if (score > 60) strokeColor = '#EF4444'; // Red (61-100)
 
   return (
-    <div className="relative flex items-center justify-center w-36 h-36 select-none">
+    <div className="relative flex items-center justify-center w-36 h-36 select-none animate-fadeIn">
       <svg className="w-full h-full transform -rotate-90">
         {/* Track circle */}
         <circle
@@ -31,7 +32,7 @@ const CircularProgress: React.FC<{ score: number }> = ({ score }) => {
           fill="transparent"
         />
         {/* Progress circle */}
-        <circle
+        <motion.circle
           cx="72"
           cy="72"
           r={radius}
@@ -39,13 +40,14 @@ const CircularProgress: React.FC<{ score: number }> = ({ score }) => {
           strokeWidth={strokeWidth}
           fill="transparent"
           strokeDasharray={circumference}
-          strokeDashoffset={strokeDashoffset}
+          initial={{ strokeDashoffset: circumference }}
+          animate={{ strokeDashoffset }}
+          transition={{ duration: 1.2, ease: "easeOut" }}
           strokeLinecap="round"
-          className="transition-all duration-1000 ease-out"
         />
       </svg>
       <div className="absolute flex flex-col items-center justify-center">
-        <span className="text-4xl font-black text-slate-900 font-display leading-none">{score}</span>
+        <span className="text-4xl font-black text-slate-900 dark:text-white font-display leading-none">{score}</span>
         <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-1.5">Risk Score</span>
       </div>
     </div>
@@ -253,12 +255,12 @@ export const Results: React.FC = () => {
   const getClauseHighlightStyles = (level: string) => {
     const norm = level.toUpperCase();
     if (norm === 'CRITICAL' || norm === 'HIGH') {
-      return 'p-3.5 rounded-xl border border-red-500/15 bg-slate-50/50 font-mono text-slate-700 text-xs leading-relaxed italic border-l-4 border-l-red-500';
+      return 'p-3.5 rounded-xl border border-red-500/15 bg-slate-50/50 dark:bg-slate-950/40 font-mono text-slate-700 dark:text-slate-350 text-xs leading-relaxed italic border-l-4 border-l-red-500';
     }
     if (norm === 'MEDIUM') {
-      return 'p-3.5 rounded-xl border border-amber-500/15 bg-slate-50/50 font-mono text-slate-700 text-xs leading-relaxed italic border-l-4 border-l-amber-500';
+      return 'p-3.5 rounded-xl border border-amber-500/15 bg-slate-50/50 dark:bg-slate-950/40 font-mono text-slate-700 dark:text-slate-350 text-xs leading-relaxed italic border-l-4 border-l-amber-500';
     }
-    return 'p-3.5 rounded-xl border border-emerald-500/15 bg-slate-50/50 font-mono text-slate-700 text-xs leading-relaxed italic border-l-4 border-l-emerald-500';
+    return 'p-3.5 rounded-xl border border-emerald-500/15 bg-slate-50/50 dark:bg-slate-950/40 font-mono text-slate-700 dark:text-slate-350 text-xs leading-relaxed italic border-l-4 border-l-emerald-500';
   };
 
   const isPending = isDocLoading || isAnalysisLoading;
@@ -353,84 +355,110 @@ export const Results: React.FC = () => {
     <div className="space-y-8 relative select-text print:bg-white print:text-black print:p-8 print:space-y-6 fade-in text-slate-700">
       
       {/* Floating Success Toast */}
-      {successToast && (
-        <div className="fixed top-6 right-6 z-50 flex items-center gap-3 px-4.5 py-3.5 rounded-xl bg-emerald-950/90 text-emerald-400 border border-emerald-500/25 shadow-2xl animate-fadeIn print:hidden">
-          <span className="text-base select-none">✓</span>
-          <span className="text-xs font-bold">{successToast}</span>
-        </div>
-      )}
+      <AnimatePresence>
+        {successToast && (
+          <motion.div 
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="fixed top-6 right-6 z-50 flex items-center gap-3 px-4.5 py-3.5 rounded-xl bg-emerald-950/90 text-emerald-400 border border-emerald-500/25 shadow-2xl print:hidden"
+          >
+            <span className="text-base select-none">✓</span>
+            <span className="text-xs font-bold">{successToast}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Floating Error Toast */}
-      {errorToast && (
-        <div className="fixed top-6 right-6 z-50 flex items-center gap-3 px-4.5 py-3.5 rounded-xl bg-red-950/90 text-red-400 border border-red-500/25 shadow-2xl animate-fadeIn print:hidden">
-          <span className="text-base select-none">⚠️</span>
-          <span className="text-xs font-bold">{errorToast}</span>
-        </div>
-      )}
+      <AnimatePresence>
+        {errorToast && (
+          <motion.div 
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="fixed top-6 right-6 z-50 flex items-center gap-3 px-4.5 py-3.5 rounded-xl bg-red-950/90 text-red-400 border border-red-500/25 shadow-2xl print:hidden"
+          >
+            <span className="text-base select-none">⚠️</span>
+            <span className="text-xs font-bold">{errorToast}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Re-analysis Loading Screen Overlay */}
-      {analyzeMutation.isPending && (
-        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-md flex flex-col items-center justify-center p-6 z-50 print:hidden">
-          <style>{`
-            @keyframes progress-indeterminate {
-              0% { transform: translateX(-100%); }
-              50% { transform: translateX(0%); }
-              100% { transform: translateX(100%); }
-            }
-            .animate-progress-indeterminate {
-              animation: progress-indeterminate 2.2s infinite ease-in-out;
-              width: 50%;
-            }
-          `}</style>
-          
-          <div className="w-full max-w-md bg-white border border-slate-200/80 rounded-2xl p-8 space-y-6 text-center shadow-2xl relative overflow-hidden animate-fadeIn">
-            {/* Top glowing laser line */}
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-brand-500 to-transparent" />
+      <AnimatePresence>
+        {analyzeMutation.isPending && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-slate-955/60 backdrop-blur-md flex flex-col items-center justify-center p-6 z-50 print:hidden"
+          >
+            <style>{`
+              @keyframes progress-indeterminate {
+                0% { transform: translateX(-100%); }
+                50% { transform: translateX(0%); }
+                100% { transform: translateX(100%); }
+              }
+              .animate-progress-indeterminate {
+                animation: progress-indeterminate 2.2s infinite ease-in-out;
+                width: 50%;
+              }
+            `}</style>
             
-            <div className="relative w-24 h-24 mx-auto flex items-center justify-center">
-              <div className="absolute inset-0 rounded-full border-4 border-t-brand-500 border-r-brand-500/10 border-b-brand-500/10 border-l-brand-500/10 animate-spin" />
-              <div className="absolute inset-2 rounded-full border-4 border-b-brand-400 border-t-brand-400/10 border-r-brand-400/10 border-l-brand-400/10 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '2s' }} />
-              <span className="text-3xl select-none">🛡️</span>
-            </div>
-            
-            <div className="space-y-2">
-              <h3 className="text-lg font-bold text-slate-900 font-display">AI Re-analysis In Progress</h3>
-              <p className="text-xs text-slate-450 leading-relaxed max-w-xs mx-auto font-medium">
-                Recalculating clause valuations, verifying modifications, and updating overall safety indices...
-              </p>
-            </div>
+            <motion.div 
+              initial={{ scale: 0.94, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.94, opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+              className="w-full max-w-md bg-white border border-slate-200/80 rounded-2xl p-8 space-y-6 text-center shadow-2xl relative overflow-hidden"
+            >
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-brand-500 to-transparent" />
+              
+              <div className="relative w-24 h-24 mx-auto flex items-center justify-center">
+                <div className="absolute inset-0 rounded-full border-4 border-t-brand-500 border-r-brand-500/10 border-b-brand-500/10 border-l-brand-500/10 animate-spin" />
+                <div className="absolute inset-2 rounded-full border-4 border-b-brand-400 border-t-brand-400/10 border-r-brand-400/10 border-l-brand-400/10 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '2s' }} />
+                <span className="text-3xl select-none">🛡️</span>
+              </div>
+              
+              <div className="space-y-2">
+                <h3 className="text-lg font-bold text-slate-900 font-display">AI Re-analysis In Progress</h3>
+                <p className="text-xs text-slate-455 leading-relaxed max-w-xs mx-auto font-medium">
+                  Recalculating clause valuations, verifying modifications, and updating overall safety indices...
+                </p>
+              </div>
 
-            <div className="w-full bg-slate-50 border border-slate-100 rounded-xl p-4.5 space-y-3 text-left">
-              <div className="flex justify-between items-center text-[10px] font-bold text-slate-500">
-                <span>AUDITING ENGINE</span>
-                <span className="text-brand-650 font-extrabold animate-pulse uppercase tracking-wider">
-                  RE-RUNNING
-                </span>
+              <div className="w-full bg-slate-50 border border-slate-100 rounded-xl p-4.5 space-y-3 text-left">
+                <div className="flex justify-between items-center text-[10px] font-bold text-slate-500">
+                  <span>AUDITING ENGINE</span>
+                  <span className="text-brand-650 font-extrabold animate-pulse uppercase tracking-wider">
+                    RE-RUNNING
+                  </span>
+                </div>
+                <div className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden relative">
+                  <div className="bg-brand-500 h-full rounded-full animate-progress-indeterminate absolute" />
+                </div>
               </div>
-              <div className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden relative">
-                <div className="bg-brand-500 h-full rounded-full animate-progress-indeterminate absolute" />
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Header breadcrumb bar */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 print:hidden">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 print:hidden select-none">
         <div>
           <div className="flex items-center gap-2 text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">
             <Link to="/documents" className="hover:text-brand-500 transition-colors">Documents</Link>
             <span>/</span>
             <span className="text-slate-500">Results Report</span>
           </div>
-          <h2 className="text-2xl font-bold text-slate-900 font-display truncate max-w-xl">
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-white font-display truncate max-w-xl">
             Audit Report: {doc.original_filename}
           </h2>
         </div>
         <div className="shrink-0">
           <Link
             to="/documents"
-            className="px-4 py-2 border border-slate-250 hover:bg-slate-50 text-slate-700 font-bold rounded-xl text-xs transition-colors shadow-sm"
+            className="px-4 py-2 border border-slate-250 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-350 font-bold rounded-xl text-xs transition-colors shadow-sm"
           >
             ← Back to Repository
           </Link>
@@ -444,7 +472,11 @@ export const Results: React.FC = () => {
         <div className="lg:col-span-1 space-y-6 print:col-span-3">
           
           {/* Gauge card */}
-          <section className={`p-6 bg-white border rounded-2xl flex flex-col items-center text-center space-y-4 shadow-soft transition-all duration-300 hover:shadow-hover ${riskDetails.borderClass}`}>
+          <motion.section 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`p-6 bg-white dark:bg-slate-900 border rounded-2xl flex flex-col items-center text-center space-y-4 shadow-soft hover:shadow-hover transition-all duration-300 ${riskDetails.borderClass}`}
+          >
             <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest font-display">Document Risk Rating</h3>
             
             <CircularProgress score={analysis.overall_risk_score} />
@@ -453,7 +485,7 @@ export const Results: React.FC = () => {
               <h4 className={`text-xl font-extrabold font-display uppercase tracking-wide ${riskDetails.colorClass}`}>
                 {riskDetails.label}
               </h4>
-              <p className="text-xs text-slate-500 leading-relaxed font-semibold max-w-[220px] mx-auto">
+              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-semibold max-w-[220px] mx-auto">
                 {riskDetails.description}
               </p>
             </div>
@@ -465,17 +497,19 @@ export const Results: React.FC = () => {
                 <span>Moderate</span>
                 <span>Critical</span>
               </div>
-              <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden border border-slate-200/25 relative">
-                <div
-                  className={`h-full rounded-full transition-all duration-1000 ${riskDetails.bgProgress}`}
-                  style={{ width: `${analysis.overall_risk_score}%` }}
+              <div className="w-full bg-slate-100 dark:bg-slate-800/40 rounded-full h-2 overflow-hidden border border-slate-200/25 relative">
+                <motion.div
+                  className={`h-full rounded-full ${riskDetails.bgProgress}`}
+                  initial={{ width: 0 }}
+                  animate={{ width: `${analysis.overall_risk_score}%` }}
+                  transition={{ duration: 1.2, ease: "easeOut" }}
                 />
               </div>
             </div>
-          </section>
+          </motion.section>
 
           {/* Counts Breakdown metrics */}
-          <section className="p-6 bg-white border border-slate-200/60 rounded-2xl space-y-4 shadow-soft">
+          <section className="p-6 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/80 rounded-2xl space-y-4 shadow-soft">
             <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest font-display">Risk Breakdown</h3>
             <div className="grid grid-cols-2 gap-3 font-semibold">
               {/* Critical */}
@@ -502,19 +536,19 @@ export const Results: React.FC = () => {
           </section>
 
           {/* Audit params metadata list */}
-          <section className="p-5 bg-white border border-slate-200/60 rounded-2xl space-y-4 shadow-soft">
-            <h4 className="text-[10px] font-bold text-slate-450 uppercase tracking-widest font-display border-b border-slate-100 pb-2">Audit Metadata</h4>
-            <div className="space-y-3 text-xs font-semibold text-slate-500">
-              <div className="flex justify-between border-b border-slate-50 pb-2">
+          <section className="p-5 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/80 rounded-2xl space-y-4 shadow-soft">
+            <h4 className="text-[10px] font-bold text-slate-450 uppercase tracking-widest font-display border-b border-slate-100 dark:border-slate-800 pb-2">Audit Metadata</h4>
+            <div className="space-y-3 text-xs font-semibold text-slate-550 dark:text-slate-400">
+              <div className="flex justify-between border-b border-slate-50 dark:border-slate-800/60 pb-2">
                 <span>Source Type:</span>
-                <span className="text-slate-800 font-bold flex items-center gap-1">
+                <span className="text-slate-800 dark:text-slate-200 font-bold flex items-center gap-1">
                   {doc.source_type === 'URL' && '🌐 URL Link'}
                   {doc.source_type === 'TEXT' && '📝 Plain Text'}
                   {(doc.source_type === 'PDF' || !doc.source_type) && '📄 PDF Document'}
                 </span>
               </div>
               {doc.source_type === 'URL' && doc.source_url && (
-                <div className="border-b border-slate-55 pb-2.5 space-y-1">
+                <div className="border-b border-slate-55 dark:border-slate-800 pb-2.5 space-y-1">
                   <span className="block text-slate-400">Source Address:</span>
                   <a
                     href={doc.source_url}
@@ -526,7 +560,7 @@ export const Results: React.FC = () => {
                   </a>
                 </div>
               )}
-              <div className="flex justify-between border-b border-slate-50 pb-2">
+              <div className="flex justify-between border-b border-slate-50 dark:border-slate-800 pb-2">
                 <span>Confidence Score:</span>
                 <span className="text-emerald-500 font-extrabold">
                   {analysis.confidence_score 
@@ -536,21 +570,21 @@ export const Results: React.FC = () => {
                     : '95%'}
                 </span>
               </div>
-              <div className="flex justify-between border-b border-slate-50 pb-2">
+              <div className="flex justify-between border-b border-slate-50 dark:border-slate-800 pb-2">
                 <span>AI Auditor Engine:</span>
-                <span className="text-slate-700 font-mono text-[11px]">{analysis.model_name}</span>
+                <span className="text-slate-700 dark:text-slate-350 font-mono text-[11px]">{analysis.model_name}</span>
               </div>
-              <div className="flex justify-between border-b border-slate-50 pb-2">
+              <div className="flex justify-between border-b border-slate-50 dark:border-slate-800 pb-2">
                 <span>LLM Provider:</span>
-                <span className="text-slate-800 font-bold uppercase">{analysis.provider}</span>
+                <span className="text-slate-800 dark:text-slate-200 font-bold uppercase">{analysis.provider}</span>
               </div>
-              <div className="flex justify-between border-b border-slate-50 pb-2">
+              <div className="flex justify-between border-b border-slate-50 dark:border-slate-800 pb-2">
                 <span>Execution Speed:</span>
                 <span className="text-brand-600 font-bold">{analysis.processing_time}s</span>
               </div>
               <div className="flex justify-between">
-                <span>Generated Date:</span>
-                <span className="text-slate-700">{formatDate(analysis.created_at)}</span>
+                <span>Generated On:</span>
+                <span className="text-slate-700 dark:text-slate-300">{formatDate(analysis.created_at)}</span>
               </div>
             </div>
           </section>
@@ -560,75 +594,76 @@ export const Results: React.FC = () => {
         <div className="lg:col-span-2 space-y-6 print:col-span-3">
           
           {/* Actions Control Deck Card */}
-          <section className="p-4 bg-white border border-slate-200/60 rounded-2xl flex flex-wrap items-center gap-2.5 print:hidden shadow-soft">
+          <section className="p-4 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/80 rounded-2xl flex flex-wrap items-center gap-2.5 print:hidden shadow-soft">
             <button
               onClick={handleCopySummary}
-              className="px-3.5 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-250 text-slate-700 text-xs font-bold rounded-xl shadow-sm transition-colors"
+              className="px-3.5 py-2 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-250 dark:border-slate-800 text-slate-700 dark:text-slate-350 text-xs font-bold rounded-xl shadow-sm transition-colors"
             >
               📋 Copy Summary
             </button>
             <button
               onClick={handleDownloadJSON}
-              className="px-3.5 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-250 text-slate-700 text-xs font-bold rounded-xl shadow-sm transition-colors"
+              className="px-3.5 py-2 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-250 dark:border-slate-800 text-slate-700 dark:text-slate-355 text-xs font-bold rounded-xl shadow-sm transition-colors"
             >
               📥 Download JSON
             </button>
             <button
               onClick={handleDownloadTxtReport}
-              className="px-3.5 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-250 text-slate-700 text-xs font-bold rounded-xl shadow-sm transition-colors"
+              className="px-3.5 py-2 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-250 dark:border-slate-800 text-slate-700 dark:text-slate-355 text-xs font-bold rounded-xl shadow-sm transition-colors"
             >
               📝 Download TXT Report
             </button>
             <button
               onClick={handlePrint}
-              className="px-3.5 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-250 text-slate-700 text-xs font-bold rounded-xl shadow-sm transition-colors"
+              className="px-3.5 py-2 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-250 dark:border-slate-800 text-slate-700 dark:text-slate-350 text-xs font-bold rounded-xl shadow-sm transition-colors"
             >
               🖨️ Print Report
             </button>
-            <button
+            <motion.button
               onClick={() => analyzeMutation.mutate(doc.id)}
+              whileTap={{ scale: 0.96 }}
               disabled={analyzeMutation.isPending}
               className="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-xl text-xs shadow-md shadow-brand-500/20 active:scale-95 transition-all select-none disabled:opacity-50 ml-auto"
             >
               🔄 Re-analyze
-            </button>
+            </motion.button>
           </section>
 
           {/* AI Summary Card */}
-          <section className="p-6 bg-white border border-slate-200/60 rounded-2xl space-y-3 shadow-soft">
-            <h3 className="text-base font-bold text-slate-900 font-display flex items-center gap-2 select-none border-b border-slate-100 pb-2.5">
+          <section className="p-6 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/80 rounded-2xl space-y-3 shadow-soft">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white font-display flex items-center gap-2 select-none border-b border-slate-100 dark:border-slate-800 pb-2.5">
               <span>📋</span> Executive Summary
             </h3>
-            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed whitespace-pre-line font-medium">
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line font-medium">
               {analysis.summary}
             </p>
           </section>
 
           {/* AI Assessment Card */}
           {analysis.ai_explanation && (
-            <section className="p-6 bg-white border border-slate-200/60 rounded-2xl space-y-3 shadow-soft">
-              <h3 className="text-base font-bold text-slate-900 font-display flex items-center gap-2 select-none border-b border-slate-100 pb-2.5">
+            <section className="p-6 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/80 rounded-2xl space-y-3 shadow-soft">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white font-display flex items-center gap-2 select-none border-b border-slate-100 dark:border-slate-800 pb-2.5">
                 <span>🤖</span> AI Auditor Assessment
               </h3>
-              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed whitespace-pre-line font-medium">
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line font-medium">
                 {analysis.ai_explanation}
               </p>
             </section>
           )}
 
           {/* Key Recommendations gradient Panel */}
-          <section className="p-6 bg-gradient-to-br from-brand-50 to-brand-100/50 border border-brand-100 rounded-2xl space-y-3 shadow-sm">
-            <h3 className="text-base font-bold text-brand-700 font-display flex items-center gap-2 select-none">
+          <section className="p-6 bg-gradient-to-br from-brand-50 to-brand-100/50 dark:from-brand-950/20 dark:to-indigo-950/20 border border-brand-100 dark:border-brand-900 rounded-2xl space-y-3 shadow-sm">
+            <h3 className="text-base font-bold text-brand-700 dark:text-brand-400 font-display flex items-center gap-2 select-none">
               <span>💡</span> Key Recommendations
             </h3>
-            <p className="text-xs sm:text-sm text-brand-900 leading-relaxed whitespace-pre-line font-semibold">
+            <p className="text-xs sm:text-sm text-brand-900 dark:text-brand-300 leading-relaxed whitespace-pre-line font-semibold">
               {analysis.recommendations}
             </p>
           </section>
 
           {/* Missing Protective Clauses Panel */}
-          <section className="p-6 bg-white border border-slate-200/60 rounded-2xl space-y-4 shadow-soft">
-            <h3 className="text-base font-bold text-slate-900 font-display flex items-center gap-2 border-b border-slate-100 pb-2.5 select-none">
+          <section className="p-6 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/80 rounded-2xl space-y-4 shadow-soft">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white font-display flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2.5 select-none">
               <span>⚠️</span> Missing Protective Clauses ({analysis.missing_clauses?.length || 0})
             </h3>
             {!analysis.missing_clauses || analysis.missing_clauses.length === 0 ? (
@@ -638,12 +673,12 @@ export const Results: React.FC = () => {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {analysis.missing_clauses.map((item: any, idx: number) => (
-                  <div key={idx} className="p-4 rounded-xl bg-slate-50 border border-slate-100 space-y-1.5 font-medium shadow-sm">
-                    <h4 className="font-bold text-slate-800 text-xs sm:text-sm font-display flex items-center gap-1.5">
+                  <div key={idx} className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950/45 border border-slate-100 dark:border-slate-800/80 space-y-1.5 font-medium shadow-sm">
+                    <h4 className="font-bold text-slate-800 dark:text-slate-200 text-xs sm:text-sm font-display flex items-center gap-1.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
                       {item.title}
                     </h4>
-                    <p className="text-[11px] text-slate-500 leading-relaxed font-semibold">
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed font-semibold">
                       {item.explanation}
                     </p>
                   </div>
@@ -655,8 +690,8 @@ export const Results: React.FC = () => {
           {/* High Risk Clauses Section */}
           <section className="space-y-4">
             <div className="flex justify-between items-center select-none">
-              <h3 className="text-base sm:text-lg font-bold text-slate-900 font-display flex items-center gap-2">
-                <span className="w-2.5 h-2.5 bg-red-500 rounded-full" />
+              <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white font-display flex items-center gap-2">
+                <span className="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse" />
                 High Risk Clauses ({highRiskClauses.length})
               </h3>
               {highRiskClauses.length > 0 && (
@@ -669,17 +704,20 @@ export const Results: React.FC = () => {
             </div>
 
             {highRiskClauses.length === 0 ? (
-              <div className="p-8 border border-slate-200/60 bg-white rounded-2xl text-center text-xs font-bold text-slate-400 shadow-soft">
+              <div className="p-8 border border-slate-200/60 bg-white dark:bg-slate-900 rounded-2xl text-center text-xs font-bold text-slate-400 dark:text-slate-500 shadow-soft">
                 ✓ No critical or high-risk clauses flagged in this agreement.
               </div>
             ) : (
               <div className="space-y-4">
-                {highRiskClauses.map((item: AnalysisItem) => {
+                {highRiskClauses.map((item: AnalysisItem, idx: number) => {
                   const isExpanded = expandedClauses[item.id] ?? false;
                   return (
-                    <div
+                    <motion.div
                       key={item.id}
-                      className="p-5 rounded-2xl bg-white border border-slate-200/60 space-y-3.5 transition hover:border-slate-350 shadow-soft"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: idx * 0.04 }}
+                      className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/80 space-y-3.5 shadow-soft"
                     >
                       <div
                         onClick={() => toggleExpand(item.id)}
@@ -694,34 +732,44 @@ export const Results: React.FC = () => {
                               {item.category}
                             </span>
                           </div>
-                          <h4 className="text-sm font-bold text-slate-800 font-display">
+                          <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200 font-display">
                             {item.title}
                           </h4>
                         </div>
-                        <button className="text-slate-400 hover:text-slate-700 text-[10px] font-bold print:hidden whitespace-nowrap pt-1">
+                        <button className="text-slate-400 hover:text-slate-750 text-[10px] font-bold print:hidden whitespace-nowrap pt-1 transition">
                           {isExpanded ? 'Collapse ▲' : 'Expand ▼'}
                         </button>
                       </div>
 
-                      {isExpanded && (
-                        <div className="pt-4 border-t border-slate-100 space-y-4 text-xs font-semibold text-slate-500 animate-fadeIn">
-                          <div className="space-y-1">
-                            <h5 className="font-bold text-slate-400 uppercase text-[9px] tracking-widest">AI Assessment</h5>
-                            <p className="text-slate-650 leading-relaxed font-normal">{item.explanation}</p>
-                          </div>
-                          <div className="space-y-1">
-                            <h5 className="font-bold text-slate-400 uppercase text-[9px] tracking-widest">Original Text Quote</h5>
-                            <div className={getClauseHighlightStyles(item.risk_level)}>
-                              "{item.original_text}"
+                      <AnimatePresence initial={false}>
+                        {isExpanded && (
+                          <motion.div 
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.25, ease: "easeInOut" }}
+                            className="overflow-hidden"
+                          >
+                            <div className="pt-4 border-t border-slate-105 dark:border-slate-800 space-y-4 text-xs font-semibold text-slate-500">
+                              <div className="space-y-1">
+                                <h5 className="font-bold text-slate-400 uppercase text-[9px] tracking-widest">AI Assessment</h5>
+                                <p className="text-slate-650 dark:text-slate-350 leading-relaxed font-normal">{item.explanation}</p>
+                              </div>
+                              <div className="space-y-1">
+                                <h5 className="font-bold text-slate-400 uppercase text-[9px] tracking-widest">Original Text Quote</h5>
+                                <div className={getClauseHighlightStyles(item.risk_level)}>
+                                  "{item.original_text}"
+                                </div>
+                              </div>
+                              <div className="p-3.5 rounded-xl bg-brand-50 dark:bg-brand-950/20 border border-brand-100 dark:border-brand-900 text-brand-900 dark:text-brand-300 shadow-sm">
+                                <h5 className="font-bold text-brand-700 dark:text-brand-400 uppercase text-[9px] tracking-widest mb-0.5">Suggested Action</h5>
+                                <p className="text-slate-700 dark:text-slate-300 leading-relaxed font-sans font-normal">{item.suggestion}</p>
+                              </div>
                             </div>
-                          </div>
-                          <div className="p-3.5 rounded-xl bg-brand-50 border border-brand-100 text-brand-900 shadow-sm">
-                            <h5 className="font-bold text-brand-700 uppercase text-[9px] tracking-widest mb-0.5">Suggested Action</h5>
-                            <p className="text-slate-700 leading-relaxed font-sans font-normal">{item.suggestion}</p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </motion.div>
                   );
                 })}
               </div>
@@ -731,24 +779,27 @@ export const Results: React.FC = () => {
           {/* Warning Clauses Section */}
           <section className="space-y-4">
             <div className="flex justify-between items-center select-none">
-              <h3 className="text-base sm:text-lg font-bold text-slate-900 font-display flex items-center gap-2">
+              <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white font-display flex items-center gap-2">
                 <span className="w-2.5 h-2.5 bg-amber-500 rounded-full" />
                 Warning Clauses ({warningClauses.length})
               </h3>
             </div>
 
             {warningClauses.length === 0 ? (
-              <div className="p-8 border border-slate-200/60 bg-white rounded-2xl text-center text-xs font-bold text-slate-400 shadow-soft">
+              <div className="p-8 border border-slate-200/60 bg-white dark:bg-slate-900 rounded-2xl text-center text-xs font-bold text-slate-400 dark:text-slate-500 shadow-soft">
                 ✓ No medium-risk warning clauses flagged in this agreement.
               </div>
             ) : (
               <div className="space-y-4">
-                {warningClauses.map((item: AnalysisItem) => {
+                {warningClauses.map((item: AnalysisItem, idx: number) => {
                   const isExpanded = expandedClauses[item.id] ?? false;
                   return (
-                    <div
+                    <motion.div
                       key={item.id}
-                      className="p-5 rounded-2xl bg-white border border-slate-200/60 space-y-3.5 transition hover:border-slate-350 shadow-soft"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: idx * 0.04 }}
+                      className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/80 space-y-3.5 shadow-soft"
                     >
                       <div
                         onClick={() => toggleExpand(item.id)}
@@ -763,34 +814,44 @@ export const Results: React.FC = () => {
                               {item.category}
                             </span>
                           </div>
-                          <h4 className="text-sm font-bold text-slate-800 font-display">
+                          <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200 font-display">
                             {item.title}
                           </h4>
                         </div>
-                        <button className="text-slate-400 hover:text-slate-700 text-[10px] font-bold print:hidden whitespace-nowrap pt-1">
+                        <button className="text-slate-400 hover:text-slate-755 text-[10px] font-bold print:hidden whitespace-nowrap pt-1 transition">
                           {isExpanded ? 'Collapse ▲' : 'Expand ▼'}
                         </button>
                       </div>
 
-                      {isExpanded && (
-                        <div className="pt-4 border-t border-slate-100 space-y-4 text-xs font-semibold text-slate-500 animate-fadeIn">
-                          <div className="space-y-1">
-                            <h5 className="font-bold text-slate-400 uppercase text-[9px] tracking-widest">AI Assessment</h5>
-                            <p className="text-slate-650 leading-relaxed font-normal">{item.explanation}</p>
-                          </div>
-                          <div className="space-y-1">
-                            <h5 className="font-bold text-slate-400 uppercase text-[9px] tracking-widest">Original Text Quote</h5>
-                            <div className={getClauseHighlightStyles(item.risk_level)}>
-                              "{item.original_text}"
+                      <AnimatePresence initial={false}>
+                        {isExpanded && (
+                          <motion.div 
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.25, ease: "easeInOut" }}
+                            className="overflow-hidden"
+                          >
+                            <div className="pt-4 border-t border-slate-105 dark:border-slate-800 space-y-4 text-xs font-semibold text-slate-500">
+                              <div className="space-y-1">
+                                <h5 className="font-bold text-slate-400 uppercase text-[9px] tracking-widest">AI Assessment</h5>
+                                <p className="text-slate-650 dark:text-slate-350 leading-relaxed font-normal">{item.explanation}</p>
+                              </div>
+                              <div className="space-y-1">
+                                <h5 className="font-bold text-slate-400 uppercase text-[9px] tracking-widest">Original Text Quote</h5>
+                                <div className={getClauseHighlightStyles(item.risk_level)}>
+                                  "{item.original_text}"
+                                </div>
+                              </div>
+                              <div className="p-3.5 rounded-xl bg-brand-50 dark:bg-brand-950/20 border border-brand-100 dark:border-brand-900 text-brand-900 dark:text-brand-300 shadow-sm">
+                                <h5 className="font-bold text-brand-700 dark:text-brand-400 uppercase text-[9px] tracking-widest mb-0.5">Suggested Action</h5>
+                                <p className="text-slate-700 dark:text-slate-300 leading-relaxed font-sans font-normal">{item.suggestion}</p>
+                              </div>
                             </div>
-                          </div>
-                          <div className="p-3.5 rounded-xl bg-brand-50 border border-brand-100 text-brand-900 shadow-sm">
-                            <h5 className="font-bold text-brand-700 uppercase text-[9px] tracking-widest mb-0.5">Suggested Action</h5>
-                            <p className="text-slate-700 leading-relaxed font-sans font-normal">{item.suggestion}</p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </motion.div>
                   );
                 })}
               </div>
@@ -799,30 +860,30 @@ export const Results: React.FC = () => {
 
           {/* Safe Clauses Section */}
           <section className="space-y-3">
-            <h3 className="text-base sm:text-lg font-bold text-slate-900 font-display flex items-center gap-2 select-none">
+            <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white font-display flex items-center gap-2 select-none">
               <span className="w-2.5 h-2.5 bg-emerald-500 rounded-full" />
               Safe Clauses ({safeClauses.length})
             </h3>
             
             {safeClauses.length === 0 ? (
-              <div className="p-6 border border-slate-200/60 bg-white rounded-2xl text-center text-slate-400 text-xs font-bold shadow-soft">
+              <div className="p-6 border border-slate-200/60 bg-white dark:bg-slate-900 rounded-2xl text-center text-slate-400 dark:text-slate-500 text-xs font-bold shadow-soft">
                 No explicitly safe user-protective covenants identified.
               </div>
             ) : (
-              <div className="p-5 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 space-y-4 shadow-sm font-semibold text-slate-500 text-xs">
+              <div className="p-5 rounded-2xl border border-emerald-500/20 bg-emerald-505/5 dark:bg-emerald-500/5 space-y-4 shadow-sm font-semibold text-slate-500 text-xs">
                 <p className="text-[11px] text-slate-450 leading-relaxed uppercase tracking-widest block select-none">
                   Identified standard user protections or safe clauses:
                 </p>
-                <ul className="space-y-3.5 text-xs text-slate-600 list-none pl-0">
+                <ul className="space-y-3.5 text-xs text-slate-600 dark:text-slate-400 list-none pl-0">
                   {safeClauses.map((item: AnalysisItem) => (
                     <li key={item.id} className="flex items-start gap-2.5">
                       <span className="text-emerald-500 text-base font-extrabold select-none">✓</span>
                       <div>
-                        <strong className="text-slate-800 font-bold text-sm leading-tight block">{item.title}</strong>
+                        <strong className="text-slate-800 dark:text-slate-200 font-bold text-sm leading-tight block">{item.title}</strong>
                         <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest font-mono mt-0.5 block">
                           {item.category}
                         </span>
-                        <p className="text-[11px] text-slate-500 mt-1 leading-relaxed font-normal">{item.explanation}</p>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-455 mt-1 leading-relaxed font-normal">{item.explanation}</p>
                       </div>
                     </li>
                   ))}
