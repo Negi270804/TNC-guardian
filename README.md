@@ -377,13 +377,41 @@ This project is licensed under the MIT License.
 
 # 👨‍💻 Author
 
-**Nikhil Negi**
+---
 
-- LinkedIn: https://www.linkedin.com/in/nikhil-negi-0bb166328/
-- GitHub: https://github.com/Negi270804/
+# 👥 Team GenDev
+
+<table>
+<tr>
+<td align="center" width="50%">
+
+### Nikhil Negi
+
+[![GitHub](https://img.shields.io/badge/GitHub-Negi270804-black?logo=github)](https://github.com/Negi270804)
+
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Nikhil%20Negi-blue?logo=linkedin)](https://www.linkedin.com/in/nikhil-negi-0bb166328/)
+
+</td>
+
+<td align="center" width="50%">
+
+### Aditya Kumar Jha
+
+[![GitHub](https://img.shields.io/badge/GitHub-145--adityakumarjha-black?logo=github)](https://github.com/145-adityakumarjha)
+
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Aditya%20Kumar%20Jha-blue?logo=linkedin)](https://www.linkedin.com/in/aditya-k-9a3942301)
+
+</td>
+</tr>
+</table>
 
 ---
 
 <p align="center">
+<b>Developed with ❤️ by Team GenDev</b>
+</p>
+
+<p align="center">
 ⭐ If you found this project useful, consider giving it a star on GitHub.
 </p>
+---
